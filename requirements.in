@@ -1,0 +1,14 @@
+opencv-python
+matplotlib
+plotly
+pyvisa-py
+pyserial
+nbformat
+scipy
+nidaqmx
+ipykernel
+ipympl  # for interactive selection
+tqdm
+thorlabs-apt-device
+pythonnet
+pip-tools  # for generating requirements.txt
