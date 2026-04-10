@@ -1,0 +1,16 @@
+1-23-26
+
+10 dBm from TSL-770 directly connected to lensed fiber,
+-----------------------------------------------------------------------------------------------
+D02P08
+
+only 3.42V max voltage from photodetector at gain = 100 corresponds to 78 uW; approx < 21 dB loss?
+------------------------------------------------------------------------------------------------
+D02P09
+
+0.55 V from PD at gain = 10, corresponds to 100 uW; 
+
+After connecting to all the modulator setup at CW pow 12 dBm
+
+0.713 V from PD at gain = 100, corresponds to 13 uW; approx. 21.5 dB
+
