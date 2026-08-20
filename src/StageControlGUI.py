@@ -8,10 +8,11 @@ class StageControlGUI:
     Interactive jog-control panel for the die tester stages.
 
     Gives independent X/Y/Z jog controls (type a distance in microns, click Move) for the
-    left ('l') and right ('r') fiber stages, and a step-size / direction toggle for the
-    chip ('m') stage -- its only axis is 'X', and it's stepped by either 8 or 254 microns
-    to match the waveguide pitch used elsewhere in the notebook (prep_next_waveguide /
-    advance_chip in src/AutoAlignController.py).
+    input fiber (left / 'l') and output fiber (right / 'r')  stages, and a step-size /
+    direction toggle for the chip ('m') stage -- its only axis is 'X'. The chip can be
+    stepped by the fixed 8 or 254 micron waveguide pitch used elsewhere in the notebook
+    (prep_next_waveguide / advance_chip in src/AutoAlignController.py), or by a custom
+    typed amount.
 
     Usage:
         stage_gui = StageControlGUI(stg)
@@ -20,7 +21,7 @@ class StageControlGUI:
 
     fiber_axes = ['X', 'Y', 'Z']
     chip_speed = 9  # matches stg.set_speed('m', 9) used elsewhere before chip moves
-    chip_step_options = [8, 254]
+    chip_step_options = [8, 254, 'Custom']
 
     def __init__(self, die_tester_stage):
         self.stg = die_tester_stage
@@ -39,8 +40,8 @@ class StageControlGUI:
         a second time (since the cell's last expression value gets shown too), producing a
         duplicate left/right/chip panel.
         """
-        left_panel = self._build_fiber_panel('l', "Left Fiber ('l')")
-        right_panel = self._build_fiber_panel('r', "Right Fiber ('r')")
+        left_panel = self._build_fiber_panel('l', "Input Fiber - Left ('l')")
+        right_panel = self._build_fiber_panel('r', "Output Fiber - Right ('r')")
         chip_panel = self._build_chip_panel()
 
         layout = widgets.VBox([
@@ -56,8 +57,13 @@ class StageControlGUI:
         rows = [widgets.HTML(f"<b>{title}</b>")]
 
         for axis in self.fiber_axes:
-            entry = widgets.FloatText(
-                value=0.0, description=f"{axis}:",
+            # Plain Text (not FloatText): some ipywidgets/browser combinations treat a bare
+            # "-" as a temporarily-invalid number and silently revert the numeric spinner
+            # to its last valid value before the minus sign ever reaches the kernel, which
+            # makes negative distances impossible to type. A text field has no such
+            # validation -- we parse it ourselves in _on_fiber_move.
+            entry = widgets.Text(
+                value="0", description=f"{axis}:",
                 layout=widgets.Layout(width='170px'),
             )
             button = widgets.Button(
@@ -90,6 +96,17 @@ class StageControlGUI:
             options=self.chip_step_options, value=self.chip_step_options[0],
             description='Step (µm):',
         )
+        custom_step_entry = widgets.Text(
+            value="0", description='Custom (µm):',
+            layout=widgets.Layout(width='170px'),
+            disabled=(step_toggle.value != 'Custom'),
+        )
+
+        def on_step_toggle_change(change):
+            custom_step_entry.disabled = (change['new'] != 'Custom')
+
+        step_toggle.observe(on_step_toggle_change, names='value')
+
         dir_toggle = widgets.ToggleButtons(
             options=['+', '-'], value='+', description='Direction:',
         )
@@ -102,13 +119,15 @@ class StageControlGUI:
             description="Refresh position", layout=widgets.Layout(width='170px'),
         )
 
-        move_button.on_click(lambda b: self._on_chip_move(step_toggle, dir_toggle, pos_label))
+        move_button.on_click(
+            lambda b: self._on_chip_move(step_toggle, custom_step_entry, dir_toggle, pos_label)
+        )
         refresh_button.on_click(lambda b: self._on_refresh_position('m', pos_label))
 
         self._all_move_buttons.extend([move_button, refresh_button])
 
         return widgets.VBox([
-            title, step_toggle, dir_toggle,
+            title, step_toggle, custom_step_entry, dir_toggle,
             widgets.HBox([move_button, refresh_button]),
             pos_label,
         ], layout=widgets.Layout(border='1px solid gray', padding='6px', margin='4px', width='260px'))
@@ -148,15 +167,27 @@ class StageControlGUI:
     # Callbacks
     # ------------------------------------------------------------------
     def _on_fiber_move(self, stage, axis, entry):
-        distance = entry.value
+        try:
+            distance = float(entry.value)
+        except ValueError:
+            self.status_label.value = f"Invalid number for {stage} {axis}: '{entry.value}'"
+            return
 
         def fn():
             self.stg.move_relative(stage, axis, distance, wait=True)
 
         self._run_move(f"stage '{stage}' axis {axis} by {distance:+g} um", fn)
 
-    def _on_chip_move(self, step_toggle, dir_toggle, pos_label):
-        step = step_toggle.value
+    def _on_chip_move(self, step_toggle, custom_step_entry, dir_toggle, pos_label):
+        if step_toggle.value == 'Custom':
+            try:
+                step = float(custom_step_entry.value)
+            except ValueError:
+                self.status_label.value = f"Invalid custom chip step: '{custom_step_entry.value}'"
+                return
+        else:
+            step = step_toggle.value
+
         sign = 1 if dir_toggle.value == '+' else -1
         distance = sign * step
 

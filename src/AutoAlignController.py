@@ -154,6 +154,15 @@ class WaveguideAlignmentController:
 
     def z_scan(self, stage, broad_range):
         """Perform a Z scan on 'l' or 'r', fit a parabola, and return the optimal Z offset."""
+        result = self.z_scan_verbose(stage, broad_range)
+        return result['z_opt']
+
+    def z_scan_verbose(self, stage, broad_range):
+        """
+        Same scan as z_scan(), but returns the full data + fit instead of just the optimal
+        Z offset -- useful for plotting (see src/ScanGUI.py). Returns a dict with keys:
+        datapoints, z_tun, Pz_tun, fitparams, fitcov, z_opt.
+        """
         if broad_range:
             commands = [['Z', 1], ['Z', -5]]
         else:
@@ -171,7 +180,15 @@ class WaveguideAlignmentController:
         fit_par = self.parabola(z_tun, *fitparams)
         z_opt = z_tun[np.argmax(fit_par)]
         print(z_opt)
-        return z_opt
+
+        return {
+            'datapoints': datapoints,
+            'z_tun': z_tun,
+            'Pz_tun': Pz_tun,
+            'fitparams': fitparams,
+            'fitcov': fitcov,
+            'z_opt': z_opt,
+        }
 
     def fine_tune(self):
         """
