@@ -9,3 +9,6 @@ Python script to control Suruga stages for automatic fiber alignment to TFLN wav
 
 ## Running
 - The workfplow will be in main.ipynb. All the classes written by Eric (me) are in the `/src` folder. All the old code is in the `/reference_code` folder.
+
+## Design documents
+- [Die handling & edge-coupling concept study](docs/die_handling_concept_study.md) — architecture concepts for high-throughput handling of singulated 10 × 6 mm photonic dies (storage, indexing, and self-registering presentation to the fiber stages).
