@@ -1,0 +1,49 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1110' height='480' viewBox='0 0 1110 480' font-family='Helvetica, Arial, sans-serif' font-size='13'>
+<defs><marker id='a' markerWidth='8' markerHeight='8' refX='7' refY='4' orient='auto'><path d='M0,0 L8,4 L0,8 z' fill='#c02020'/></marker><marker id='b' markerWidth='8' markerHeight='8' refX='1' refY='4' orient='auto'><path d='M8,0 L0,4 L8,8 z' fill='#c02020'/></marker><pattern id='hatch' width='6' height='6' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'><line x1='0' y1='0' x2='0' y2='6' stroke='#e05a3a' stroke-width='2'/></pattern><pattern id='hatchg' width='6' height='6' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'><line x1='0' y1='0' x2='0' y2='6' stroke='#777' stroke-width='1.5'/></pattern></defs>
+<rect width='1110' height='480' fill='#ffffff'/>
+<text x='16' y='26' font-size='17' font-weight='bold' fill='#222'>Fig. 4 — Jaw clearance at the test nest (section along X) and in a stick pocket (plan)</text>
+<text x='142.0' y='88.8' font-size='12' fill='#222' text-anchor='start' font-weight='bold'>nest, section looking along Y, 32 px/mm — free space needed at each die end: ≥1.6 mm in X, from deck to above the die</text>
+<rect x='142.0' y='300.0' width='576.0' height='35.2' rx='0' fill='#d9d9d9' stroke='#555' stroke-width='1.2' opacity='1'/>
+<text x='430.0' y='320.8' font-size='12' fill='#333' text-anchor='middle'>nest deck on the X-Y-θ correction stage — rails sit ~1 mm inboard of each facet plane</text>
+<rect x='270.0' y='252.0' width='320.0' height='48.0' rx='0' fill='#8f8f8f' stroke='#444' stroke-width='1.2' opacity='1'/>
+<text x='430.0' y='280.8' font-size='10' fill='#fff' text-anchor='middle'>vacuum rail — 2 off along X, second one behind</text>
+<text x='430.0' y='299.6' font-size='10' fill='#222' text-anchor='start'></text>
+<rect x='270.0' y='236.0' width='320.0' height='16.0' rx='0' fill='#cfe3f7' stroke='#2b5d8a' stroke-width='1.5' opacity='1'/>
+<rect x='270.0' y='236.0' width='320.0' height='3.0' rx='0' fill='#1f4f7a' stroke='#333' stroke-width='1.2' opacity='1'/>
+<text x='430.0' y='226.4' font-size='11' fill='#2b5d8a' text-anchor='middle'>DIE — fibers approach along Y (into / out of the page)</text>
+<rect x='244.4' y='239.2' width='25.6' height='11.2' rx='0' fill='#444' stroke='#111' stroke-width='1.2' opacity='1'/>
+<rect x='218.8' y='156.0' width='41.6' height='83.2' rx='0' fill='#888' stroke='#111' stroke-width='1.2' opacity='1'/>
+<rect x='590.0' y='239.2' width='25.6' height='11.2' rx='0' fill='#444' stroke='#111' stroke-width='1.2' opacity='1'/>
+<rect x='599.6' y='156.0' width='41.6' height='83.2' rx='0' fill='#888' stroke='#111' stroke-width='1.2' opacity='1'/>
+<text x='239.6' y='151.2' font-size='12' fill='#222' text-anchor='middle'>jaw</text>
+<text x='620.4' y='151.2' font-size='12' fill='#222' text-anchor='middle'>jaw</text>
+<rect x='318.0' y='104.8' width='224.0' height='38.4' rx='0' fill='#eee' stroke='#333' stroke-width='1' opacity='1' stroke-dasharray='5,3'/>
+<text x='430.0' y='128.8' font-size='10' fill='#333' text-anchor='middle'>objective barrel (WD to be measured) — jaw bodies stay outboard of X = −1.6 … 11.6</text>
+<line x1='193.2' y1='264.8' x2='193.2' y2='250.4' stroke='#c02020' stroke-width='1' marker-start='url(#b)' marker-end='url(#a)'/>
+<text x='188.4' y='260.0' font-size='10' fill='#c02020' text-anchor='end'>jaw bottom ≥0.4 above deck</text>
+<line x1='618.8' y1='300.0' x2='618.8' y2='252.0' stroke='#c02020' stroke-width='1' marker-start='url(#b)' marker-end='url(#a)'/>
+<text x='624.8' y='280.0' font-size='10' fill='#c02020' text-anchor='start'>rail 1.5</text>
+<line x1='270.0' y1='204.0' x2='590.0' y2='204.0' stroke='#c02020' stroke-width='1' marker-start='url(#b)' marker-end='url(#a)'/>
+<text x='430.0' y='199.0' font-size='10' fill='#c02020' text-anchor='middle'>10 mm</text>
+<text x='760.0' y='180.0' font-size='12' fill='#222' text-anchor='start' font-weight='bold'>stick pocket, plan view, 20 px/mm</text>
+<rect x='760.0' y='205.0' width='300.0' height='170.0' rx='0' fill='#e8e0c8' stroke='#7a6a40' stroke-width='1.5' opacity='1'/>
+<rect x='810.0' y='332.0' width='200.0' height='20.0' rx='0' fill='#8f8f8f' stroke='#444' stroke-width='1' opacity='1'/>
+<rect x='810.0' y='248.0' width='200.0' height='20.0' rx='0' fill='#8f8f8f' stroke='#444' stroke-width='1' opacity='1'/>
+<rect x='770.0' y='264.0' width='40.0' height='72.0' rx='0' fill='#fff' stroke='#7a6a40' stroke-width='1' opacity='1' stroke-dasharray='4,2'/>
+<rect x='1010.0' y='264.0' width='40.0' height='72.0' rx='0' fill='#fff' stroke='#7a6a40' stroke-width='1' opacity='1' stroke-dasharray='4,2'/>
+<text x='790.0' y='300.0' font-size='9' fill='#7a6a40' text-anchor='middle'>jaw</text>
+<text x='790.0' y='310.0' font-size='9' fill='#7a6a40' text-anchor='middle'>slot</text>
+<text x='1030.0' y='300.0' font-size='9' fill='#7a6a40' text-anchor='middle'>jaw</text>
+<text x='1030.0' y='310.0' font-size='9' fill='#7a6a40' text-anchor='middle'>slot</text>
+<rect x='810.0' y='240.0' width='200.0' height='120.0' rx='0' fill='none' stroke='#2b5d8a' stroke-width='1.5' opacity='1'/>
+<text x='910.0' y='296.0' font-size='11' fill='#2b5d8a' text-anchor='middle'>die 10 × 6</text>
+<text x='910.0' y='346.0' font-size='9' fill='#fff' text-anchor='middle'>ledge</text>
+<text x='910.0' y='262.0' font-size='9' fill='#fff' text-anchor='middle'>ledge</text>
+<line x1='760.0' y1='374.0' x2='1060.0' y2='374.0' stroke='#c02020' stroke-width='1' marker-start='url(#b)' marker-end='url(#a)'/>
+<text x='910.0' y='388.0' font-size='10' fill='#c02020' text-anchor='middle'>15 mm pocket</text>
+<line x1='1072.0' y1='375.0' x2='1072.0' y2='205.0' stroke='#c02020' stroke-width='1' marker-start='url(#b)' marker-end='url(#a)'/>
+<text x='1078.0' y='294.0' font-size='10' fill='#c02020' text-anchor='start'>8.5</text>
+<text x='760.0' y='402.0' font-size='10' fill='#333' text-anchor='start'>die rests on two backside ledges under the facet-edge strips;</text>
+<text x='760.0' y='415.0' font-size='10' fill='#333' text-anchor='start'>0.4 mm Y clearance per side; X retained by the slot end walls;</text>
+<text x='760.0' y='428.0' font-size='10' fill='#333' text-anchor='start'>lead-in chamfers on all walls; lid for transport.</text>
+</svg>

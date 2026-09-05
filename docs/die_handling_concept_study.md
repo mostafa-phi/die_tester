@@ -1,6 +1,6 @@
 # System Redesign Study — Batch Edge-Coupled Testing of Hundreds of 10 × 6 mm Photonic Dies
 
-**Status:** concept study for review (pre-CAD), rev. 2.3
+**Status:** concept study for review (pre-CAD), rev. 2.4
 **Scope:** ground-up redesign of the die-tester stage and handling system. The current
 machine is architected around a single manually loaded die; this study treats the whole
 stage system as open for redesign and asks what a machine looks like when the unit of
@@ -21,6 +21,10 @@ backside-only with vision registration (§3), and §6a selects the pick-and-plac
 Rev. 2.3 adds §6b: dies arrive diced on tape with kerf-width streets, so a separate
 tape-to-stick sorting step (UV release, tape expansion, backside ejector, end-face edge
 gripper) is defined, and the edge gripper is recorded as a candidate tester tool.
+Rev. 2.4 decides on **one end-face edge gripper for every handling step**, demotes the
+backside tongue to a documented fallback, and adds the sketches: sorting-station layout,
+ejector/jaw pick section, contact zones with stepped-jaw detail, and nest/stick jaw
+clearance (`docs/images/fig1…fig4`).
 
 Coordinate convention follows the brief: **X** = 10 mm die dimension, **Y** = 6 mm die
 dimension (optical propagation; fibers approach along ±Y), **Z** = vertical, **θ** =
@@ -106,10 +110,12 @@ chain at all in the primary concept.
 **Governing constraint (rev. 2.2):** the dies carry **air-clad ridge waveguides — no
 top oxide**. The top surface is untouchable everywhere, and the facet edges, where the
 exposed waveguides terminate, are the most fragile lines on the part. The nest and
-every handling step therefore contact the die **on its backside only**. In-plane
-registration is done by **vision**, not by side datums: with a single fixed nest and a
-calibrated overhead camera, a measured X/Y/θ is as good as a mechanical one and carries
-zero facet risk. This supersedes the brief's facet-face datum sketch (§9 of the brief).
+every handling step therefore contact the die only on its **backside** (rails, ledges,
+ejector pins) and, for transfer, on the **middle of its two non-optical X-end faces**
+(gripper jaws, §6a, Fig. 3). In-plane registration at the nest is done by **vision**,
+not by side datums: with a single fixed nest and a calibrated overhead camera, a
+measured X/Y/θ is as good as a mechanical one and carries zero facet risk. This
+supersedes the brief's facet-face datum sketch (§9 of the brief).
 
 One nest, machined and lapped once, characterized exhaustively:
 
@@ -119,9 +125,9 @@ One nest, machined and lapped once, characterized exhaustively:
         ┌──────────────────────────────┐            fiber →              ← fiber
    Y=6  │ ═══════ vacuum rail ═══════  │ ← rail       ┃  die 0.3–0.7 mm    ┃
         │                              │   ~1 mm     ┌┸────────────────────┸┐
-        │   ····· tongue channel ····· │ ← open      │         DIE          │
-        │   (tongue enters along ±X)   │   gap       └─┬──┐  channel   ┌──┬─┘
-        │                              │   ~2.5 mm     │▓▓│◄─tongue──►│▓▓│ rails
+        │   ····· open gap ·········· │ ← open      │         DIE          │
+        │   (kept for tongue fallback) │   gap       └─┬──┐   (gap)    ┌──┬─┘
+        │                              │   ~2.5 mm     │▓▓│           │▓▓│ rails
    Y=0  │ ═══════ vacuum rail ═══════  │ ← rail        │▓▓│           │▓▓│
         └──────────────────────────────┘             ──┴──┴───────────┴──┴── deck
         X=0                          X=10           recess ~1 mm inboard of each facet
@@ -135,9 +141,14 @@ One nest, machined and lapped once, characterized exhaustively:
   below the waveguide plane and never in the fiber's horizontal path; the deck beyond
   the rails drops away so the ±Y corridors stay open for the fiber clamps. Vacuum level
   per rail doubles as **presence/seat sensing**.
-- **Tongue channel:** the ~2.5 mm gap between the rails is an open channel along X in
-  which the transfer tool's tongue (§6a) slides under the die center from either die
-  end. Nothing about the nest blocks the ±X ends.
+![Fig. 4 — jaw clearance at the nest and in a stick pocket](images/fig4_nest_stick_jaw_clearance.svg)
+
+- **Jaw clearance at the die ends (Fig. 4):** the transfer tool grips the die by its
+  two non-optical X-end faces (§6a), so the nest leaves **≥ 1.6 mm of free space beyond
+  each end face, from the deck up past the die**: the rails end flush with the die
+  ends, the deck sits ≥ 0.4 mm below the jaw bottoms, and nothing else occupies the ±X
+  ends. The ~2.5 mm gap between the rails is kept open as well; it costs nothing and
+  preserves the backside-tongue fallback (§6a).
 - **In-plane registration (X, Y, θ — by vision):** no side datums, no preload finger.
   After placement, the overhead camera measures facet-edge position and a fiducial (the
   existing OpenCV template/edge methods, which already resolve the die at the µm level
@@ -148,12 +159,14 @@ One nest, machined and lapped once, characterized exhaustively:
   sample-side moves during a measurement.
 - **Optional mechanical X/θ (not baseline):** if a hard in-plane reference is later
   wanted, two pins plus a retracting flexure finger acting on the **diced X-end faces**
-  (non-optical, no waveguides) can be added without changing the rails or the tongue.
-  The facet faces are never a datum surface in any variant.
-- **Exchange sequence per die:** fibers retract (interlocked) → tongue slides in along X
-  under the outgoing die, vacuum on, lifts 0.3–0.5 mm, withdraws → returns with the
-  incoming die, lowers it onto the rails, vacuum handshake (tongue off, rails on),
-  withdraws → camera measures pose → correction stage zeroes X/Y/θ → fibers approach.
+  (non-optical, no waveguides) can be added without changing the rails; note that the
+  gripper jaws already define X and θ mechanically while the die is held, so the
+  residual vision correction is mostly Y. The facet faces are never a datum surface in
+  any variant.
+- **Exchange sequence per die:** fibers retract (interlocked) → jaws descend beside the
+  outgoing die's end faces, close, rail vacuum off, lift → carry to bin stick → return
+  with the incoming die → lower onto the rails, rail vacuum on, jaws open and rise →
+  camera measures pose → correction stage zeroes X/Y/θ → fibers approach.
 - **No structure above the die top surface** in the central 8 mm of X, no structure at
   waveguide height anywhere in the ±Y fiber approach cones, and a software/hardware
   interlocked fiber-retract corridor before any nest actuation (carries over R1/R5/R6
@@ -190,16 +203,17 @@ deck holds 6–10 sticks (input, pass, fail, regrade) — ≥ 100–200 dies res
 are loaded at a bench, ideally by the dicing vendor.
 
 **Transfer:** a 4-axis **SCARA** (~400–600 mm reach, ±0.02 mm class, integrated
-controller) carrying a thin **backside vacuum tongue** that slides under the die along
-X, lifts it 0.3–0.5 mm off the pocket or nest rails, and carries it. No top-surface or
-facet contact at any point (§6a). Placement scatter of a few tenths of a mm is closed by
-vision registration at the nest, not by a mechanical funnel.
+controller) carrying a stepped-jaw **end-face edge gripper** (§6a, Fig. 3) that takes the
+die by the middle of its two non-optical X-end faces, lifts it off the pocket ledges or
+nest rails, and carries it. No top-surface or facet contact at any point. Placement
+scatter of a few tenths of a mm in Y is closed by vision registration at the nest; X
+and θ are already defined by the jaw faces.
 
-**Sequence per die:** fibers retract → tongue removes die *i* from the nest → returns
-it to its bin stick → picks die *i+1* → places it on the nest rails → vacuum handshake →
-overhead camera measures X/Y/θ → correction stage zeroes the pose → fibers approach
-along the pre-computed trajectory → first light as verification → measure. In the
-screening regime a second tongue pre-stages die *i+1* so the swap itself is ~5 s.
+**Sequence per die:** fibers retract → gripper removes die *i* from the nest → returns
+it to its bin stick → picks die *i+1* → places it on the nest rails → rail vacuum on,
+jaws open → overhead camera measures X/Y/θ → correction stage zeroes the pose → fibers
+approach along the pre-computed trajectory → first light as verification → measure. In
+the screening regime a second gripper pre-stages die *i+1* so the swap itself is ~5 s.
 
 **Why it wins at this scale:**
 - Operator interaction = swap packs and press start: **one interaction per ~100–200
@@ -212,9 +226,9 @@ screening regime a second tongue pre-stages die *i+1* so the swap itself is ~5 s
   approach; the die is returned to a reject position and the run continues — no human
   needed for the common faults.
 
-**Main risks:** it is a real machine build (robot, hotel, tongue tooling, guarding,
+**Main risks:** it is a real machine build (robot, hotel, gripper tooling, guarding,
 ESD/ionization, error-recovery software); every die is robot-handled twice — mitigated
-by backside-only contact, low approach velocities, and the fact that robot handling
+by backside-and-end-face-only contact, low approach velocities, and the fact that robot handling
 replaces *tweezers*, historically the worst offender; custom sticks must be adopted
 upstream; total cost dominated by the robot cell (order €30–60 k in COTS hardware
 before integration labor).
@@ -324,20 +338,21 @@ Ratings: ● strong / ◐ adequate / ○ weak.
   working-distance objective (≥ 30 mm) with a low-profile end-effector that enters
   horizontally along ±X beneath it. Option (b) removes a moving element from the
   optical path and is preferred if the magnification budget allows; (a) is the
-  fallback. With the backside tongue (§6a) the tool itself is *below* the die top
-  surface during the exchange, so only the tool holder — outboard of the die's X end —
-  must clear the objective barrel; a fixed column is very likely sufficient. In both
-  cases the objective-to-die gap is a hard interlock input for the robot, exactly like
-  fiber retract.
+  fallback. With the end-face gripper (§6a, Fig. 4) the jaw bodies rise above the die
+  only outboard of X = −1.6 … 11.6 mm, so the objective barrel must clear a ~13 mm wide
+  corridor centred on the die; with a barrel diameter and working distance to be
+  measured (§8) a fixed column is plausible but not yet certain. In both cases the
+  objective-to-die gap is a hard interlock input for the robot, exactly like fiber
+  retract.
 - **Transfer:** a small 4-axis **SCARA** on its own pedestal beside the optical table,
-  carrying a **backside vacuum tongue** that slides under the die along ±X — the only
-  direction not occupied by fiber arms (±Y) or the objective (+Z) — and lifts it off
-  its rails. Selection rationale, tool geometry and alternatives are in §6a. The fiber
-  arms park retracted and the objective gap is confirmed before the tongue may enter;
-  all states are interlocked.
-- **Storage:** custom **slotted carrier sticks/trays** (§6a) whose pockets present the
-  same backside rail-pair-and-channel geometry as the nest, so the tongue picks from
-  storage and places into the nest with one motion primitive. 6–10 sticks on a hotel
+  carrying the stepped-jaw **end-face edge gripper** that descends beside the die's X
+  ends — the only sides not occupied by fiber arms (±Y) — grips the end-face middles
+  and lifts the die off its rails. Selection rationale, tool geometry and alternatives
+  are in §6a. The fiber arms park retracted and the objective gap is confirmed before
+  the jaws may descend; all states are interlocked.
+- **Storage:** custom **carrier sticks** (§6a, Fig. 4) whose pockets present the same
+  backside ledges and end-face jaw slots as the nest, so the gripper picks from storage
+  and places into the nest with one motion primitive. 6–10 sticks on a hotel
   deck with stick-ID reading (DataMatrix); designated output sticks for binning.
   Located to one side of the optical site along **X**, so the robot's transit path
   never crosses the fiber corridors. Standard waffle packs are not used on the machine
@@ -363,57 +378,79 @@ Ratings: ● strong / ◐ adequate / ○ weak.
 
 ### 6a. Pick-and-place system and die pickup
 
-**How a die is picked up.** Because the top surface carries exposed waveguides and the
-facet edges are fragile, the die is lifted **from below, at its backside center**, by a
-thin vacuum **tongue**:
+**How a die is picked up — one tool everywhere (rev. 2.4): the end-face edge gripper.**
+Because the top surface carries exposed waveguides and the facet edges are fragile, the
+die is gripped only by the **middle 3 mm of its two non-optical X-end faces**, and is
+otherwise supported only on its backside (ejector pins, nest rails, stick ledges). The
+same gripper picks from tape at the sorting station (§6b), exchanges dies at the nest,
+and bins them into sticks. Geometry in Figs. 2–4:
 
-- Tongue ≈ 2.5 mm wide × ≤ 0.8 mm thick × ~15 mm long, vacuum ports on its upper face,
-  dissipative material (conductive PEEK or hard-anodized Al with a conductive coating —
-  LN is pyroelectric and charges with every temperature swing; the cell is ionized).
-- It slides horizontally **along X** into the channel between the two backside rails
-  (nest or storage pocket), ~0.3 mm below the die; vacuum on; lifts 0.3–0.5 mm so the
-  die leaves the rails; withdraws along X; travels; reverses the sequence at the
-  destination. A vacuum switch on the tongue line confirms pick and detects loss.
-- Holding force: ~12 mm² of ports at −60 kPa ≈ 0.7 N against a die weight of ~1.4 mN
-  (10 × 6 × 0.5 mm LN). Backside friction holds it laterally at any sane acceleration.
-  The die overhangs the tongue by ~1.75 mm per side in Y and ~0 in X — negligible bow.
-- Nothing ever contacts the top surface, the facet faces, or the facet edges. The only
-  contact patches in the die's entire life on the machine are the backside center
-  (tongue) and the two backside rail strips (nest, storage).
+- **Jaws:** parallel micro-gripper (pneumatic or voice-coil, with jaw-position feedback
+  for die-present / no-die detection), PEEK or Vespel jaw inserts, dissipative grade —
+  LN is pyroelectric and charges with every temperature swing; the cell is ionized.
+  One jaw is compliant in yaw (±2°) so both faces seat on a die whose end faces are not
+  perfectly parallel.
+- **Stepped jaw (Fig. 3 detail):** the contact nose is 0.35 mm tall and its top sits
+  **0.10 mm below the die's top surface**; the jaw body is set back 0.6 mm above the
+  nose. The jaw therefore cannot overhang the surface geometrically, whatever the
+  closing force. This requires the die's top-surface height to be known to ~±50 µm
+  wherever it is gripped — i.e. known support heights plus a die-thickness spec.
+- **Contact zone (Fig. 3 plan):** the jaws touch the end face only over its middle
+  3 mm (Y = 1.5…4.5), staying ≥ 1.5 mm from the facet corners. Facet faces, facet edges
+  and the top surface are never touched by anything.
+- **Forces:** grip 0.2–0.5 N. Contact pressure on a 0.35 × 3 mm patch ≈ 0.3 MPa. Euler
+  buckling load of the 10 × 6 × 0.5 mm die under end load ≈ 1 kN. Friction hold
+  (µ ≈ 0.4) ≈ 0.2 N against a die weight of ~1.4 mN — >100× margin at any sane
+  acceleration.
+- **What the jaws give for free:** X and θ are fixed mechanically by the jaw faces
+  while the die is held (centering gripper), so placement scatter at the nest is
+  ~±0.02 mm in X and ~±0.1° in θ; vision then corrects mostly Y.
+- **Fallback (documented, not built unless trials fail):** a thin backside vacuum
+  **tongue** (≈ 2.5 × 0.8 mm) sliding along X in the gap between the rails, lifting the
+  die 0.3–0.5 mm. Zero side contact, insensitive to die thickness, but it cannot pick
+  from tape and needs a channel under every resting position. The rail gap is kept open
+  so the fallback remains possible.
 
-**Storage carrier: slotted sticks.** Standard waffle packs have closed pocket floors and
-force a top pick, so they are replaced by a machined (PEEK/Delrin) or SLA-printed
-carrier whose pockets have the **same geometry as the nest**: two ledges under the die's
-facet-edge strips (backside only), a floor-level **channel along X** under the center,
-a **tunnel through both X-end pocket walls** so the tongue enters from the side, low
-retention walls on all four sides, generous lead-in chamfers, and a lid for transport.
-Pockets are arranged in a row along **Y** so every channel opens to the stick's long
-edges (a 12-pocket stick ≈ 16 × 105 mm); sticks sit on the hotel deck with ~20 mm gaps
-for the tool holder. A 2-D tray variant with an access well at each pocket's X end is
-possible if deck area becomes the constraint. Sticks are filled from the diced wafer
-on tape at the **tape-to-stick sorting station** (§6b), which grips dies only by their
-**non-optical X-end faces** after backside ejection — the one bare-die handling step
-outside the tester. Preferably the dicing vendor performs it and delivers loaded sticks.
+**Storage carrier: sticks with jaw slots (Fig. 4).** Standard waffle packs have closed
+pocket floors and pocket walls hard against the die ends, so they are replaced by a
+machined (PEEK/Delrin) or SLA-printed stick whose pockets have: two backside **ledges**
+under the die's facet-edge strips, **jaw slots** ≥ 2 mm long at both X ends (floor cut
+down so the jaw noses reach ≥ 0.1 mm below the die bottom), Y retention walls at
+~0.4 mm clearance, lead-in chamfers on all walls, and a lid for transport. Pockets sit
+side by side along the stick at ~7.5 mm pitch with the die's X axis across the stick,
+so a 14-pocket stick is ≈ 16 × 105 mm; sticks carry a DataMatrix ID. Sticks are filled
+from the diced wafer on tape at the **tape-to-stick sorting station** (§6b), which uses
+the same gripper — the one bare-die handling step outside the tester. Preferably the
+dicing vendor performs it and delivers loaded sticks.
 
-**Robot type: 4-axis SCARA.** The task is a horizontal slide-in along one axis at a
-fixed height, a few-tenths-of-a-mm vertical lift, and a carry of 300–450 mm — exactly a
-SCARA's native motion — at ±0.3 mm / ±1° placement accuracy, with a payload in grams.
+**Robot type: 4-axis SCARA.** The task is a vertical approach beside the die, a grip, a
+lift of a few tenths of a millimetre to a few millimetres, and a carry of 300–450 mm —
+native SCARA motion — at ±0.3 mm / ±1° placement accuracy with a payload in grams.
 
 | Option | Verdict |
 |---|---|
-| **4-axis SCARA** (Epson T3/T6, Yamaha, Denso class; ~400–600 mm reach, ±0.02 mm, integrated controller, Ethernet API) | **Selected.** Horizontal approach is native; compact pedestal footprint beside the table; integrated safety/controller; J4 (θ) corrects 180°-rotated dies detected by the verify camera. A Dobot MG400-class unit (~±0.05 mm, 440 mm reach, Python SDK) is an acceptable prototyping stand-in with identical geometry. |
-| Overhead Cartesian gantry | Rejected: the bridge must live above the cell, exactly where the microscope column and the two ~200 mm fiber stacks are; forces a tall enclosure and constant clearance conflicts; custom controls and safety. Reconsider only if the hotel grows far beyond 10 sticks. |
+| **4-axis SCARA** (Epson T3/T6, Yamaha, Denso class; ~400–600 mm reach, ±0.02 mm, integrated controller, Ethernet API) | **Selected.** Compact pedestal footprint beside the table; integrated safety/controller; J4 (θ) keeps the jaw axis parallel to die X at every station. A Dobot MG400-class unit (~±0.05 mm, 440 mm reach, Python SDK) is an acceptable prototyping stand-in with identical geometry. |
+| Overhead Cartesian gantry | Rejected for the tester: the bridge must live above the cell, exactly where the microscope column and the two ~200 mm fiber stacks are; forces a tall enclosure and constant clearance conflicts. (A small gantry *is* the right choice at the sorting station, where nothing is above the wafer — Fig. 1.) |
 | 6-axis articulated arm (Meca500, UR3e) | Rejected: unused DOF, slower, costlier, harder safety case; no angled approaches are needed. |
 | Dedicated X-Z shuttle + indexing deck | Cheapest and stiffest, but fully custom and it freezes the hotel geometry. Only if the hotel stays at 1–2 sticks. |
 
-**Pickup alternatives considered and ranked below the tongue:**
+**Why one gripper everywhere — and the honest "why not":**
+
+| For | Against (all testable in the same sorter trial) |
+|---|---|
+| One tool, one contact mode, one set of trials, one spare-parts list. | It is side contact ~1.5 mm from a facet corner; the tongue has zero side contact. |
+| X and θ defined mechanically while held; vision corrects mostly Y. | Jaw step must stay below the top surface → Z known to ~±50 µm at every grip; die-thickness spec becomes mandatory. |
+| Sticks and nest need only end clearance — no channels, no tunnels. | Heavily chipped or non-square diced end faces degrade θ definition and could cock the die in the jaws. |
+| The tape step forces this gripper into the system anyway. | Jaw insert wear changes the 0.10 mm top gap → periodic gauge check. |
+
+**Pickup alternatives considered and ranked below the edge gripper:**
 
 | Method | Assessment |
 |---|---|
-| **Edge gripper on the X-end faces** (robotic tweezers, PEEK/Vespel jaws, 0.2–0.5 N) | Viable second choice — no top contact. But needs ~1 mm jaw clearance to pocket walls, must close symmetrically without riding onto the top edge of a 0.5 mm face, and conflicts with any nest features on the same faces. |
-| **Bernoulli non-contact top gripper** | Works with standard waffle packs and never touches the die, but blows air across exposed waveguides and facet edges (particle transport), has weak lateral constraint (needs end-face stops), and the body overhangs the facets. Fallback only if custom carriers are impossible. |
+| **Backside vacuum tongue** | Kept as the documented fallback for nest/stick handling (see above). Cannot pick from tape. |
+| **Bernoulli non-contact top gripper** | Works with standard waffle packs and never touches the die, but blows air across exposed waveguides and facet edges (particle transport), has weak lateral constraint (needs end-face stops), and the body overhangs the facets. |
 | Top vacuum pads in the 1-mm end zones | **Rejected.** A 0.6 mm pad in a 1 mm strip needs ±0.2 mm die-relative placement while pocket slop alone is ±0.25 mm; one miss puts a pad on a waveguide. |
-| Top-and-bottom sandwich clamp at the end zones | **Rejected.** Still touches the top surface and adds nothing over backside vacuum. |
+| Top-and-bottom sandwich clamp at the end zones | **Rejected.** Still touches the top surface and adds nothing over end-face gripping. |
 | Electrostatic top chuck | Rejected: unpredictable on pyroelectric LN. |
 
 **Layout and operation.** Robot pedestal at −X of the nest, off the optical table (or on
@@ -421,7 +458,7 @@ a bridge decoupled from the base plate), so its motion never enters the metrolog
 sticks arrayed on the −X side within the arm's arc, flanking the base, outside both
 fiber corridors. The robot moves **only while fibers are retracted** and is parked
 during every measurement, so pipelining is not needed in the long-test regime; in the
-screening regime the incoming die is pre-staged on a second tongue before the fibers
+screening regime the incoming die is pre-staged in a second gripper before the fibers
 retract, making the swap itself ~5 s and the full exchange 15–25 s including vision
 registration and correction. Operator role: remove stick lids, load the hotel, press
 start.
@@ -468,24 +505,42 @@ photonics-oriented services offer this). The film frame is **not** integrated in
 tester: a 200/300 mm frame plus ejector is a large mechanism unrelated to optical
 testing, and decoupling keeps the tester's hotel simple.
 
-**Consequence for the tester tool:** the tape step forces an end-face edge gripper into
-the system regardless. Once it has proven itself on hundreds of dies at the sorter, it
-is a legitimate candidate to replace the tongue on the tester too — one tool and one
-contact mode (end faces + backside rails) everywhere, with X and θ fixed mechanically
-by the jaw faces. The tongue keeps two advantages: insensitivity to die thickness and Z
-precision, and no need for clearance beside the die. **Decision rule:** tongue stays the
-tester baseline; "same gripper on the tester" is decided *after* sorter trials
-(≥ 300 picks, facet and end-face inspection), not before.
+**Station layout and pick geometry (Figs. 1–3).**
+
+![Fig. 1 — sorting station layout](images/fig1_sorter_layout.svg)
+
+The wafer table (X–Y ±70 mm, θ ±3°) moves the expanded frame so that the target die
+sits over a **fixed pick point**: ejector and tape-vacuum anvil below the tape,
+down-looking camera above, gripper head on a small X–Y–Z gantry that also reaches the
+four-stick deck (pass / fail / regrade / spare). A gantry is right here, unlike at the
+tester, because nothing lives above the wafer. UV cure is done offline before mounting.
+
+![Fig. 2 — pick moment: ejector and jaws](images/fig2_pick_section.svg)
+
+At the pick moment the anvil vacuum holds the tape, four Ø0.5 mm pins under the 1-mm
+end zones raise the die ~1 mm, the tape peels and tents, and the jaws descend beside
+the end faces **above the neighbours' plane** — with ~1 mm streets after expansion no
+tilt of the lifted die can reach a neighbour's facet.
+
+![Fig. 3 — contact zones and stepped jaw](images/fig3_jaw_geometry.svg)
+
+**Decision (rev. 2.4): the same end-face gripper is used everywhere** — tape pick, nest
+exchange, binning (rationale and the "why not" list in §6a). The sorter trial
+(≥ 300 picks with facet, top-surface and end-face inspection every 50) is the gate for
+the tester build, not for the tool choice; if the trial fails on end-face damage or
+θ repeatability, the documented tongue fallback takes over the nest/stick handling and
+the sorter falls back to a Bernoulli head.
 
 **For future layouts:** 300–500 µm streets would make tape release markedly easier and
 safer; at 10 × 6 mm dies the area cost is a few percent.
 
-**Why via S3:** the single highest-risk item is now: does backside-only handling with
-vision registration deliver ±10–25 µm / ±0.05° at the fibers over hundreds of cycles
-with **zero** top-surface or facet damage? That is answered fastest and cheapest by
-building **one rail-pair nest, one tongue on a hand-positioned or cheap stage, and one
-stick** (S3 hardware minimum), cycling dies through a few hundred times, and inspecting.
-Everything built for that test (nest, tongue, stick geometry, vision registration,
+**Why via S3:** the single highest-risk item is now: does end-face gripping plus
+backside support with vision registration deliver ±10–25 µm / ±0.05° at the fibers over
+hundreds of cycles with **zero** top-surface or facet damage? That is answered fastest
+and cheapest by building **one rail-pair nest, one gripper on a hand-positioned or cheap
+stage, and one stick** (S3 hardware minimum) — the same gripper the sorting station
+needs — cycling dies through a few hundred times, and inspecting. Everything built for
+that test (nest, gripper, stick geometry, vision registration,
 fiber choreography, orchestration software) is carried unchanged into S1; the SCARA and
 hotel are then a procurement-and-integration project around a proven core, not a
 gamble. If the trials instead show any bare-die robot handling is untenable, the same
@@ -521,11 +576,11 @@ one lights-out day.
 2. **Die contact constraints — partly settled:** no top-side contact anywhere (air-clad
    waveguides, rev. 2.2) and no facet contact. Still to confirm: backside condition
    (bare substrate vs metallization/handle wafer, allowed vacuum stress, contamination
-   class) → rail/tongue materials and vacuum level.
-3. **Die dimensional data** (thickness ± tol — this sets the tongue's 0.3 mm working
-   clearance under the die and the rail height; dicing size and squareness tol; facet
-   edge condition as-received) → pocket and channel dimensions, vision-registration
-   range, θ budget check.
+   class) → rail materials and vacuum level; end-face condition → jaw insert material.
+3. **Die dimensional data** (thickness ± tol — this sets the stepped jaw's 0.10 mm top
+   gap and the support heights; dicing size and squareness tol; end-face and facet edge
+   condition as-received) → jaw geometry, pocket dimensions, vision-registration range,
+   θ budget check.
 4. **Nest seating trials** (the S3-minimum prototype): repeatability over ≥ 300
    seatings, facet-edge inspection every 50, vacuum-seat detection ROC → the go/no-go
    data for S1 vs S2.
@@ -539,7 +594,7 @@ one lights-out day.
    the `SoftwareFence` calibration), facet-edge and fiducial detection repeatability →
    confirms X/Y/θ can be zeroed to inside the presentation budget without side datums.
 10. **Objective working distance and barrel diameter** → whether the fixed vision column
-   clears the tongue holder or must retract.
+   clears the jaw bodies (~13 mm corridor, Fig. 4) or must retract.
 7. **Test-plan regimes:** expected mix of full characterization vs screening per
    campaign → pipelining priority and hotel sizing.
 8. **Throughput accounting on the current tester** (operator minutes and interventions
@@ -550,16 +605,18 @@ one lights-out day.
 - Vision-only in-plane registration: facet-edge detection must be robust to facet
   quality variation and illumination; mechanical X/θ on the end faces is the documented
   add-on if it is not (§3).
-- Tongue working clearance (~0.3 mm under the die) versus die-thickness tolerance and
-  pocket/rail height tolerances across sticks from different batches.
+- Jaw Z reference: the 0.10 mm top gap of the stepped jaw relies on die thickness
+  (±50 µm spec) and on known support heights (pins, rails, ledges) across sticks from
+  different batches; a gauge die and a periodic jaw-wear check are part of the design.
 - Rail recess (~1 mm inboard of the facet) versus the true fiber/clamp envelope — a
   fiber crash now meets a rail instead of empty space; the software fence and rail
   material (no harder than the fiber ferrule) must reflect that.
 - Tape release at kerf-width streets: without expansion, a lifted die can tilt into a
   neighbor's facet; the expander and UV cure are therefore mandatory, not optional, in
   the sorting recipe (§6b). Verify expansion ratio achievable with the vendor's tape.
-- Edge-gripper reliability on diced end faces (chipping, non-parallel faces): sorter
-  trials decide whether it also replaces the tongue on the tester.
+- Edge-gripper reliability on diced end faces (chipping, non-parallel faces, jaw insert
+  wear): the sorter trial is the gate; failure redirects to the tongue fallback at the
+  nest and a Bernoulli head at the sorter.
 - Correction-stage motion per die adds ~5–10 s and a moving element under the nest;
   its stiffness and settling must be characterized so nothing sample-side drifts
   during a measurement.

@@ -1,0 +1,71 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1070' height='520' viewBox='0 0 1070 520' font-family='Helvetica, Arial, sans-serif' font-size='13'>
+<defs><marker id='a' markerWidth='8' markerHeight='8' refX='7' refY='4' orient='auto'><path d='M0,0 L8,4 L0,8 z' fill='#c02020'/></marker><marker id='b' markerWidth='8' markerHeight='8' refX='1' refY='4' orient='auto'><path d='M8,0 L0,4 L8,8 z' fill='#c02020'/></marker><pattern id='hatch' width='6' height='6' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'><line x1='0' y1='0' x2='0' y2='6' stroke='#e05a3a' stroke-width='2'/></pattern><pattern id='hatchg' width='6' height='6' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'><line x1='0' y1='0' x2='0' y2='6' stroke='#777' stroke-width='1.5'/></pattern></defs>
+<rect width='1070' height='520' fill='#ffffff'/>
+<text x='16' y='26' font-size='17' font-weight='bold' fill='#222'>Fig. 3 — Where the die may be touched: jaw contact zones, ejector pins, stepped jaw</text>
+<text x='150.0' y='84.0' font-size='12' fill='#222' text-anchor='start' font-weight='bold'>plan view, 40 px/mm — contact rule: end faces only, middle 3 mm, below the top surface; backside anywhere</text>
+<rect x='150.0' y='140.0' width='400.0' height='240.0' rx='0' fill='#cfe3f7' stroke='#2b5d8a' stroke-width='1.5' opacity='1'/>
+<line x1='210.0' y1='380.0' x2='210.0' y2='140.0' stroke='#1f4f7a' stroke-width='1.2'/>
+<line x1='230.0' y1='380.0' x2='230.0' y2='140.0' stroke='#1f4f7a' stroke-width='1.2'/>
+<line x1='250.0' y1='380.0' x2='250.0' y2='140.0' stroke='#1f4f7a' stroke-width='1.2'/>
+<line x1='270.0' y1='380.0' x2='270.0' y2='140.0' stroke='#1f4f7a' stroke-width='1.2'/>
+<line x1='290.0' y1='380.0' x2='290.0' y2='140.0' stroke='#1f4f7a' stroke-width='1.2'/>
+<line x1='310.0' y1='380.0' x2='310.0' y2='140.0' stroke='#1f4f7a' stroke-width='1.2'/>
+<line x1='330.0' y1='380.0' x2='330.0' y2='140.0' stroke='#1f4f7a' stroke-width='1.2'/>
+<line x1='350.0' y1='380.0' x2='350.0' y2='140.0' stroke='#1f4f7a' stroke-width='1.2'/>
+<line x1='370.0' y1='380.0' x2='370.0' y2='140.0' stroke='#1f4f7a' stroke-width='1.2'/>
+<line x1='390.0' y1='380.0' x2='390.0' y2='140.0' stroke='#1f4f7a' stroke-width='1.2'/>
+<line x1='410.0' y1='380.0' x2='410.0' y2='140.0' stroke='#1f4f7a' stroke-width='1.2'/>
+<line x1='430.0' y1='380.0' x2='430.0' y2='140.0' stroke='#1f4f7a' stroke-width='1.2'/>
+<line x1='450.0' y1='380.0' x2='450.0' y2='140.0' stroke='#1f4f7a' stroke-width='1.2'/>
+<line x1='470.0' y1='380.0' x2='470.0' y2='140.0' stroke='#1f4f7a' stroke-width='1.2'/>
+<line x1='490.0' y1='380.0' x2='490.0' y2='140.0' stroke='#1f4f7a' stroke-width='1.2'/>
+<rect x='150.0' y='136.0' width='400.0' height='8.0' rx='0' fill='url(#hatch)' stroke='#e05a3a' stroke-width='1' opacity='1'/>
+<rect x='150.0' y='376.0' width='400.0' height='8.0' rx='0' fill='url(#hatch)' stroke='#e05a3a' stroke-width='1' opacity='1'/>
+<text x='350.0' y='128.0' font-size='12' fill='#e05a3a' text-anchor='middle' font-weight='bold'>OPTICAL FACET (Y = 6) — fiber side — never touched</text>
+<text x='350.0' y='404.0' font-size='12' fill='#e05a3a' text-anchor='middle' font-weight='bold'>OPTICAL FACET (Y = 0) — fiber side — never touched</text>
+<rect x='150.0' y='140.0' width='40.0' height='240.0' rx='0' fill='url(#hatchg)' stroke='#777' stroke-width='0.8' opacity='1'/>
+<rect x='510.0' y='140.0' width='40.0' height='240.0' rx='0' fill='url(#hatchg)' stroke='#777' stroke-width='0.8' opacity='1'/>
+<text x='170.0' y='260.0' font-size='9' fill='#444' text-anchor='middle' transform='rotate(-90 170.0 260.0)'>1-mm end zone</text>
+<text x='530.0' y='260.0' font-size='9' fill='#444' text-anchor='middle' transform='rotate(-90 530.0 260.0)'>1-mm end zone</text>
+<rect x='118.0' y='200.0' width='32.0' height='120.0' rx='0' fill='#444' stroke='#111' stroke-width='1.2' opacity='1'/>
+<rect x='550.0' y='200.0' width='32.0' height='120.0' rx='0' fill='#444' stroke='#111' stroke-width='1.2' opacity='1'/>
+<text x='134.0' y='260.0' font-size='11' fill='#fff' text-anchor='middle' transform='rotate(-90 134.0 260.0)'>jaw</text>
+<text x='566.0' y='260.0' font-size='11' fill='#fff' text-anchor='middle' transform='rotate(-90 566.0 260.0)'>jaw</text>
+<circle cx='170.0' cy='340.0' r='10.0' fill='#3a9d5d' stroke='#1d5f36' stroke-width='1' stroke-dasharray='3,2'/>
+<circle cx='170.0' cy='180.0' r='10.0' fill='#3a9d5d' stroke='#1d5f36' stroke-width='1' stroke-dasharray='3,2'/>
+<circle cx='530.0' cy='340.0' r='10.0' fill='#3a9d5d' stroke='#1d5f36' stroke-width='1' stroke-dasharray='3,2'/>
+<circle cx='530.0' cy='180.0' r='10.0' fill='#3a9d5d' stroke='#1d5f36' stroke-width='1' stroke-dasharray='3,2'/>
+<line x1='90.0' y1='320.0' x2='90.0' y2='200.0' stroke='#c02020' stroke-width='1' marker-start='url(#b)' marker-end='url(#a)'/>
+<text x='84.0' y='264.0' font-size='11' fill='#c02020' text-anchor='end'>3 mm</text>
+<line x1='90.0' y1='200.0' x2='90.0' y2='140.0' stroke='#c02020' stroke-width='1' marker-start='url(#b)' marker-end='url(#a)'/>
+<text x='82.0' y='174.0' font-size='10' fill='#c02020' text-anchor='end'>≥1.5 mm</text>
+<text x='82.0' y='190.0' font-size='10' fill='#c02020' text-anchor='end'>to facet corner</text>
+<line x1='150.0' y1='436.0' x2='550.0' y2='436.0' stroke='#c02020' stroke-width='1' marker-start='url(#b)' marker-end='url(#a)'/>
+<text x='350.0' y='450.0' font-size='11' fill='#c02020' text-anchor='middle'>X = 10 mm</text>
+<line x1='602.0' y1='380.0' x2='602.0' y2='140.0' stroke='#c02020' stroke-width='1' marker-start='url(#b)' marker-end='url(#a)'/>
+<text x='618.0' y='260.0' font-size='11' fill='#c02020' text-anchor='middle' transform='rotate(-90 618.0 260.0)'>Y = 6 mm (optical axis)</text>
+<circle cx='162.0' cy='478.0' r='6.0' fill='#3a9d5d' stroke='#1d5f36' stroke-width='1' stroke-dasharray='3,2'/>
+<text x='178.0' y='482.0' font-size='11' fill='#1d5f36' text-anchor='start'>ejector pins, 4 off, backside through tape, at the end-zone corners</text>
+<text x='660.0' y='105.0' font-size='12' fill='#222' text-anchor='start' font-weight='bold'>stepped jaw — section, 100 px/mm</text>
+<rect x='830.0' y='200.0' width='180.0' height='50.0' rx='0' fill='#cfe3f7' stroke='#2b5d8a' stroke-width='1.5' opacity='1'/>
+<rect x='830.0' y='200.0' width='180.0' height='3.0' rx='0' fill='#1f4f7a' stroke='#333' stroke-width='1.2' opacity='1'/>
+<text x='920.0' y='230.0' font-size='12' fill='#2b5d8a' text-anchor='middle'>die (end)</text>
+<rect x='795.0' y='210.0' width='35.0' height='35.0' rx='0' fill='#444' stroke='#111' stroke-width='1.2' opacity='1'/>
+<rect x='735.0' y='140.0' width='60.0' height='70.0' rx='0' fill='#888' stroke='#111' stroke-width='1.2' opacity='1'/>
+<text x='765.0' y='178.0' font-size='11' fill='#fff' text-anchor='middle'>jaw</text>
+<line x1='715.0' y1='245.0' x2='715.0' y2='210.0' stroke='#c02020' stroke-width='1' marker-start='url(#b)' marker-end='url(#a)'/>
+<text x='709.0' y='231.5' font-size='10' fill='#c02020' text-anchor='end'>0.35 contact</text>
+<line x1='735.0' y1='128.0' x2='795.0' y2='128.0' stroke='#c02020' stroke-width='1' marker-start='url(#b)' marker-end='url(#a)'/>
+<text x='765.0' y='123.0' font-size='10' fill='#c02020' text-anchor='middle'>0.6 set-back</text>
+<line x1='795.0' y1='262.0' x2='830.0' y2='262.0' stroke='#c02020' stroke-width='1' marker-start='url(#b)' marker-end='url(#a)'/>
+<text x='812.5' y='276.0' font-size='10' fill='#c02020' text-anchor='middle'>0.35 nose</text>
+<line x1='1020.0' y1='250.0' x2='1020.0' y2='200.0' stroke='#c02020' stroke-width='1' marker-start='url(#b)' marker-end='url(#a)'/>
+<text x='1026.0' y='229.0' font-size='10' fill='#c02020' text-anchor='start'>t = 0.5</text>
+<line x1='825.0' y1='205.0' x2='875.0' y2='155.0' stroke='#c02020' stroke-width='0.9'/>
+<circle cx='825.0' cy='205.0' r='2.0' fill='#c02020' stroke='#c02020' stroke-width='0.5'/>
+<text x='880.0' y='152.0' font-size='10' fill='#c02020' text-anchor='start'>jaw top 0.10 mm below die top:</text>
+<text x='880.0' y='164.0' font-size='10' fill='#c02020' text-anchor='start'>jaw can never overhang the surface</text>
+<text x='660.0' y='295.0' font-size='10' fill='#333' text-anchor='start'>Z reference = whatever the die rests on (pins / rails / ledges);</text>
+<text x='660.0' y='308.0' font-size='10' fill='#333' text-anchor='start'>die thickness known to ±50 µm keeps the contact band inside</text>
+<text x='660.0' y='321.0' font-size='10' fill='#333' text-anchor='start'>the lower ~80 % of the end face.</text>
+</svg>
