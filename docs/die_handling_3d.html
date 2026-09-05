@@ -363,7 +363,7 @@
     ],
     names: ['Measuring', 'Fibers retract', 'Arm descends (Z)', 'Jaws close', 'Die lifts off rails', 'Carry along X', 'Set into stick'],
     descs: [
-      'Fibers coupled at both facets; die held by rail vacuum; gripper parked outboard at −X. Objective over the die (translucent).',
+      'Fibers coupled at both facets from two NanoMax stages at ±Y; die held by rail vacuum; gripper parked outboard at −X. Dies move along X, never across the fiber line.',
       'Fiber arms back off along Y by the safety retract. Small, because the gripper comes in along X, not through the fiber corridor.',
       'Z lowers the arm. Only the two thin finger bars enter the orange keep-out under the objective; the gripper body stays outside it.',
       'Jaws close on the middle 3 mm of each end face, 0.2–0.5 N. X and θ now defined by the jaw faces.',
@@ -382,6 +382,7 @@
       // die
       this.die = makeDie(); this.die.position.set(0, 1.5, 0); g.add(this.die);
       // ---- Cartesian axes (bench level, outboard at -X) ----
+      g.add(span(-270, -60, -75, -26, -10, 20, mat(COL.stage)));                   // X axis riser
       g.add(span(-270, -60, -26, -12, -12, 22, mat(COL.axisFixed)));               // X axis body (210 mm)
       this.xCar = span(-25, 25, -12, -4, -10, 20, mat(COL.axisMove)); g.add(this.xCar); // X carriage
       this.zStage = new THREE.Group(); g.add(this.zStage);
@@ -390,7 +391,8 @@
       this.zCar.add(span(0, 12, -6, 20, -8, 18, mat(COL.axisMove)));             // Z carriage
       this.arm = new THREE.Group(); this.zCar.add(this.arm);                      // arm + gripper move with Z carriage
       // stick station at -X on a Y stage
-      g.add(span(-170, -130, -20, -12, -50, 50, mat(COL.axisFixed)));             // Y axis under the stick
+      g.add(span(-170, -130, -75, -60, -60, 60, mat(COL.stage)));                 // stick riser
+      g.add(span(-170, -130, -60, -12, -50, 50, mat(COL.axisFixed)));             // Y axis under the stick (150 mm travel)
       this.stick = new THREE.Group(); g.add(this.stick);
       this.stick.add(span(-166, -134, -12, -10, -20, 20, mat(COL.stick)));        // stick slab (5 pockets shown)
       for (let i = -2; i <= 2; i++) {
@@ -401,16 +403,26 @@
         if (i !== 0) { const d = makeDie(); d.position.set(-160, -9.2, z0); this.stick.add(d); }
       }
       this.stick.add(span(-166, -134, -10, -8.4, 2 * 7.5 - 3 + 6.05, 2 * 7.5 - 3 + 6.75, mat(COL.stick)));
-      // fibers: input at z<0, output at z>6
+      // optical-table plane: the NanoMax deck (62.5 mm) + fiber holder put the fiber axis at die-top height,
+      // so the nest sits on a ~75 mm riser. Table top at y = -75.
+      g.add(span(-300, 120, -78, -75, -140, 160, mat(0xd6dae0)));
+      g.add(span(-12, 22, -75, -9, -6, 12, mat(COL.stage)));                        // nest riser
+      // fibers: input at z<0, output at z>6. Each on a Thorlabs NanoMax 300 placeholder (112 x 112 footprint,
+      // 62.5 mm deck height, 4 mm travel) whose inner face is 'gapY' from the facet.
       this.fibers = [];
+      const gapY = 45;                                                                // NanoMax inner face to facet
       [-1, 1].forEach((sgn) => {
         const f = new THREE.Group();
+        f.add(span(-51, 61, -75, -12.5, -(gapY + 112), -gapY, mat(COL.axisFixed)));          // NanoMax body 112 x 62.5 x 112
+        f.add(span(-41, 51, -12.5, -8.5, -(gapY + 100), -gapY - 8, mat(COL.gantry)));       // stage top platform (4 mm travel)
+        f.add(span(-1, 11, -8.5, 6.0, -(gapY + 30), -gapY + 6, mat(COL.clamp)));            // fiber-holder post on the deck
+        f.add(span(1, 9, 0.5, 3.5, -gapY + 6, -12, mat(COL.arm)));                          // holder arm reaching in
+        f.add(span(2, 8, 0, 4, -20, -12, mat(COL.clamp)));                                  // V-groove clamp
         const fib = cyl(0.0625, 12, mat(COL.fiber, { roughness: 0.3 }), 12); fib.rotation.x = Math.PI / 2; fib.position.set(5, 2.0, -6.02); f.add(fib);
-        f.add(span(2, 8, 0, 4, -20, -12, mat(COL.clamp)));
-        f.add(span(1, 9, 0.5, 3.5, -60, -20, mat(COL.arm)));
         if (sgn > 0) { f.rotation.y = Math.PI; f.position.set(10, 0, 6); }
         g.add(f); this.fibers.push({ g: f, s: sgn });
       });
+      this.gapY = gapY;
       // objective on a column with a vertical pivot at +Y (swing-away option)
       this.pivot = new THREE.Group(); this.pivot.position.set(5, 0, 100); g.add(this.pivot);
       this.pivot.add(cyl(5, 110, mat(COL.gantry)).translateY(55));                 // column (thin post)
@@ -426,6 +438,8 @@
       this.dieLabel = addLabel('die on nest rails', () => this.die.position.clone().add(new THREE.Vector3(5, 0.6, -1)));
       addLabel('fiber', () => new THREE.Vector3(5, 2.4, -9));
       addLabel('fiber', () => new THREE.Vector3(5, 2.4, 15));
+      addLabel('NanoMax 300 (input fiber)', () => new THREE.Vector3(5, -6, -this.gapY - 56));
+      addLabel('NanoMax 300 (output fiber)', () => new THREE.Vector3(5, -6, 6 + this.gapY + 56));
       addLabel('X axis (fixed)', () => new THREE.Vector3(-200, -12, 5));
       addLabel('Z axis', () => this.zStage.localToWorld(new THREE.Vector3(-10, 64, 5)));
       addLabel('gripper', () => this.gr.localToWorld(new THREE.Vector3(-25, 0.5 + P.armH + 26, 3)));
@@ -492,7 +506,9 @@
         ['Fiber tip to facet during exchange', (0.02 + retract).toFixed(2) + ' mm', retract < 0.5 && t > 1.5 ? 'bad' : ''],
         ['Free space needed beyond each end face', '1.6 mm', ''],
         ['Jaw top below die surface', '0.10 mm', 'good'],
-        ['Axes inside microscope or fiber volumes', 'never', 'good']
+        ['Gap between NanoMax stages (Y)', (6 + 2 * this.gapY).toFixed(0) + ' mm', 'good'],
+        ['Gap between fiber clamps (Y)', '30 mm vs 10 mm gripper', 'good'],
+        ['Die travel direction', 'along X, never across fibers', 'good']
       ];
       setReadouts(rows);
       if (this.objLabel) {
@@ -502,7 +518,7 @@
     },
     follow() { return this.die.position.clone().add(new THREE.Vector3(5, 4, 3)); },
     view: { target: [5, 6, 3], theta: -0.7, phi: 1.2, dist: 110 },
-    wide: { target: [-70, 10, 10], theta: -0.6, phi: 1.1, dist: 380 }
+    wide: { target: [-60, -10, 5], theta: -0.6, phi: 1.05, dist: 480 }
   };
 
   // =====================================================================
