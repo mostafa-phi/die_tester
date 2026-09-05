@@ -40,6 +40,8 @@ must be **stick pocket and nest**, not the tape.
 
 ## 2. Parts that work, with lead times
 
+The orderable list with exact part numbers, vendors, checked prices and the outsourcing decision is in **`bom_month1.md`**; this table is the summary.
+
 Prices are indicative US list prices; lead times are typical for in‑stock items.
 **Order the robot, gripper, and machined parts on day 1.**
 

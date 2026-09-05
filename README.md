@@ -13,4 +13,5 @@ Python script to control Suruga stages for automatic fiber alignment to TFLN wav
 ## Design documents
 - [Die handling & edge-coupling concept study](docs/die_handling_concept_study.md) — architecture concepts for high-throughput handling of singulated 10 × 6 mm photonic dies (storage, indexing, and self-registering presentation to the fiber stages).
 - [Month-1 prototype plan](docs/prototype_plan_month1.md) — what to build first, parts with lead times, week-by-week schedule and pass criteria for robotic die exchange on the existing tester.
+- [Month-1 bill of materials](docs/bom_month1.md) — exact part numbers, vendors, checked prices and lead times, plus the in-house vs outsourced die-sorting decision.
 - [Interactive 3-D clearance model](docs/die_handling_3d.html) — three.js scenes of the nest exchange, tape pick, stick pocket and sorting station.
