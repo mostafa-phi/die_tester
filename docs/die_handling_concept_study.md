@@ -1,6 +1,6 @@
 # System Redesign Study — Batch Edge-Coupled Testing of Hundreds of 10 × 6 mm Photonic Dies
 
-**Status:** concept study for review (pre-CAD), rev. 2.5
+**Status:** concept study for review (pre-CAD), rev. 2.6
 **Scope:** ground-up redesign of the die-tester stage and handling system. The current
 machine is architected around a single manually loaded die; this study treats the whole
 stage system as open for redesign and asks what a machine looks like when the unit of
@@ -428,7 +428,7 @@ and bins them into sticks. Geometry in Figs. 2–4:
   from tape and needs a channel under every resting position. The rail gap is kept open
   so the fallback remains possible.
 
-**Storage carrier: sticks with jaw slots (Fig. 4).** Standard waffle packs have closed
+**Storage carrier: wafer trays with jaw slots (Fig. 4 shows one pocket row; rev. 2.6 — one 100 mm wafer ≈ 112 dies = one tray of 8 × 14 pockets, 128 × 106 mm; the die returns to its own pocket after test and the map carries the result).** Standard waffle packs have closed
 pocket floors and pocket walls hard against the die ends, so they are replaced by a
 machined (PEEK/Delrin) or SLA-printed stick whose pockets have: two backside **ledges**
 under the die's facet-edge strips, **jaw slots** ≥ 2 mm long at both X ends (floor cut

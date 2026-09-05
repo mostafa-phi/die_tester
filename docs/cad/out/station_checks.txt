@@ -1,7 +1,8 @@
 table plane Z = -86.0 (die bottom = 0). Nest die top at 0.5; fiber axis at 0.5 via holder 20.0 above NanoMax deck
-X carriage: nest -120 -> stick -370  (travel used 250 of 300 mm)
-Z carriage: nest arm at Z 70.0 -> stick at Z 67.0 (drop 3.0 mm) + 8 mm approach lift
-Y stage: pocket pitch 7.5 x 14 pockets -> travel 105 mm
+wafer tray: 8 columns x 14 rows = 112 pockets, 128 x 106 mm; columns at die X -150 .. -262 (pitch 16.0)
+X carriage: nest -120 -> farthest column -382  (travel used 262 of 300 mm)
+Z carriage: nest arm at Z 70.0 -> tray at Z 67.0 (drop 3.0 mm) + 8 mm approach lift
+Y stage: row pitch 7.5 x 14 rows -> travel 97.5 mm (axis 105)
 
 clearances vs boxes (AABB separation, mm; negative = overlap):
   gripper near_arm @nest     vs fiber_holder_in     :    10.2  OK 
@@ -12,10 +13,11 @@ clearances vs boxes (AABB separation, mm; negative = overlap):
   z_axis_body @nest          vs nanomax300_in       :    83.5  OK 
   x_axis_body                vs nanomax300_in       :     9.0  OK 
   x_axis_body                vs y_stage_body        :    11.0  OK 
-  z_axis_body @stick         vs y_stage_body        :    86.0  OK 
-  arm_L @stick               vs stick               :    69.2  OK 
-  gripper mhz2_body @stick   vs stick               :    24.4  OK 
-  gripper far_arm @stick     vs stick               :     4.7  OK 
+  z_axis_body @stick         vs y_stage_body        :    98.0  OK 
+  arm_L @far column          vs wafer_tray          :    69.2  OK 
+  gripper mhz2_body @far col vs wafer_tray          :    24.4  OK 
+  gripper far_arm @far col   vs wafer_tray          :     4.7  OK 
+  gripper near_arm @far col  vs wafer_tray          :     4.7  OK 
   x_carriage @nest           vs nanomax300_in       :    73.5  OK 
   x_carriage @nest           vs fiber_holder_in     :    65.0  OK 
   z_axis_body @nest          vs fiber_holder_in     :    84.0  OK 

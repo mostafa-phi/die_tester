@@ -112,7 +112,7 @@ them with vendor STEP in Fusion.
 | **Z axis** (50–100 mm travel) | vertical on the X carriage; nest position carriage centre X −120 | Carriage end at X −69 vs NanoMax face at X −51 in the other Y band; 73 mm true clearance. |
 | **Arm** | 25 mm square L-bar from the Z carriage: +X to X −54, then +Y from the axis band to the die line; end plate over the gripper interface at Z 70–78 | Passes 7 mm outside the Ø40 tube; nothing of it enters the objective footprint. |
 | **Gripper module** | actuator body X −40…−20, Y −2…8; bars 5 mm above the die | Only the two 3 mm bars and the tip blocks enter the objective footprint. |
-| **Y stage** (105 mm travel) + stick | under the stick at X −296…−194, body Y −38…167; stick pockets along Y at 7.5 mm pitch; die in pocket at **X −250** | 11 mm from the X axis band; the gripper never crosses the fiber line. |
+| **Y stage** (105 mm travel) + **wafer tray** | tray of **8 columns × 14 rows = 112 pockets** (one 100 mm wafer), 128 × 106 mm, on the Y-stage deck; columns at die X **−150 … −262** (16 mm pitch), rows at 7.5 mm pitch; X selects the column, Y the row | Dies return to their own pocket after test (results live in the map); 11 mm from the X axis band; the gripper never crosses the fiber line. |
 
 ## Movement pattern (one exchange)
 
@@ -126,13 +126,20 @@ pocket position. Fibers are only ever moved by their own NanoMax stages.
 | 3 | Z | −8 mm: noses descend beside the die's end faces | — |
 | 4 | gripper | close (finger-on-finger stop; 0.32 N on the die) | — |
 | 5 | nest | rail vacuum off; **Z +8 mm** lifts the die | vacuum switch reads atmosphere |
-| 6 | X | −120 → **−370** (250 mm, along the die's long axis, front of the bench) | Z at +8 |
-| 7 | Y stage | brings pocket *k* to Y = 3 (±52.5 mm) | can pre-position during step 6 |
-| 8 | Z | −8 −3 mm: die onto the stick ledges (3 mm below nest height) | — |
+| 6 | X | −120 → −270 … **−382** (column *c* of the tray: 150 + 16·c mm along the die's long axis, front of the bench) | Z at +8 |
+| 7 | Y stage | brings row *r* to Y = 3 (±48.75 mm) | can pre-position during step 6 |
+| 8 | Z | −8 −3 mm: die onto the pocket ledges (3 mm below nest height) | — |
 | 9 | gripper | open (+1.5 mm per side) | — |
 | 10 | Z | +11 mm; then steps 6–9 in reverse with the next die; at the nest: rails vacuum on, jaws open, Z +8, camera pose, correction, fibers approach | seat detection by rail vacuum |
 
 Exchange time budget: ~20 s with lead-screw stages at 20 mm/s; the X move dominates.
+
+**Container assumption.** One wafer (~100–112 dies of 10 × 6 mm) = one tray. Pocket
+indices mirror the wafer map (row, column), so a die's identity is its pocket. The tray
+(128 × 106 × 6 mm, SLA-printed, lidded, DataMatrix on the rim) fits a Form 3 bed and a
+5″ wafer box. Physical pass/fail binning is not done at the tester; it is a map
+operation at the sorting station if ever needed. A second tray position along X would
+need +130 mm X travel and is the Month-2 option if two wafers must be resident.
 
 ## Compatibility results (from `station_checks.txt`)
 
@@ -146,8 +153,8 @@ Exchange time budget: ~20 s with lead-screw stages at 20 mm/s; the X move domina
   and above its actuator zone; X carriage 73 mm from it; Z tower 84 mm from the holder.
   The die's travel path (after the 8 mm lift) clears both holders by 3.6 mm and both
   fibers by 7.5 mm, and never crosses the fiber line.
-- **Stick side:** Z tower at the stick position 86 mm from the Y-stage body; the stick
-  walls 4.7 mm under the far bar at the placing height.
+- **Tray side:** Z tower at the farthest column 86 mm from the Y-stage body; the pocket
+  walls 4.7 mm under both bars at the placing height; X travel used 262 of 300 mm.
 
 ## Open dimensions to measure before ordering the axes and risers
 

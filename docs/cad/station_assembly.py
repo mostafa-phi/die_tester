@@ -40,10 +40,10 @@ S = dict(
     x_axis_cy=-100.0,              # X axis centre-line in Y (beside the input NanoMax, outside the fiber corridor)
     x_axis_riser=76.0,             # X axis sits on a riser ABOVE the NanoMax envelope (body top Z -10 .. +54)
     xc_nest=-120.0,                # X-carriage centre when the gripper is at the nest (carriage end X -69, NanoMax face X -51)
-    stick_x=-250.0,                # die X when in the stick pocket (X travel used: 250 mm)
     arm_sec=25.0,                  # square arm bar
-    # stick
-    stick_pitch=7.5, stick_n=14,
+    # wafer tray: one 100 mm wafer = 8 columns x 14 rows = 112 pockets, die returns to its own pocket after test
+    tray_cols=8, tray_rows=14, tray_col_pitch=16.0, tray_row_pitch=7.5,
+    tray_col0_x=-150.0,            # die X of the first (nearest) column; last column at -150 - 7*16 = -262
 )
 
 die_top = G.die_top
@@ -154,32 +154,39 @@ def z_carriage_and_arm(xc, z_iface_top, gx):
     return zc, ep.union(bar_y).union(bar_x)
 
 
-def y_stage_and_stick(stick_x, pocket_at_y):
-    """Y axis body under the stick deck, its carriage, deck and one stick (pockets along Y)."""
-    xw0, xw1 = stick_x + 5 - S["axis_w"] / 2, stick_x + 5 + S["axis_w"] / 2
+def y_stage_and_tray(active_col_x, active_row_y):
+    """Y axis body under the tray deck, its carriage, deck and the wafer tray (cols along X, rows along Y).
+    The tray is positioned so that the pocket in column 'active_col_x' (die X) and the active row sits at Y = active_row_y."""
+    nc, nr, pc, pr = S["tray_cols"], S["tray_rows"], S["tray_col_pitch"], S["tray_row_pitch"]
+    x_first = S["tray_col0_x"]                                       # die X of column 0 (nearest the nest)
+    tray_x0 = x_first - (nc - 1) * pc - 3.0                          # tray spans all columns (+3 mm rim)
+    tray_x1 = x_first + 13.0
+    tray_len_y = nr * pr + 1.5
+    tray_cx = (tray_x0 + tray_x1) / 2
+    xw0, xw1 = tray_cx - S["axis_w"] / 2, tray_cx + S["axis_w"] / 2
     yb0 = -38.0
     ybody = box(xw0, xw1, yb0, yb0 + S["y_body_len"], table_z, table_z + S["axis_h"])
     zc0 = table_z + S["axis_h"]
-    # carriage centred where the stick centre is now: the stick's pocket k sits at Y = pocket_at_y
-    n, p = S["stick_n"], S["stick_pitch"]
-    stick_len = n * p + 1.5
-    ycar_c = pocket_at_y                                            # place carriage under the active pocket
+    # carriage / tray placed so the active row is at active_row_y: active row = middle row here
+    ycar_c = active_row_y
     ycar = box(xw0, xw1, ycar_c - S["car_len"] / 2, ycar_c + S["car_len"] / 2, zc0, zc0 + S["car_t"])
-    deck = box(stick_x - 20, stick_x + 30, ycar_c - stick_len / 2 - 10, ycar_c + stick_len / 2 + 10, zc0 + S["car_t"], zc0 + S["car_t"] + 6)
-    # stick: die bottom on ledges at z_led
+    deck = box(tray_x0 - 8, tray_x1 + 8, ycar_c - tray_len_y / 2 - 8, ycar_c + tray_len_y / 2 + 8, zc0 + S["car_t"], zc0 + S["car_t"] + 6)
     z_top_deck = zc0 + S["car_t"] + 6
-    z_led = z_top_deck + 2.2 + 0.8                                   # ledge top
-    stick = box(stick_x - 3, stick_x + 13, ycar_c - stick_len / 2, ycar_c + stick_len / 2, z_top_deck, z_top_deck + 2.2)
-    # active pocket index chosen so that one pocket is centred at pocket_at_y: pockets at ycar_c + (k - (n-1)/2) * p
-    for k in range(n):
-        yc = ycar_c + (k - (n - 1) / 2) * p
-        y0 = yc - 3.0
-        stick = stick.union(box(stick_x, stick_x + 10, y0 + 0.4, y0 + 1.4, z_top_deck + 2.2, z_led))
-        stick = stick.union(box(stick_x, stick_x + 10, y0 + 4.6, y0 + 5.6, z_top_deck + 2.2, z_led))
-        stick = stick.union(box(stick_x - 3, stick_x + 13, yc - 3.75, yc - 3.05, z_top_deck + 2.2, z_led + 0.8))   # Y wall
-        stick = stick.union(box(stick_x - 3, stick_x - 2, y0 - 0.05, y0 + 6.05, z_top_deck + 2.2, z_led + 0.8))    # X end walls
-        stick = stick.union(box(stick_x + 12, stick_x + 13, y0 - 0.05, y0 + 6.05, z_top_deck + 2.2, z_led + 0.8))
-    return ybody, ycar, deck, stick, z_led
+    z_led = z_top_deck + 2.2 + 0.8                                   # ledge top = die bottom in the pocket
+    # slab to full wall height, cut all pocket cavities in ONE boolean, add all ledges in ONE boolean
+    tray = box(tray_x0, tray_x1, ycar_c - tray_len_y / 2, ycar_c + tray_len_y / 2, z_top_deck, z_led + 0.8)
+    cavities, ledges = [], []
+    for c in range(nc):
+        xd = x_first - c * pc                                        # die X for this column
+        for k in range(nr):
+            yc = ycar_c + (k - (nr - 1) / 2) * pr
+            y0 = yc - 3.0
+            cavities.append(box(xd - 2, xd + 12, y0 - 0.4, y0 + 6.4, z_top_deck + 2.2, z_led + 1.0).val())   # 14 x 6.8 cavity (2 mm jaw space each end)
+            ledges.append(box(xd, xd + 10, y0 + 0.4, y0 + 1.4, z_top_deck + 2.2, z_led).val())
+            ledges.append(box(xd, xd + 10, y0 + 4.6, y0 + 5.6, z_top_deck + 2.2, z_led).val())
+    tray = tray.cut(cq.Workplane().add(cq.Compound.makeCompound(cavities)))
+    tray = tray.union(cq.Workplane().add(cq.Compound.makeCompound(ledges)))
+    return ybody, ycar, deck, tray, z_led, (tray_x0, tray_x1, tray_len_y)
 
 
 # ----------------------------------------------------------------------------
@@ -235,23 +242,27 @@ def main():
     xcar, zbody = z_tower(xc)
     z_iface_top = G.body_z1 + G.P["top_t"]            # bracket top plate top (Z 70)
     zc, arm = z_carriage_and_arm(xc, z_iface_top, 0.0)
-    ybody, ycar, deck, stick, z_led = y_stage_and_stick(S["stick_x"], cy)
+    ybody, ycar, deck, stick, z_led, tray_ext = y_stage_and_tray(S["tray_col0_x"], cy)
     moving_nest = {"x_carriage": xcar, "z_axis_body_velmex": zbody, "z_carriage": zc, "arm_L_25sq": arm}
     grip_nest = gripper_at(0.0, 0.0)
 
-    # ---- moving, at STICK (second configuration) ----
-    xc2 = xc + S["stick_x"]
-    gz2 = z_led                                        # die bottom on the stick ledges
+    # ---- moving, at the FARTHEST tray column (second configuration; worst case for travel and the Z tower) ----
+    far_col_x = S["tray_col0_x"] - (S["tray_cols"] - 1) * S["tray_col_pitch"]
+    S["stick_x"] = far_col_x
+    xc2 = xc + far_col_x
+    gz2 = z_led                                        # die bottom on the tray ledges
     xcar2, zbody2 = z_tower(xc2)
-    zc2, arm2 = z_carriage_and_arm(xc2, z_iface_top + gz2, S["stick_x"])
-    grip_stick = gripper_at(S["stick_x"], gz2, open_mm=1.5)
+    zc2, arm2 = z_carriage_and_arm(xc2, z_iface_top + gz2, far_col_x)
+    grip_stick = gripper_at(far_col_x, gz2, open_mm=1.5)
 
     # ---- checks ----
     rep = []
     rep.append(f"table plane Z = {table_z:.1f} (die bottom = 0). Nest die top at {die_top}; fiber axis at {die_top} via holder {S['holder_axis_above_deck']} above NanoMax deck")
-    rep.append(f"X carriage: nest {xc:.0f} -> stick {xc2:.0f}  (travel used {abs(S['stick_x']):.0f} of {S['x_travel']:.0f} mm)")
-    rep.append(f"Z carriage: nest arm at Z {z_iface_top:.1f} -> stick at Z {z_iface_top + gz2:.1f} (drop {abs(gz2):.1f} mm) + 8 mm approach lift")
-    rep.append(f"Y stage: pocket pitch {S['stick_pitch']} x {S['stick_n']} pockets -> travel {S['y_travel']:.0f} mm")
+    rep.append(f"wafer tray: {S['tray_cols']} columns x {S['tray_rows']} rows = {S['tray_cols']*S['tray_rows']} pockets, "
+               f"{tray_ext[1]-tray_ext[0]:.0f} x {tray_ext[2]:.0f} mm; columns at die X {S['tray_col0_x']:.0f} .. {far_col_x:.0f} (pitch {S['tray_col_pitch']})")
+    rep.append(f"X carriage: nest {xc:.0f} -> farthest column {xc2:.0f}  (travel used {abs(far_col_x):.0f} of {S['x_travel']:.0f} mm)")
+    rep.append(f"Z carriage: nest arm at Z {z_iface_top:.1f} -> tray at Z {z_iface_top + gz2:.1f} (drop {abs(gz2):.1f} mm) + 8 mm approach lift")
+    rep.append(f"Y stage: row pitch {S['tray_row_pitch']} x {S['tray_rows']} rows -> travel {(S['tray_rows']-1)*S['tray_row_pitch']:.1f} mm (axis {S['y_travel']:.0f})")
     pairs = [
         ("gripper far_arm @nest", grip_nest["far_arm"], "objective", static["objective"]),
         ("gripper near_arm @nest", grip_nest["near_arm"], "objective", static["objective"]),
@@ -268,9 +279,10 @@ def main():
         ("x_axis_body", xax, "nanomax300_in", static["nanomax300_in"]),
         ("x_axis_body", xax, "y_stage_body", ybody),
         ("z_axis_body @stick", zbody2, "y_stage_body", ybody),
-        ("arm_L @stick", arm2, "stick", stick),
-        ("gripper mhz2_body @stick", grip_stick["mhz2_body"], "stick", stick),
-        ("gripper far_arm @stick", grip_stick["far_arm"], "stick", stick),
+        ("arm_L @far column", arm2, "wafer_tray", stick),
+        ("gripper mhz2_body @far col", grip_stick["mhz2_body"], "wafer_tray", stick),
+        ("gripper far_arm @far col", grip_stick["far_arm"], "wafer_tray", stick),
+        ("gripper near_arm @far col", grip_stick["near_arm"], "wafer_tray", stick),
     ]
     pairs += [
         ("x_carriage @nest", xcar, "nanomax300_in", static["nanomax300_in"]),
@@ -339,15 +351,15 @@ def main():
         "objective": (0.20, 0.23, 0.27), "microscope_tube": (0.25, 0.28, 0.32), "microscope_arm": (0.77, 0.79, 0.82), "microscope_column": (0.77, 0.79, 0.82),
         "x_axis_body_velmex": (0.56, 0.69, 0.82), "die_at_nest": (0.81, 0.89, 0.97),
         "x_carriage": (0.18, 0.31, 0.44), "z_axis_body_velmex": (0.56, 0.69, 0.82), "z_carriage": (0.18, 0.31, 0.44), "arm_L_25sq": (0.18, 0.31, 0.44),
-        "y_stage_body": (0.56, 0.69, 0.82), "y_carriage": (0.18, 0.31, 0.44), "stick_deck": (0.60, 0.63, 0.68), "stick": (0.85, 0.81, 0.68),
+        "y_stage_body": (0.56, 0.69, 0.82), "y_carriage": (0.18, 0.31, 0.44), "tray_deck": (0.60, 0.63, 0.68), "wafer_tray": (0.85, 0.81, 0.68),
     }
     for n, s in static.items(): assy.add(s, name=n, color=cq.Color(*col[n], 1.0))
     for n, s in moving_nest.items(): assy.add(s, name=n, color=cq.Color(*col[n], 1.0))
-    for n, s in {"y_stage_body": ybody, "y_carriage": ycar, "stick_deck": deck, "stick": stick}.items(): assy.add(s, name=n, color=cq.Color(*col[n], 1.0))
+    for n, s in {"y_stage_body": ybody, "y_carriage": ycar, "tray_deck": deck, "wafer_tray": stick}.items(): assy.add(s, name=n, color=cq.Color(*col[n], 1.0))
     for n, s in grip_nest.items(): assy.add(s, name=f"gripper_{n}", color=cq.Color(0.25, 0.25, 0.27, 1.0))
-    for n, s in {"x_carriage_at_stick": xcar2, "z_axis_at_stick": zbody2, "z_carriage_at_stick": zc2, "arm_at_stick": arm2}.items():
+    for n, s in {"x_carriage_at_far_col": xcar2, "z_axis_at_far_col": zbody2, "z_carriage_at_far_col": zc2, "arm_at_far_col": arm2}.items():
         assy.add(s, name=n, color=cq.Color(0.18, 0.31, 0.44, 0.25))
-    for n, s in grip_stick.items(): assy.add(s, name=f"gripper_at_stick_{n}", color=cq.Color(0.25, 0.25, 0.27, 0.25))
+    for n, s in grip_stick.items(): assy.add(s, name=f"gripper_at_far_col_{n}", color=cq.Color(0.25, 0.25, 0.27, 0.25))
     assy.add(keepout(), name="objective_keepout", color=cq.Color(0.85, 0.64, 0.25, 0.25))
     assy.save(os.path.join(OUT, "station_assembly.step"))
 
