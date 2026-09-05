@@ -75,9 +75,10 @@ days.
 - **Day 1 (M+S):** order the linear stages, gripper, regulator/valves, vacuum switch, dicing of
   blank dies, ionizer. Ask the dicing vendor: tape type (UV‑release?), post‑dicing
   street width, film‑frame size, die thickness distribution.
-- **Day 1–3 (M):** CAD the nest, fingers, sticks from Figs. 3–4 and the 3‑D model
-  (`docs/die_handling_3d.html`). Send nest and fingers to machining; print sticks
-  in‑house or send out.
+- **Day 1–3 (M):** review and release the gripper CAD package (`docs/cad/`, parametric
+  CadQuery model, STEP/STL per part, assembly with the MHZ2‑6D stand‑in); CAD the nest
+  and sticks from Figs. 3–4. Send arms, tip blocks, bracket and nest to machining; print
+  sticks in‑house or send out.
 - **Day 2–5 (M):** measure on the tester: objective working distance and barrel
   diameter, fiber‑holder envelope, safe retract distance, chuck mounting interface.
   Enter them into the 3‑D model's sliders; confirm the gripper bridge clears the

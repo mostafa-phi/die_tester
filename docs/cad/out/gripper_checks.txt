@@ -1,0 +1,11 @@
+closed nose gap            : 9.870 mm (die 10.000 -> blade preload 0.130 mm)
+open nose gap              : 13.87 mm (2.0 mm per side)
+flexure stiffness          : 2.46 N/mm  (t=0.127 mm, w=3.0 mm, L=5.0 mm)
+grip force                 : 0.32 N  +/- 0.06 N for die length +/- 0.025 mm
+nose top below die top     : 0.100 mm
+far bar top above die top  : 8.00 mm  (far bar lane Y 4.8..7.8, near lane Y -1.8..1.2)
+near head X extent         : -5.73 .. -0.73
+near head top above die top: 9.00 mm  <- tallest tool part inside objective footprint
+actuator body X extent     : -36.0 .. -16.0 (objective footprint -12 .. 22)
+module height above die top: 69.5 mm (to interface plate top)
+body Y extent              : -2.0 .. 8.0  (fiber clamps at Y <= -12 and >= 18)
