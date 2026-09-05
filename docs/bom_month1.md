@@ -3,8 +3,9 @@
 Companion to `prototype_plan_month1.md`. Every line is an orderable part or a quote
 request to a named vendor. Prices are US list/street prices checked in September 2026
 unless marked **quote**; lead times are for in‑stock items. Total for everything to
-order now: **≈ $9–11 k** (≈ $6–7 k if the lab already has a manual XYZ stage, house
-vacuum and compressed air).
+order now: **≈ $13–16 k** (≈ $10–12 k if the lab already has a manual XYZ stage, house
+vacuum and compressed air); the transfer axes are the largest item and are also the
+production kinematics.
 
 **Check before ordering (day 0):**
 1. Is there compressed air (or nitrogen at ≥ 0.3 MPa) at the bench? If yes, skip A6.
@@ -19,8 +20,9 @@ vacuum and compressed air).
 
 | # | Item | Exact part | Vendor | Unit price | Qty | Lead | Why this one |
 |---|---|---|---|---|---|---|---|
-| A1 | Prototype robot | **Dobot MG400** (4‑axis desktop SCARA, 440 mm reach, ±0.05 mm, 500 g rated / 750 g max payload, 16 × 24 V DI + 16 × 24 V DO on the base, TCP/IP) | RobotLAB (US) $2,890 incl. suction tool + 1‑yr support; also RobotShop, Dobot US | $2,890 | 1 | 1–2 wk | Cheapest robot with the accuracy, a real TCP/IP API (Dobot‑Arm/TCP‑IP‑4Axis‑Python on GitHub, ports 29999/30003/30004) and enough 24 V I/O to run valves and sensors directly. Controller firmware must be ≥ V1.6.0.0 for the TCP ports. |
-| A2 | Gripper actuator | **SMC MHZ2‑6D‑M9N** (ø6 parallel gripper, 4 mm total stroke, 0.15–0.7 MPa, with two D‑M9N solid‑state position switches) | SMC USA / Motion / Southern Controls / RS | ~$60–120 gripper; ~$40 per switch | 2 (one spare) | in stock | Its 3.3 N external force is irrelevant: the die load is set by the flexure jaw (see fingers). Two switches give "closed on die" vs "closed empty" = die‑present detection. Confirm N (NPN) vs P (PNP) against the MG400 DI polarity in the hardware manual; order ‑M9P if needed. |
+| A1 | Transfer axes (prototype **and** production kinematics) | **Bench‑level 3‑axis Cartesian from motorized linear stages.** Option 1: **Zaber X‑LSM150A‑E03** ×2 (X and Y, 150 mm, built‑in controllers, daisy‑chain) + **X‑LSM050A‑E03** (Z, 50 mm) + X‑MCC/USB cable kit; Zaber Motion Library (Python). Option 2: **Thorlabs LTS150/M** ×2 + **MTS50‑Z8** (Z) with KDC101 cube; Kinesis Python. Option 3: **Suruga Seiki KXL06** linear stages on a second **DS102** controller — driven by the existing `SurugaSeikiDS102` class with no new driver. | Zaber direct (NA pricing on request); Thorlabs; Suruga Seiki USA | **quote** — ≈ $7–10 k for 3 axes any option | 1 set | Zaber 2–4 wk; Thorlabs in stock; Suruga quote | The tool must enter a ~13 mm corridor under the objective horizontally along die X. A low X axis carrying a short Z and a horizontal gripper arm does exactly that; the stages never enter the microscope or fiber volumes and the swept volume is a box. No θ axis: jaw axis stays parallel to die X at every station. Same kinematics scale to the production cell (longer axes), so nothing is discarded after Month 1. |
+| A1b | Bench‑only fallback robot (only if A1 lead time > 3 weeks) | **Dobot MG400** (articulated desktop arm: J2/J3 pitch in a vertical plane, parallelogram wrist, ±0.05 mm, 24 V DIO, TCP/IP) | RobotLAB $2,890; RobotShop; Dobot US | $2,890 | 0–1 | 1–2 wk | Fine for the stick → nest → stick cycling rig where there is no microscope. **Not for the tester**: its forearm approaches from above and behind, into the microscope column's volume, and it is not a horizontal‑plane SCARA. |
+| A2 | Gripper actuator | **SMC MHZ2‑6D‑M9N** (ø6 parallel gripper, 4 mm total stroke, 0.15–0.7 MPa, with two D‑M9N solid‑state position switches) | SMC USA / Motion / Southern Controls / RS | ~$60–120 gripper; ~$40 per switch | 2 (one spare) | in stock | Its 3.3 N external force is irrelevant: the die load is set by the flexure jaw (see fingers). Two switches give "closed on die" vs "closed empty" = die‑present detection. Sensors and valves wire to the stage controllers' digital I/O (Zaber X‑MCC / Thorlabs KDC101 trigger lines) or to the NI USB‑6363 via a 24 V ↔ 5 V isolator module; confirm N/P polarity accordingly. |
 | A3 | Jaw fingers + flexure | **Custom**: 2 aluminum 6061 fingers per Fig. 3 (stepped nose 0.35 mm, 0.6 mm set‑back, ≥ 13 mm long), one rigid, one carrying a spring‑steel flexure blade (k ≈ 3 N/mm) with a hard stop; jaw inserts machined from **Semitron ESd 480** (static‑dissipative PEEK) | Protolabs / Xometry CNC; Semitron from Boedeker or Professional Plastics (cut‑to‑size rod/sheet, in stock) | quote (~$300–600 incl. material) | 2 sets | 5–7 working days | Force = k × (δ + die tolerance) ⇒ 0.3 ± 0.08 N for ±25 µm dies, independent of air pressure. Semitron ESd 480 is the standard dissipative jaw material for bare‑die handling. |
 | A4 | Test nest | **Custom**: 17‑4 PH H900 (or 6061 hard‑anodized) block per Fig. 4 — two rails 0.9 × 1.5 × 10 mm at 1.0 mm inboard of the facet planes, rail tops lapped flat ≤ 5 µm, 4 × Ø0.6 mm vacuum ports per rail into a common M5 port, deck ≥ 0.4 mm below jaw bottoms, ≥ 1.6 mm free beyond each end face; bolt pattern for B3 kinematic base | Protolabs / Xometry CNC (lapping in‑house on a granite plate with 3 µm diamond film, or a local lapping shop) | quote (~$400–800) | 1 (+1 spare rail insert if two‑piece) | 1 wk | The one precision part. Two‑piece (base + rail insert) is recommended so rails can be re‑lapped or re‑made without the base. |
 | A5 | Storage sticks | **Custom SLA print**: 14‑pocket stick per Fig. 4 (ledges 1.0 mm wide under the facet‑edge strips, 0.8 mm tall; jaw slots 2 mm beyond each end face; Y walls at 0.4 mm clearance; center channel left open; lid). Material: Formlabs **Rigid 10K** if a Form 3/4 is in house, else Protolabs Accura Xtreme / Somos WaterShed | In‑house printer or Protolabs SLA | ~$50–150 each | 6 | 2–4 days | Cheap enough to iterate weekly. Include a 1 mm scale bar and pocket numbers in the print for the camera. |
@@ -41,19 +43,19 @@ vacuum and compressed air).
 | B5 | Gripper valve | **SMC SY3120‑5LZ‑M5** (5/2, 24 VDC, M5 ports) | Zoro / RS / Automation Distribution | $48–67 | 2 | One for the gripper, one spare (or as 3/2 for vacuum). |
 | B6 | Vacuum valve | **SMC VQ110‑5L‑M5** (3/2, 24 VDC) or a second SY3120 plumbed 3‑port | SMC distributors | ~$50–70 | 1 | Nest rail vacuum on/off. |
 | B7 | Precision regulator (gripper supply) | **SMC IR1000‑01** (0.005–0.2 MPa) — or **IR1010‑01** (0.01–0.4 MPa) for headroom | SMC distributors / Automation Distribution | ~$120–180 | 1 | Gripper runs at 0.15–0.2 MPa; force still comes from the flexure. |
-| B8 | Vacuum switch (seat sensing) | **SMC ZSE30A‑01‑N‑L** (or ‑N01‑P for PNP, NPT) digital vacuum switch, 0 to −101 kPa | Next Day Automation / Automation Distribution | $60–85 | 1 | Threshold output → MG400 DI. |
+| B8 | Vacuum switch (seat sensing) | **SMC ZSE30A‑01‑N‑L** (or ‑N01‑P for PNP, NPT) digital vacuum switch, 0 to −101 kPa | Next Day Automation / Automation Distribution | $60–85 | 1 | Threshold output → controller / DAQ digital input (via isolator). |
 | B9 | Fittings & tubing | SMC **KQ2H04‑M5** (M5 → Ø4 one‑touch) ×10, **KQ2H04‑01S** ×4, **TU0425BU‑20** Ø4 PU tubing 20 m, **KQ2T04‑00A** tees ×4 | SMC distributors / McMaster | ~$80 | — | |
-| B10 | 24 V supply | **Mean Well LRS‑50‑24** | Digi‑Key / Mouser | ~$15 | 1 | Valves and sensors; MG400 DO can also source 24 V at ≤ 500 mA/ch. |
+| B10 | 24 V supply + I/O | **Mean Well LRS‑50‑24**; if using the NI USB‑6363 for valves/sensors add a 4‑ch 24 V relay/isolator module (e.g., Phoenix Contact PLC‑RSC‑24DC/21 ×2 for valves, and 24 V→5 V optocoupler inputs for the M9 switches) | Digi‑Key / Mouser | ~$80 | 1 | Zaber and Thorlabs controllers also expose digital I/O usable for the valves. |
 | B11 | Jaw force check | **American Weigh Scales GEMINI‑20** (0.001 g pocket scale) | Amazon | ~$25 | 1 | 0.3 N = 30 g on the pan; sets the flexure preload. |
 | B12 | End‑face tweezers (manual stick loading) | **Ideal‑tek 2ACFR.SA.1** with **A2ACF** carbon‑fiber flat tips | TestEquity / TEquipment | ~$50 | 3 | The only approved hand tool near dies: flat ESD tips on the end faces. |
 | B13 | Bench inspection camera | **Dino‑Lite AM7915MZT** (5 MP, 20–220×, EDOF) | Mega Depot / Microscope.com | **quote** (~$900–1,100) | 1 (optional) | Only if the existing microscope cannot be used at the bench rig. |
-| B14 | Robot pedestal | 20 mm aluminum plate 300 × 300 mm, tapped for the MG400 base (190 × 190 mm footprint) and ¼‑20 grid | Protolabs / McMaster + in‑house tapping | ~$150 | 1 | Off the optical table; height set so the MG400 Z range covers nest and stick tops. |
+| B14 | Axis mounting | Thorlabs / Zaber adapter plates and a 90° bracket for the Z stage; 20 mm aluminum riser plate under the X axis so the gripper arm meets nest and stick heights | Thorlabs / McMaster + in‑house tapping | ~$250 | 1 | X axis runs along the exchange direction beside the nest, at bench level, outside both fiber corridors. |
 
 ## C. Not this month — price‑checked for Month 2 planning
 
 | Item | Part | Price / lead | Use |
 |---|---|---|---|
-| Production robot | **Epson T3‑B** all‑in‑one SCARA (400 mm, 3 kg, ±0.02 mm) | $7,495; typically < 4 wk, up to 6–8 wk | Replaces the MG400 in the tester cell if Month 1 passes. |
+| Production transfer axes | Longer versions of A1 (X 300 mm, Y 300 mm, Z 60 mm) — same vendor and software as the prototype | quote (~$10–14 k) | Scale‑up of the Month‑1 Cartesian; a SCARA (Epson T3‑B, $7,495) is only an option with an offset gripper bar, since its vertical quill lands at the die end where the objective barrel is. |
 | Film‑frame expander (if the vendor does not pre‑expand) | **Dynatex DXE 5** (≤ 150 mm) or **DXE 9** (≤ 200 mm); **Ultron UH130** semi‑automatic | quote (used manual units ~$2–5 k) | Sorting station. |
 | UV cure box (if the vendor does not pre‑cure) | **Ultron UH102‑8** | quote (used units on eBay) | Sorting station. |
 | Electric gripper (only if air proves impossible) | **Schunk EGP 25‑N‑N‑B** (3 mm/jaw, 20–40 N) | ~$1.5–2 k, 2–4 wk | Same flexure fingers; force still spring‑limited. |
@@ -90,7 +92,7 @@ So:
    end‑face tweezers or the gripper on the manual XYZ, needle‑eject from below where
    needed, into the sticks. Five hours per 300‑die batch is acceptable and it is the
    same handling you do today, only safer.
-2. **Month 2–3:** semi‑automate in‑house with the **same MG400 and gripper** you already
+2. **Month 2–3:** semi‑automate in‑house with the **same Cartesian axes and gripper** you already
    own, plus a manual ejector under the frame — the incremental cost is a used expander
    (or none if the vendor keeps expanding for you).
 3. **In parallel, qualify APD as a backup:** give them two sticks, two pairs of end‑face

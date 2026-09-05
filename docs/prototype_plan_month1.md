@@ -7,7 +7,7 @@ times, without damage, with nobody touching the die**. End the month with an
 unattended N‑die loop running on the current tester.
 
 **What the month deliberately does not include:** the enclosure, the stick hotel, the
-production SCARA, the X‑Y‑θ correction stage, automated tape pick, error‑recovery
+production‑length axes, the X‑Y‑θ correction stage, automated tape pick, error‑recovery
 software beyond "stop and alarm". Those are Month 2–3 and they all depend on Month 1's
 answer.
 
@@ -24,7 +24,7 @@ redirects to the backside tongue and everything downstream changes. So:
 1. **First:** the **gripper + nest + stick** contact system, cycled by hand on a manual
    stage before any robot exists. This answers the damage question in week 2 regardless
    of robot lead time.
-2. **Second:** the same gripper on a cheap, fast‑to‑get robot doing **A → B → A**
+2. **Second:** the same gripper on the 3‑axis Cartesian doing **A → B → A**
    (stick → nest → stick) for hundreds of cycles with placement statistics from the
    camera.
 3. **Third:** the nest at the real optical station, fibers interlocked, the existing
@@ -47,14 +47,14 @@ Prices are indicative US list prices; lead times are typical for in‑stock item
 
 | Item | Choice | Alternative | Approx. cost | Lead time |
 |---|---|---|---|---|
-| **Prototype robot** | Dobot MG400 — 4‑axis desktop SCARA, 440 mm reach, ±0.05 mm, 750 g payload, 24 V DIO, TCP/IP protocol with Dobot's Python examples | Small Cartesian from Zaber/Thorlabs stepper stages (higher cost, longer build) | ~$3.5–4 k | 1–2 weeks |
-| **Production robot (decide end of month, order Month 2)** | Epson T3‑B or T6‑B SCARA, ±0.02 mm, integrated controller | Yamaha YK‑XE, Denso LPH | ~$9–12 k | 4–8 weeks |
+| **Transfer axes** | Bench‑level 3‑axis Cartesian from motorized linear stages (Zaber X‑LSM, Thorlabs LTS150, or Suruga KXL06 on a DS102) — gripper arm enters under the objective along die X; no θ | Dobot MG400 for the bench‑only rig if lead time slips (not at the tester: articulated arm approaches from above/behind into the microscope volume) | ~$7–10 k | 2–4 weeks |
+| **Production transfer axes (Month 2)** | Longer versions of the same Cartesian (X 300, Y 300, Z 60 mm), same software | SCARA only with an offset gripper bar (vertical quill lands where the objective barrel is) | ~$10–14 k | 3–6 weeks |
 | **Gripper actuator** | SMC MHZ2‑6D pneumatic parallel gripper (4 mm total stroke) + precision regulator (SMC IR1000) + 5/2 valve (SY3120) + D‑M9 position sensors | Electric: Schunk EGP 25 or Zimmer GEP2010 (no air needed) | ~$300 pneumatic / ~$1.5–2 k electric | in stock / 2–4 weeks |
 | **Jaw fingers** | Custom aluminum fingers with PEEK or Vespel SP‑1 inserts; stepped nose per Fig. 3; **one finger on a flexure or pivot with a 0.3 N spring stop** so grip force is set by the spring, not by air pressure | Bare PEEK fingers (no compliance) for the very first trial | ~$300–600 | 5–7 days (Protolabs/Xometry) or in‑house |
 | **Nest** | 17‑4 PH or hard‑anodized 6061 block: two rails 0.9 × 1.5 × 10 mm, 1 mm inboard of facets, lapped tops, vacuum ports, deck ≥ 0.4 mm below jaw bottoms, kinematic feet | Two‑piece (base + rail insert) if lapping is easier | ~$400–800 | 1 week |
 | **Vacuum** | Lab house vacuum or KNF N86 micro pump; SMC ZSE30A digital vacuum switch (seat sensing); 3/2 valve | — | ~$400 | in stock |
 | **Sticks** | SLA print (Formlabs Rigid 10K or Protolabs Accura): ledges, jaw slots, **and** the open center channel (keeps the tongue fallback alive); 14 pockets | Machined PEEK later | ~$50–150 per stick | 2–4 days |
-| **I/O** | Existing NI USB‑6363 digital lines for valves and sensors (already in `src/NIDAQPowermeter.py` stack), or the MG400's own DIO | Arduino | $0 | — |
+| **I/O** | Stage‑controller digital I/O (Zaber X‑MCC / Thorlabs KDC101 triggers) or the existing NI USB‑6363 lines with a 24 V isolator module | Arduino | ~$80 | — |
 | **Vision** | Existing overhead microscope camera + `ChipAlignmentController` template/edge methods for pose at the nest; a USB microscope for the bench rig | — | ~$100 | in stock |
 | **Test dies** | (a) 50 diced silicon blanks 10 × 6 × 0.5 mm for cycling; (b) 20 diced LN blanks for contact realism; (c) 10–20 **scrap real TFLN dies** for damage tests | — | ~$300–800 (dicing service) | 1 week |
 | **ESD** | Bench ionizer (Simco‑Ion Aerostat PC or similar), grounded fixtures, dissipative jaw inserts | — | ~$600–900 | in stock |
@@ -72,7 +72,7 @@ days.
 
 ### Week 1 — decide, order, draw, and start the contact question
 
-- **Day 1 (M+S):** order robot, gripper, regulator/valves, vacuum switch, dicing of
+- **Day 1 (M+S):** order the linear stages, gripper, regulator/valves, vacuum switch, dicing of
   blank dies, ionizer. Ask the dicing vendor: tape type (UV‑release?), post‑dicing
   street width, film‑frame size, die thickness distribution.
 - **Day 1–3 (M):** CAD the nest, fingers, sticks from Figs. 3–4 and the 3‑D model
@@ -82,8 +82,9 @@ days.
   diameter, fiber‑holder envelope, safe retract distance, chuck mounting interface.
   Enter them into the 3‑D model's sliders; confirm the gripper bridge clears the
   objective or plan the retracting column now.
-- **Day 2–5 (S):** robot driver skeleton (`HandlingRobot` interface + `DobotMG400`
-  implementation over TCP), NI‑DAQ digital I/O for valves/sensors, a `Interlock` class
+- **Day 2–5 (S):** transfer‑axes driver skeleton (`HandlingRobot` interface + a `CartesianXYZ`
+  implementation over Zaber Motion Library / Kinesis / the existing `SurugaSeikiDS102`),
+  digital I/O for valves/sensors, a `Interlock` class
   that refuses robot motion unless both fiber Z axes report the retracted position
   (reuse `DieTesterStage` queries).
 - **Day 4–5 (M):** build the manual rig: gripper on the manual XYZ, nest and one stick
@@ -105,9 +106,9 @@ days.
 
 ### Week 3 — robot A → B → A
 
-- **Days 11–12 (M):** robot arrives; mount on a pedestal beside the bench plate; mount
-  gripper; teach nest and stick pocket frames using the camera (touch‑off with a
-  dummy die).
+- **Days 11–12 (M):** stages arrive; assemble X–Z–arm beside the bench plate, Y under the
+  sticks (or as third axis); mount gripper; teach nest and stick pocket coordinates using
+  the camera (touch‑off with a dummy die).
 - **Days 12–14 (S):** `exchange_die(from_pocket, to_nest)` primitive: approach height,
   descend, close, lift, carry, descend, open, rise; jaw sensors confirm die‑present;
   vacuum switch confirms seat; abort‑and‑alarm on any mismatch.
@@ -121,8 +122,9 @@ days.
 
 - **Days 16–17 (M):** mount the nest at the tester's optical position (adapter to the
   current sample‑stage top, or directly to the table if the stage is removed for the
-  trial). Robot pedestal at −X of the nest, outside the fiber corridors. Objective
-  clearance verified against the measured working distance.
+  trial). X axis at −X of the nest at bench level, outside the fiber corridors; the
+  gripper arm's height under the objective verified against the measured working
+  distance in the 3‑D model.
 - **Days 17–18 (S):** integrate the interlock with the real fiber Z axes; `run_all_dies`
   loop = retract → exchange → pose measure → fiber offset from pose → existing first
   light → existing `run_all_waveguides` (a short device subset) → retract → return die.
@@ -152,7 +154,7 @@ days.
 
 | Module | Purpose |
 |---|---|
-| `src/handling/robot.py` | `HandlingRobot` abstract interface (move_to, grip, release, home, status); `DobotMG400` over TCP; later `EpsonSCARA`. |
+| `src/handling/robot.py` | `HandlingRobot` abstract interface (move_to, grip, release, home, status); `CartesianXYZ` over Zaber Motion Library / Kinesis / `SurugaSeikiDS102`. |
 | `src/handling/io.py` | Valves, vacuum switch, jaw sensors on NI‑DAQ digital lines. |
 | `src/handling/interlock.py` | Fiber‑retracted and objective‑clear checks from `DieTesterStage`; a single `permit_robot_motion()` gate used by every robot call. |
 | `src/handling/nest.py` | Nest vacuum on/off, seat detection, `measure_die_pose()` via existing camera + template matching. |
@@ -165,7 +167,7 @@ days.
 
 | Risk | Mitigation in Month 1 |
 |---|---|
-| Robot lead time slips | Hand cycling answers the damage question without the robot; a Zaber/Thorlabs Cartesian is the backup order if the MG400 date passes 2 weeks. |
+| Stage lead time slips | Hand cycling answers the damage question without any axes; Thorlabs LTS150 is the in‑stock fallback; a Dobot MG400 can run the bench‑only rig but never goes to the tester. |
 | End‑face gripping marks or chips the dies | Flexure‑limited force, dissipative PEEK inserts, inspection every 50 cycles; **tongue fallback** already designed and the sticks carry its channel. |
 | Objective collides with gripper bridge | Measure WD in week 1; if < bridge + 3 mm, either shorten fingers (low bridge) or add a manual Z‑retract of the microscope column for the trial. |
 | Vision pose is not repeatable enough | Fall back to two end‑face pins + retracting finger on the nest (concept study §3 option); fiber stages absorb Y. |
@@ -176,6 +178,6 @@ days.
 
 ## 7. What Month 2 looks like if Month 1 passes
 
-Order the production SCARA; build the stick hotel and enclosure; film‑frame expander +
+Order the longer production axes; build the stick hotel and enclosure; film‑frame expander +
 UV box + ejector for the sorting station using the same gripper; X‑Y‑θ correction stage
 under the nest; error‑recovery states in `campaign.py`; first lights‑out overnight run.

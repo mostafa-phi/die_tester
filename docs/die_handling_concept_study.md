@@ -1,6 +1,6 @@
 # System Redesign Study — Batch Edge-Coupled Testing of Hundreds of 10 × 6 mm Photonic Dies
 
-**Status:** concept study for review (pre-CAD), rev. 2.4
+**Status:** concept study for review (pre-CAD), rev. 2.5
 **Scope:** ground-up redesign of the die-tester stage and handling system. The current
 machine is architected around a single manually loaded die; this study treats the whole
 stage system as open for redesign and asks what a machine looks like when the unit of
@@ -24,7 +24,10 @@ gripper) is defined, and the edge gripper is recorded as a candidate tester tool
 Rev. 2.4 decides on **one end-face edge gripper for every handling step**, demotes the
 backside tongue to a documented fallback, and adds the sketches: sorting-station layout,
 ejector/jaw pick section, contact zones with stepped-jaw detail, and nest/stick jaw
-clearance (`docs/images/fig1…fig4`).
+clearance (`docs/images/fig1…fig4`). Rev. 2.5 replaces the SCARA with a bench-level
+3-axis Cartesian for the tester: the gripper must enter a straight ~13 mm corridor under
+the objective, a SCARA's vertical quill lands where the objective barrel is, and the
+articulated desktop arm first proposed for prototyping approaches from above and behind.
 
 Coordinate convention follows the brief: **X** = 10 mm die dimension, **Y** = 6 mm die
 dimension (optical propagation; fibers approach along ±Y), **Z** = vertical, **θ** =
@@ -195,15 +198,15 @@ Three full-system concepts plus one deliberate inversion. All share the §3 nest
 differ in storage format and transfer mechanism — which is exactly where the brief says
 the freedom is.
 
-### S1 — Stick hotel + SCARA pick-and-place into the fixed nest  *(recommended)*
+### S1 — Stick hotel + Cartesian pick-and-place into the fixed nest  *(recommended)*
 
 **Storage:** dies sit in **slotted carrier sticks** (§6a) whose pockets support the die
 on its backside only and leave a channel under the center open at both ends. A hotel
 deck holds 6–10 sticks (input, pass, fail, regrade) — ≥ 100–200 dies resident. Sticks
 are loaded at a bench, ideally by the dicing vendor.
 
-**Transfer:** a 4-axis **SCARA** (~400–600 mm reach, ±0.02 mm class, integrated
-controller) carrying a stepped-jaw **end-face edge gripper** (§6a, Fig. 3) that takes the
+**Transfer:** a bench-level **3-axis Cartesian** (motorized linear stages, µm class)
+carrying a stepped-jaw **end-face edge gripper** (§6a, Fig. 3) on a low arm that takes the
 die by the middle of its two non-optical X-end faces, lifts it off the pocket ledges or
 nest rails, and carries it. No top-surface or facet contact at any point. Placement
 scatter of a few tenths of a mm in Y is closed by vision registration at the nest; X
@@ -296,7 +299,7 @@ with that trigger condition; otherwise rejected.
 
 Ratings: ● strong / ◐ adequate / ○ weak.
 
-| Criterion | S1 hotel + SCARA + 1 nest | S2 pallet cassette line | S3 batch combs | S4 moving head |
+| Criterion | S1 hotel + Cartesian + 1 nest | S2 pallet cassette line | S3 batch combs | S4 moving head |
 |---|---|---|---|---|
 | Dies resident per operator interaction | 100–200 ● | 100–400 (cassettes) ● | 25–60 ◐ | 25–60 ◐ |
 | Operator minutes per 100 dies | ~5 (stick swaps) ● | ~60–100 (pallet mounting) ○ | ~30 (comb loading) ◐ | ~30 ◐ |
@@ -344,10 +347,10 @@ Ratings: ● strong / ◐ adequate / ○ weak.
   measured (§8) a fixed column is plausible but not yet certain. In both cases the
   objective-to-die gap is a hard interlock input for the robot, exactly like fiber
   retract.
-- **Transfer:** a small 4-axis **SCARA** on its own pedestal beside the optical table,
-  carrying the stepped-jaw **end-face edge gripper** that descends beside the die's X
-  ends — the only sides not occupied by fiber arms (±Y) — grips the end-face middles
-  and lifts the die off its rails. Selection rationale, tool geometry and alternatives
+- **Transfer:** a bench-level **3-axis Cartesian** beside the optical table, carrying the
+  stepped-jaw **end-face edge gripper** on a low horizontal arm that enters under the
+  objective along X — the only direction not occupied by fiber arms (±Y) — descends
+  beside the die's end faces, grips their middles and lifts the die off its rails. Selection rationale, tool geometry and alternatives
   are in §6a. The fiber arms park retracted and the objective gap is confirmed before
   the jaws may descend; all states are interlocked.
 - **Storage:** custom **carrier sticks** (§6a, Fig. 4) whose pockets present the same
@@ -423,16 +426,23 @@ from the diced wafer on tape at the **tape-to-stick sorting station** (§6b), wh
 the same gripper — the one bare-die handling step outside the tester. Preferably the
 dicing vendor performs it and delivers loaded sticks.
 
-**Robot type: 4-axis SCARA.** The task is a vertical approach beside the die, a grip, a
-lift of a few tenths of a millimetre to a few millimetres, and a carry of 300–450 mm —
-native SCARA motion — at ±0.3 mm / ±1° placement accuracy with a payload in grams.
+**Transfer axes: bench-level 3-axis Cartesian (rev. 2.5; supersedes the SCARA choice).**
+The gripper must enter a ~13 mm wide corridor under the objective, horizontally along
+die X, with fiber arms occupying ±Y. That is a straight-line task, and the machine for it
+is a linear axis: an X axis along the exchange direction at bench level, carrying a
+short Z and a low horizontal gripper arm; a Y axis (or a stage under the sticks) to
+index pockets; no θ — the jaw axis stays parallel to die X at every station. The
+stages never enter the microscope or fiber volumes and the swept volume is a box that
+can be drawn on the table and interlocked.
 
 | Option | Verdict |
 |---|---|
-| **4-axis SCARA** (Epson T3/T6, Yamaha, Denso class; ~400–600 mm reach, ±0.02 mm, integrated controller, Ethernet API) | **Selected.** Compact pedestal footprint beside the table; integrated safety/controller; J4 (θ) keeps the jaw axis parallel to die X at every station. A Dobot MG400-class unit (~±0.05 mm, 440 mm reach, Python SDK) is an acceptable prototyping stand-in with identical geometry. |
-| Overhead Cartesian gantry | Rejected for the tester: the bridge must live above the cell, exactly where the microscope column and the two ~200 mm fiber stacks are; forces a tall enclosure and constant clearance conflicts. (A small gantry *is* the right choice at the sorting station, where nothing is above the wafer — Fig. 1.) |
-| 6-axis articulated arm (Meca500, UR3e) | Rejected: unused DOF, slower, costlier, harder safety case; no angled approaches are needed. |
-| Dedicated X-Z shuttle + indexing deck | Cheapest and stiffest, but fully custom and it freezes the hotel geometry. Only if the hotel stays at 1–2 sticks. |
+| **Bench-level 3-axis Cartesian** from motorized linear stages (Zaber X-LSM, Thorlabs LTS150, or Suruga Seiki stages on a DS102 — the controller family the tester already drives) | **Selected.** Straight-line entry under the objective, predictable swept volume, µm repeatability, no θ. The prototype axes are the production kinematics with shorter travel. |
+| 4-axis SCARA (Epson T3/T6 class) | Only with an offset gripper bar: the vertical quill must land at the die's X end, ~15 mm from center, where a Ø30–35 mm objective barrel is. With the bar it does nothing a linear axis cannot. |
+| Articulated desktop arm (Dobot MG400 class) | **Rejected for the tester.** J2/J3 are pitch joints in a vertical plane (parallelogram wrist): the forearm approaches from above and behind, into the microscope column's volume, and its swept volume near the nest is an arc. Acceptable only for a bench-only cycling rig with no microscope. |
+| Overhead gantry spanning the cell | Rejected for the tester (bridge lives where the column and fiber stacks are); right for the sorting station (Fig. 1), where nothing is above the wafer. |
+| 6-axis articulated arm (Meca500, UR3e) | Rejected: unused DOF, slower, costlier, harder safety case. |
+| Dedicated X-Z shuttle + indexing deck | This *is* the selected option in its minimal form; the difference is only whether Y is a third axis or a stage under the sticks. |
 
 **Why one gripper everywhere — and the honest "why not":**
 
@@ -453,10 +463,9 @@ native SCARA motion — at ±0.3 mm / ±1° placement accuracy with a payload in
 | Top-and-bottom sandwich clamp at the end zones | **Rejected.** Still touches the top surface and adds nothing over end-face gripping. |
 | Electrostatic top chuck | Rejected: unpredictable on pyroelectric LN. |
 
-**Layout and operation.** Robot pedestal at −X of the nest, off the optical table (or on
-a bridge decoupled from the base plate), so its motion never enters the metrology loop;
-sticks arrayed on the −X side within the arm's arc, flanking the base, outside both
-fiber corridors. The robot moves **only while fibers are retracted** and is parked
+**Layout and operation.** X axis at −X of the nest at bench level, on a riser decoupled
+from the nest base plate, so its motion never enters the metrology loop; sticks arrayed
+along the X axis on the −X side, outside both fiber corridors. The axes move **only while fibers are retracted** and is parked
 during every measurement, so pipelining is not needed in the long-test regime; in the
 screening regime the incoming die is pre-staged in a second gripper before the fibers
 retract, making the swap itself ~5 s and the full exchange 15–25 s including vision
@@ -547,8 +556,8 @@ and cheapest by building **one rail-pair nest, one gripper on a hand-positioned 
 stage, and one stick** (S3 hardware minimum) — the same gripper the sorting station
 needs — cycling dies through a few hundred times, and inspecting. Everything built for
 that test (nest, gripper, stick geometry, vision registration,
-fiber choreography, orchestration software) is carried unchanged into S1; the SCARA and
-hotel are then a procurement-and-integration project around a proven core, not a
+fiber choreography, orchestration software) is carried unchanged into S1; the longer axes
+and hotel are then a procurement-and-integration project around a proven core, not a
 gamble. If the trials instead show any bare-die robot handling is untenable, the same
 data redirects the build to S2 with minimal loss.
 
