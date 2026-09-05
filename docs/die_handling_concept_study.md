@@ -11,7 +11,10 @@ carriers and reviewing results.
 Rev. 2 changes versus rev. 1: the study is reframed from "retrofit the existing
 single-die stages" to a full system redesign; the carousel concept is removed; the
 scaled concepts are re-derived for hundreds-of-dies batches; a recommended system
-architecture is described at subsystem level.
+architecture is described at subsystem level. Rev. 2.1 adds the as-built observations
+from the current bench (Appendix A, photo in `docs/images/current_setup.jpg`) and folds
+their consequences — overhead microscope clearance, die-exchange approach direction,
+fiber-arm envelope, enclosure and fiber management — into §3 and §6.
 
 Coordinate convention follows the brief: **X** = 10 mm die dimension, **Y** = 6 mm die
 dimension (optical propagation; fibers approach along ±Y), **Z** = vertical, **θ** =
@@ -139,6 +142,18 @@ One nest, machined and lapped once, characterized exhaustively:
   waveguide height anywhere in the ±Y fiber approach cones, and a software/hardware
   interlocked fiber-retract corridor before any nest actuation (carries over R1/R5/R6
   and brief §15/§22 unchanged).
+- **Envelope as it exists today (Appendix A):** the fibers arrive on long, thin
+  cantilevered holder arms that pass through slots in the ±Y walls of the present
+  enclosure, and the die sits under a high-magnification objective a short working
+  distance above it. Three consequences for the nest: (i) the ±Y corridors must be
+  sized for the *arm*, not the fiber — the current arms are tens of mm long with a
+  V-groove clamp near the tip, so the pedestal recess and any nest wall on the ±Y sides
+  are set by clamp height/width, not by the 125 µm fiber; (ii) the only free approach
+  directions to the die are **±X** (horizontally, under the objective) and **from
+  above** (only if the objective retracts), which fixes the die-exchange geometry in §6;
+  (iii) the nest must be low and stiff — the present chuck rides a tall stage tower,
+  and a low pedestal directly on the base both shortens the structural loop to the
+  fiber stages and frees vertical room for the exchange mechanism.
 
 Everything else in the machine can be ordinary industrial automation because this one
 component absorbs the precision problem.
@@ -288,11 +303,38 @@ Ratings: ● strong / ◐ adequate / ○ weak.
   alignment. With the die always at the same nominal point, approach trajectories are
   pre-computed and first light typically completes in seconds. Fibers park in a
   retracted, interlocked position during every nest/robot action.
+- **Vision column (redesigned around the exchange):** the overhead objective stays —
+  it is the verify camera — but it must **clear the exchange volume**. Two options,
+  chosen by the objective's working distance and the end-effector height: (a) put the
+  microscope column on a motorized Z lift (or a pneumatic two-position retract) that
+  raises it 50–100 mm during every exchange; (b) keep it fixed and use a *long*
+  working-distance objective (≥ 30 mm) with a low-profile end-effector that enters
+  horizontally along ±X beneath it. Option (b) removes a moving element from the
+  optical path and is preferred if the magnification budget allows; (a) is the
+  fallback. In both cases the objective-to-die gap is a hard interlock input for the
+  robot, exactly like fiber retract.
 - **Transfer:** overhead Cartesian gantry (X ~400–500 mm, Y ~300 mm, Z ~100 mm,
-  ±0.05–0.1 mm), dual vacuum end-effector (swap in one visit), up-looking pose camera,
-  force-limited Z placement.
+  ±0.05–0.1 mm) with a **side-entering end-effector**: the tool arrives at the nest
+  horizontally **along ±X** — the only direction not occupied by fiber arms (±Y) or the
+  objective (+Z) — as a low fork whose twin vacuum pads contact the two 1-mm X-end
+  zones from above with a final short vertical stroke. Dual tool (swap in one visit),
+  up-looking pose camera on the transit path, force-limited placement. The fiber arms
+  park retracted and the objective clears before the fork may enter; all three states
+  are interlocked.
 - **Storage:** flat hotel deck for 6–10 open waffle packs / Gel-Paks with pack-ID
-  reading (barcode/DataMatrix); designated output packs for binning.
+  reading (barcode/DataMatrix); designated output packs for binning. Located to one
+  side of the optical site along **X**, so the gantry's transit path never crosses the
+  fiber corridors.
+- **Enclosure and dressing (replaces the present small box):** the current 3D-printed
+  enclosure with glass top and acrylic front shows the need for still air and dust
+  control already exists; in the redesign it grows into the full cell — one enclosure
+  around nest, fiber aligners, gantry and hotel, with a laminar top-down flow or at
+  least a still-air lid, interlocked doors, ionized air, and windows placed for the
+  overhead camera and operator view. Fiber pigtails and stage cables, which today lie
+  loose on the breadboard, are routed in captive guides with strain relief on the
+  aligner frames: a robot may never share a volume with an unmanaged fiber. Fiber
+  aligners mount to the same rigid base plate as the nest rather than to the optical
+  table individually, closing the metrology loop through one stiff part.
 - **Software (this repo evolves into the orchestrator):** a campaign layer above the
   existing per-die stack — die queue + results database keyed by pack/pocket ID; state
   machine per die (stored → picked → verified → nested → measured → binned) with
@@ -371,3 +413,19 @@ one lights-out day.
   scripted, tested recovery path — this is software scope, and it is large.
 - If any future measurement requires temperature control at the die, revisit S4's
   trigger condition before committing the nest design.
+
+---
+
+## Appendix A — The current bench as built, and what it implies
+
+Reference photo: `docs/images/current_setup.jpg`.
+
+![Current manual die-tester setup](images/current_setup.jpg)
+
+| Observation | Design consequence |
+|---|---|
+| Chip stage (X + θ stack) stands on a tall tower inside a small 3D-printed enclosure with a glass top window and a clear acrylic front panel; a ring illuminator sits inside. | Still-air/dust control is an existing requirement, currently met at die scale. The redesign scales the enclosure to the whole cell (§6) rather than boxing the nest. The tall tower goes: the nest sits low on the common base plate for stiffness and to free vertical room for the exchange tool. |
+| High-magnification objective on a vertical microscope column, pointing down through the top window, a short working distance above the die. | The overhead camera is the natural verify camera and is retained, but it occupies the +Z approach. Die exchange must enter along ±X beneath it, or the column must retract; objective-to-die gap becomes an interlock (§6). Working distance of the current objective is a required measurement (§8). |
+| Two Suruga Seiki motorized XYZ stacks (Oriental Motor steppers, manual micrometer verniers) mounted outside the enclosure; fibers on long, thin cantilevered holder arms with V-groove clamps near the tip, passing through slots in the ±Y enclosure walls. | The arm, not the fiber, is the keep-out body: nest pedestal recess and any ±Y structure are sized from arm/clamp dimensions and the alignment sweep. The slotted walls also show today's approach corridor is already tightly constrained — in the redesign the ±Y corridors stay fully open inside one enclosure. The stacks are retained as coarse stages under added piezo fine stages; the arms should be shortened and stiffened once the enclosure no longer forces a long reach. |
+| Fiber pigtails (FC/APC) and stage cables lying loose on the breadboard; blue/orange patch cables overhead; 80/20 framing close around the table. | Fiber and cable management becomes a design deliverable (captive routing, strain relief, no fiber in any robot volume). The redesigned cell should be a self-contained module on its own base plate (~600 × 500 mm footprint class) so it can be placed and, if needed, relocated as one unit within the existing frame. |
+| Everything is bolted individually to the optical table (stages, tower, microscope). | Replace with a single stiff base plate carrying nest, both fiber aligners and the vision column, so thermal and structural drift is common-mode across the metrology loop; the table then only isolates vibration. |
