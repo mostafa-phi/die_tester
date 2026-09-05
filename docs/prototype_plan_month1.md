@@ -2,11 +2,11 @@
 
 **Goal of the month:** prove, with real hardware and real dies, that a 10 × 6 × 0.5 mm
 air‑clad TFLN die can be picked by its end faces, carried, set on the vision‑registered
-nest, coupled by the existing auto‑alignment, and returned to a stick — **hundreds of
+nest, coupled by the existing auto‑alignment, and returned to its wafer-tray pocket — **hundreds of
 times, without damage, with nobody touching the die**. End the month with an
 unattended N‑die loop running on the current tester.
 
-**What the month deliberately does not include:** the enclosure, the stick hotel, the
+**What the month deliberately does not include:** the enclosure, a second tray position, the
 production‑length axes, the X‑Y‑θ correction stage, automated tape pick, error‑recovery
 software beyond "stop and alarm". Those are Month 2–3 and they all depend on Month 1's
 answer.
@@ -21,11 +21,11 @@ placed on backside rails, within ±0.3 mm / ±1°, with zero top‑surface or fa
 If that is true, the rest is procurement and integration. If it is false, the design
 redirects to the backside tongue and everything downstream changes. So:
 
-1. **First:** the **gripper + nest + stick** contact system, cycled by hand on a manual
+1. **First:** the **gripper + nest + tray pocket** contact system, cycled by hand on a manual
    stage before any robot exists. This answers the damage question in week 2 regardless
    of robot lead time.
 2. **Second:** the same gripper on the 3‑axis Cartesian doing **A → B → A**
-   (stick → nest → stick) for hundreds of cycles with placement statistics from the
+   (tray → nest → tray) for hundreds of cycles with placement statistics from the
    camera.
 3. **Third:** the nest at the real optical station, fibers interlocked, the existing
    `run_all_waveguides` measuring dies the robot exchanged. This is the demo.
@@ -34,7 +34,7 @@ redirects to the backside tongue and everything downstream changes. So:
    needle‑eject experiment on a scrap wafer segment.
 
 "Pick from point A to point B" is exactly the right first robot task — but A and B
-must be **stick pocket and nest**, not the tape.
+must be **tray pocket and nest**, not the tape.
 
 ---
 
@@ -53,12 +53,12 @@ Prices are indicative US list prices; lead times are typical for in‑stock item
 | **Jaw fingers** | Custom aluminum fingers with PEEK or Vespel SP‑1 inserts; stepped nose per Fig. 3; **one finger on a flexure or pivot with a 0.3 N spring stop** so grip force is set by the spring, not by air pressure | Bare PEEK fingers (no compliance) for the very first trial | ~$300–600 | 5–7 days (Protolabs/Xometry) or in‑house |
 | **Nest** | 17‑4 PH or hard‑anodized 6061 block: two rails 0.9 × 1.5 × 10 mm, 1 mm inboard of facets, lapped tops, vacuum ports, deck ≥ 0.4 mm below jaw bottoms, kinematic feet | Two‑piece (base + rail insert) if lapping is easier | ~$400–800 | 1 week |
 | **Vacuum** | Lab house vacuum or KNF N86 micro pump; SMC ZSE30A digital vacuum switch (seat sensing); 3/2 valve | — | ~$400 | in stock |
-| **Sticks** | SLA print (Formlabs Rigid 10K or Protolabs Accura): ledges, jaw slots, **and** the open center channel (keeps the tongue fallback alive); 14 pockets | Machined PEEK later | ~$50–150 per stick | 2–4 days |
+| **Wafer trays** (replace the sticks) | SLA print (Formlabs Rigid 10K or Protolabs Accura): 8 × 14 = 112 pockets (one 4″ wafer), cavity 12.0 × 6.8 mm with corner retention, 3.6 mm nose slots, ledges, lid; see `docs/cad/README.md` | Machined PEEK later | ~$120–250 per tray | 2–4 days |
 | **I/O** | Stage‑controller digital I/O (Zaber X‑MCC / Thorlabs KDC101 triggers) or the existing NI USB‑6363 lines with a 24 V isolator module | Arduino | ~$80 | — |
 | **Vision** | Existing overhead microscope camera + `ChipAlignmentController` template/edge methods for pose at the nest; a USB microscope for the bench rig | — | ~$100 | in stock |
 | **Test dies** | (a) 50 diced silicon blanks 10 × 6 × 0.5 mm for cycling; (b) 20 diced LN blanks for contact realism; (c) 10–20 **scrap real TFLN dies** for damage tests | — | ~$300–800 (dicing service) | 1 week |
 | **ESD** | Bench ionizer (Simco‑Ion Aerostat PC or similar), grounded fixtures, dissipative jaw inserts | — | ~$600–900 | in stock |
-| **Manual rig** | Thorlabs manual XYZ stage (from lab stock) + adapter plate to carry the gripper over nest and stick | — | ~$0–300 | in stock |
+| **Manual rig** | Thorlabs manual XYZ stage (from lab stock) + adapter plate to carry the gripper over nest and tray | — | ~$0–300 | in stock |
 
 **Not needed in Month 1:** correction stage (vision measures, fiber stages compensate),
 film‑frame expander, UV box, enclosure, safety light curtain (bench run attended).
@@ -76,9 +76,9 @@ days.
   blank dies, ionizer. Ask the dicing vendor: tape type (UV‑release?), post‑dicing
   street width, film‑frame size, die thickness distribution.
 - **Day 1–3 (M):** review and release the gripper CAD package (`docs/cad/`, parametric
-  CadQuery model, STEP/STL per part, assembly with the MHZ2‑6D stand‑in); CAD the nest
-  and sticks from Figs. 3–4. Send arms, tip blocks, bracket and nest to machining; print
-  sticks in‑house or send out.
+  CadQuery model, STEP/STL per part, assembly with the MHZ2‑6D stand‑in); the nest and the
+  wafer tray are already in `docs/cad/station_assembly.py`. Send arms, tip blocks, bracket
+  and nest to machining; print the trays in‑house or send out.
 - **Day 2–5 (M):** measure on the tester: objective working distance and barrel
   diameter, fiber‑holder envelope, safe retract distance, chuck mounting interface.
   Enter them into the 3‑D model's sliders; confirm the gripper bridge clears the
@@ -88,12 +88,12 @@ days.
   digital I/O for valves/sensors, a `Interlock` class
   that refuses robot motion unless both fiber Z axes report the retracted position
   (reuse `DieTesterStage` queries).
-- **Day 4–5 (M):** build the manual rig: gripper on the manual XYZ, nest and one stick
+- **Day 4–5 (M):** build the manual rig: gripper on the manual XYZ, nest and one tray
   on a common plate; dummy fingers (plain PEEK) if the real ones are not back yet.
 
 ### Week 2 — hand cycling: the damage and repeatability answer
 
-- **Days 6–8 (M):** 100 hand cycles stick → nest → stick with silicon blanks; then 100
+- **Days 6–8 (M):** 100 hand cycles tray → nest → tray with silicon blanks; then 100
   with LN blanks. Tune the flexure preload to 0.2–0.5 N (measure with a gram gauge).
   Record: seat failures, drops, jaw marks under the microscope.
 - **Days 8–10 (M+S):** camera repeatability at the nest: 30 placements, measure X/Y/θ
@@ -102,13 +102,13 @@ days.
 - **Days 9–10 (S):** vision routine `measure_die_pose()` at the nest (facet edge + a
   fiducial or corner); pass/fail thresholds; logging to CSV.
 - **Gate 1 (end of week 2):** zero top‑surface or facet damage on 20 LN blank cycles;
-  seat success ≥ 95 %. *Fail → switch to the tongue fallback design immediately; the
-  sticks already have the channel.*
+  seat success ≥ 95 %. *Fail → switch to the tongue fallback design immediately; add a
+  centre channel to the tray pockets (one SLA reprint).*
 
 ### Week 3 — robot A → B → A
 
 - **Days 11–12 (M):** stages arrive; assemble X–Z–arm beside the bench plate, Y under the
-  sticks (or as third axis); mount gripper; teach nest and stick pocket coordinates using
+  wafer tray (or as third axis); mount gripper; teach nest and tray pocket coordinates using
   the camera (touch‑off with a dummy die).
 - **Days 12–14 (S):** `exchange_die(from_pocket, to_nest)` primitive: approach height,
   descend, close, lift, carry, descend, open, rise; jaw sensors confirm die‑present;
@@ -159,7 +159,7 @@ days.
 | `src/handling/io.py` | Valves, vacuum switch, jaw sensors on NI‑DAQ digital lines. |
 | `src/handling/interlock.py` | Fiber‑retracted and objective‑clear checks from `DieTesterStage`; a single `permit_robot_motion()` gate used by every robot call. |
 | `src/handling/nest.py` | Nest vacuum on/off, seat detection, `measure_die_pose()` via existing camera + template matching. |
-| `src/handling/campaign.py` | `run_all_dies`: stick map → per‑die state machine (stored → gripped → seated → measured → binned), CSV log, stop‑and‑alarm on any fault. Wraps the existing `WaveguideAlignmentController`. |
+| `src/handling/campaign.py` | `run_all_dies`: tray map → per‑die state machine (stored → gripped → seated → measured → binned), CSV log, stop‑and‑alarm on any fault. Wraps the existing `WaveguideAlignmentController`. |
 | `notebooks/handling_trials.ipynb` | Cycle tests and statistics for Gates 1–2. |
 
 ---
@@ -169,16 +169,16 @@ days.
 | Risk | Mitigation in Month 1 |
 |---|---|
 | Stage lead time slips | Hand cycling answers the damage question without any axes; Thorlabs LTS150 is the in‑stock fallback; a Dobot MG400 can run the bench‑only rig but never goes to the tester. |
-| End‑face gripping marks or chips the dies | Flexure‑limited force, dissipative PEEK inserts, inspection every 50 cycles; **tongue fallback** already designed and the sticks carry its channel. |
+| End‑face gripping marks or chips the dies | Flexure‑limited force, dissipative PEEK inserts, inspection every 50 cycles; **tongue fallback** already designed (tray pockets would get a centre channel). |
 | Objective collides with gripper bridge | Measure WD in week 1; if < bridge + 3 mm, either shorten fingers (low bridge) or add a manual Z‑retract of the microscope column for the trial. |
 | Vision pose is not repeatable enough | Fall back to two end‑face pins + retracting finger on the nest (concept study §3 option); fiber stages absorb Y. |
 | Pneumatic force unstable at low pressure | Force comes from the spring, not the air; the actuator only opens/closes to stops. |
-| Dies arrive on tape only, no sticks yet | Load sticks by hand with end‑face tweezers for Month 1 (that is today's workflow anyway); tape automation is Month 2. |
+| Dies arrive on tape only, no loaded trays yet | Load a tray by hand with end‑face tweezers for Month 1 (that is today's workflow anyway); tape automation is Month 2. |
 
 ---
 
 ## 7. What Month 2 looks like if Month 1 passes
 
-Order the longer production axes; build the stick hotel and enclosure; film‑frame expander +
+Order the longer production axes; add the second tray position and the enclosure; film‑frame expander +
 UV box + ejector for the sorting station using the same gripper; X‑Y‑θ correction stage
 under the nest; error‑recovery states in `campaign.py`; first lights‑out overnight run.

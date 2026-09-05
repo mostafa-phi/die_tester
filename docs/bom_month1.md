@@ -20,8 +20,8 @@ axes are the largest item and are also the production kinematics.
 
 | # | Item | Exact part | Vendor | Unit price | Qty | Lead | Why this one |
 |---|---|---|---|---|---|---|---|
-| A1 | Transfer axes (prototype **and** production kinematics) | **Bench‑level 3‑axis Cartesian**, right‑sized to the need (±0.3 mm X/Y placement; ±0.05 mm Z for the stepped jaw). **Default: Velmex BiSlide** lead‑screw stages — X 300 mm (MN10‑0300‑M02‑21 class) + Y 150 mm under the stick deck + Z 50–100 mm, with a **VXM‑3** stepper controller (ASCII serial, trivial from Python), repeatability ~5 µm. **Budget option:** three stepper ball‑screw/lead‑screw modules (FUYU FSL40 class or igus drylin SLW) on a GRBL/Duet G‑code controller, ~$1–2 k total, repeatability 10–50 µm — adequate but no vendor support and more build/tune time. **Premium option:** Zaber X‑LSM150A‑E03 ×2 + X‑LSM050A‑E03 (built‑in controllers, Zaber Motion Library) or Thorlabs LTS150 ×2 + MTS50‑Z8 (Kinesis). | Velmex (US, direct); FUYU/igus; Zaber; Thorlabs | Velmex **quote** (~$4–5 k for 3 axes + controller); budget ~$1–2 k; premium ~$7–10 k | 1 set | Velmex 2–3 wk; modules 1–2 wk; Thorlabs in stock; Zaber 2–4 wk | The tool must enter a ~13 mm corridor under the objective horizontally along die X and never cross the fiber line. A low X axis carrying a short Z and a ~120 mm horizontal gripper arm does exactly that; the stages never enter the microscope or fiber volumes. Precision stages are **not** needed for accuracy; they are chosen for stiffness under the cantilevered arm, predictable swept volume, and a driver that works on day 1. No θ axis. Same kinematics scale to the production cell. |
-| A1b | Bench‑only fallback robot (only if A1 lead time > 3 weeks) | **Dobot MG400** (articulated desktop arm: J2/J3 pitch in a vertical plane, parallelogram wrist, ±0.05 mm, 24 V DIO, TCP/IP) | RobotLAB $2,890; RobotShop; Dobot US | $2,890 | 0–1 | 1–2 wk | Fine for the stick → nest → stick cycling rig where there is no microscope. **Not for the tester**: its forearm approaches from above and behind, into the microscope column's volume, and it is not a horizontal‑plane SCARA. |
+| A1 | Transfer axes (prototype **and** production kinematics) | **Bench‑level 3‑axis Cartesian**, right‑sized to the need (±0.3 mm X/Y placement; ±0.05 mm Z for the stepped jaw). **Default: Velmex BiSlide** lead‑screw stages — X 300 mm (MN10‑0300‑M02‑21 class) + Y 105–150 mm under the wafer tray + Z 50–100 mm, with a **VXM‑3** stepper controller (ASCII serial, trivial from Python), repeatability ~5 µm. **Budget option:** three stepper ball‑screw/lead‑screw modules (FUYU FSL40 class or igus drylin SLW) on a GRBL/Duet G‑code controller, ~$1–2 k total, repeatability 10–50 µm — adequate but no vendor support and more build/tune time. **Premium option:** Zaber X‑LSM150A‑E03 ×2 + X‑LSM050A‑E03 (built‑in controllers, Zaber Motion Library) or Thorlabs LTS150 ×2 + MTS50‑Z8 (Kinesis). | Velmex (US, direct); FUYU/igus; Zaber; Thorlabs | Velmex **quote** (~$4–5 k for 3 axes + controller); budget ~$1–2 k; premium ~$7–10 k | 1 set | Velmex 2–3 wk; modules 1–2 wk; Thorlabs in stock; Zaber 2–4 wk | The tool must enter a ~13 mm corridor under the objective horizontally along die X and never cross the fiber line. A low X axis carrying a short Z and a ~120 mm horizontal gripper arm does exactly that; the stages never enter the microscope or fiber volumes. Precision stages are **not** needed for accuracy; they are chosen for stiffness under the cantilevered arm, predictable swept volume, and a driver that works on day 1. No θ axis. Same kinematics scale to the production cell. |
+| A1b | Bench‑only fallback robot (only if A1 lead time > 3 weeks) | **Dobot MG400** (articulated desktop arm: J2/J3 pitch in a vertical plane, parallelogram wrist, ±0.05 mm, 24 V DIO, TCP/IP) | RobotLAB $2,890; RobotShop; Dobot US | $2,890 | 0–1 | 1–2 wk | Fine for the tray → nest → tray cycling rig where there is no microscope. **Not for the tester**: its forearm approaches from above and behind, into the microscope column's volume, and it is not a horizontal‑plane SCARA. |
 | A2 | Gripper actuator | **SMC MHZ2‑6D‑M9N** (ø6 parallel gripper, 4 mm total stroke, 0.15–0.7 MPa, with two D‑M9N solid‑state position switches) | SMC USA / Motion / Southern Controls / RS | ~$60–120 gripper; ~$40 per switch | 2 (one spare) | in stock | Its 3.3 N external force is irrelevant: the die load is set by the flexure jaw (see fingers). Two switches give "closed on die" vs "closed empty" = die‑present detection. Sensors and valves wire to the stage controllers' digital I/O (Zaber X‑MCC / Thorlabs KDC101 trigger lines) or to the NI USB‑6363 via a 24 V ↔ 5 V isolator module; confirm N/P polarity accordingly. |
 | A3 | Jaw fingers + flexure | **Custom**: 2 aluminum 6061 fingers per Fig. 3 (stepped nose 0.35 mm, 0.6 mm set‑back, ≥ 13 mm long), one rigid, one carrying a spring‑steel flexure blade (k ≈ 3 N/mm) with a hard stop; jaw inserts machined from **Semitron ESd 480** (static‑dissipative PEEK) | Protolabs / Xometry CNC; Semitron from Boedeker or Professional Plastics (cut‑to‑size rod/sheet, in stock) | quote (~$300–600 incl. material) | 2 sets | 5–7 working days | Force = k × (δ + die tolerance) ⇒ 0.3 ± 0.08 N for ±25 µm dies, independent of air pressure. Semitron ESd 480 is the standard dissipative jaw material for bare‑die handling. |
 | A4 | Test nest | **Custom**: 17‑4 PH H900 (or 6061 hard‑anodized) block per Fig. 4 — two rails 0.9 × 1.5 × 10 mm at 1.0 mm inboard of the facet planes, rail tops lapped flat ≤ 5 µm, 4 × Ø0.6 mm vacuum ports per rail into a common M5 port, deck ≥ 0.4 mm below jaw bottoms, ≥ 1.6 mm free beyond each end face; bolt pattern for B3 kinematic base | Protolabs / Xometry CNC (lapping in‑house on a granite plate with 3 µm diamond film, or a local lapping shop) | quote (~$400–800) | 1 (+1 spare rail insert if two‑piece) | 1 wk | The one precision part. Two‑piece (base + rail insert) is recommended so rails can be re‑lapped or re‑made without the base. |
@@ -36,8 +36,8 @@ axes are the largest item and are also the production kinematics.
 
 | # | Item | Exact part | Vendor | Unit price | Qty | Notes |
 |---|---|---|---|---|---|---|
-| B1 | Manual XYZ for the hand‑cycling rig | **Thorlabs PT3** (1″ XYZ, ¼‑20) or **PT3/M** | Thorlabs / Fisher | $1,350 | 1 (skip if in stock) | Carries the gripper over nest and stick for Gate 1. |
-| B2 | Rig plate | **Thorlabs MB1218** 12 × 18″ breadboard | Thorlabs / Fisher | $281 | 1 | Common plate for nest, stick, manual stage; later the robot bench. |
+| B1 | Manual XYZ for the hand‑cycling rig | **Thorlabs PT3** (1″ XYZ, ¼‑20) or **PT3/M** | Thorlabs / Fisher | $1,350 | 1 (skip if in stock) | Carries the gripper over nest and tray for Gate 1. |
+| B2 | Rig plate | **Thorlabs MB1218** 12 × 18″ breadboard | Thorlabs / Fisher | $281 | 1 | Common plate for nest, tray, manual stage; later the robot bench. |
 | B3 | Nest kinematic base | **Thorlabs KB1X1** (or KB1X1/M) kinematic base | Thorlabs | ~$150 | 1 | Lets the nest move between rig and tester and return repeatably. |
 | B4 | Right‑angle bracket + posts for the gripper | Thorlabs **AP90**, **RS2P**, **TR75** as needed | Thorlabs | ~$150 total | — | |
 | B5 | Gripper valve | **SMC SY3120‑5LZ‑M5** (5/2, 24 VDC, M5 ports) | Zoro / RS / Automation Distribution | $48–67 | 2 | One for the gripper, one spare (or as 3/2 for vacuum). |
@@ -47,9 +47,9 @@ axes are the largest item and are also the production kinematics.
 | B9 | Fittings & tubing | SMC **KQ2H04‑M5** (M5 → Ø4 one‑touch) ×10, **KQ2H04‑01S** ×4, **TU0425BU‑20** Ø4 PU tubing 20 m, **KQ2T04‑00A** tees ×4 | SMC distributors / McMaster | ~$80 | — | |
 | B10 | 24 V supply + I/O | **Mean Well LRS‑50‑24**; if using the NI USB‑6363 for valves/sensors add a 4‑ch 24 V relay/isolator module (e.g., Phoenix Contact PLC‑RSC‑24DC/21 ×2 for valves, and 24 V→5 V optocoupler inputs for the M9 switches) | Digi‑Key / Mouser | ~$80 | 1 | Zaber and Thorlabs controllers also expose digital I/O usable for the valves. |
 | B11 | Jaw force check | **American Weigh Scales GEMINI‑20** (0.001 g pocket scale) | Amazon | ~$25 | 1 | 0.3 N = 30 g on the pan; sets the flexure preload. |
-| B12 | End‑face tweezers (manual stick loading) | **Ideal‑tek 2ACFR.SA.1** with **A2ACF** carbon‑fiber flat tips | TestEquity / TEquipment | ~$50 | 3 | The only approved hand tool near dies: flat ESD tips on the end faces. |
+| B12 | End‑face tweezers (manual tray loading) | **Ideal‑tek 2ACFR.SA.1** with **A2ACF** carbon‑fiber flat tips | TestEquity / TEquipment | ~$50 | 3 | The only approved hand tool near dies: flat ESD tips on the end faces. |
 | B13 | Bench inspection camera | **Dino‑Lite AM7915MZT** (5 MP, 20–220×, EDOF) | Mega Depot / Microscope.com | **quote** (~$900–1,100) | 1 (optional) | Only if the existing microscope cannot be used at the bench rig. |
-| B14 | Axis mounting | Thorlabs / Zaber adapter plates and a 90° bracket for the Z stage; 20 mm aluminum riser plate under the X axis so the gripper arm meets nest and stick heights | Thorlabs / McMaster + in‑house tapping | ~$250 | 1 | X axis runs along the exchange direction beside the nest, at bench level, outside both fiber corridors. |
+| B14 | Axis mounting | Thorlabs / Zaber adapter plates and a 90° bracket for the Z stage; 76 mm aluminum riser under the X axis so its body sits above the NanoMax envelope and the gripper arm meets nest and tray heights (`docs/cad/station_assembly.py`) | Thorlabs / McMaster + in‑house tapping | ~$250 | 1 | X axis runs along the exchange direction beside the input NanoMax (centre-line Y −100), outside both fiber corridors. |
 
 ## C. Not this month — price‑checked for Month 2 planning
 
@@ -59,11 +59,11 @@ axes are the largest item and are also the production kinematics.
 | Film‑frame expander (if the vendor does not pre‑expand) | **Dynatex DXE 5** (≤ 150 mm) or **DXE 9** (≤ 200 mm); **Ultron UH130** semi‑automatic | quote (used manual units ~$2–5 k) | Sorting station. |
 | UV cure box (if the vendor does not pre‑cure) | **Ultron UH102‑8** | quote (used units on eBay) | Sorting station. |
 | Electric gripper (only if air proves impossible) | **Schunk EGP 25‑N‑N‑B** (3 mm/jaw, 20–40 N) | ~$1.5–2 k, 2–4 wk | Same flexure fingers; force still spring‑limited. |
-| Machined PEEK sticks | Semitron ESd 480 or natural PEEK, CNC | quote | Replace SLA sticks after the design settles. |
+| Machined PEEK wafer trays | Semitron ESd 480 or natural PEEK, CNC | quote | Replace SLA trays after the pocket design settles. |
 
 ---
 
-## D. Should die sorting (tape → sticks) be outsourced to the dicing company?
+## D. Should die sorting (tape → wafer trays) be outsourced to the dicing company?
 
 **Recommendation: keep the pick itself in‑house; outsource only the tape preparation.**
 
@@ -83,19 +83,19 @@ which is exactly what air‑clad waveguides forbid.
 | Iteration speed | Weeks per lot | Same day |
 | Throughput needed | ~300 dies/batch | ~1 min/die manual ⇒ ~5 h per batch — not the bottleneck against hours‑per‑die test time |
 | Cost | Manual sort typically a few $/die + NRE for custom carriers (quote) | Tech time; hardware already bought for the tester |
-| Traceability | Wafer map → carrier map supplied | Wafer map → stick map, same |
+| Traceability | Wafer map → carrier map supplied | Wafer map → tray map, same |
 
 So:
 
 1. **Now (Month 1–2):** have the vendor dice on **UV‑release tape, UV‑cure, and expand
    the frame before shipping** (all standard services, cheap). Sort in‑house by hand:
    end‑face tweezers or the gripper on the manual XYZ, needle‑eject from below where
-   needed, into the sticks. Five hours per 300‑die batch is acceptable and it is the
+   needed, into the wafer tray. Five hours per 300‑die batch is acceptable and it is the
    same handling you do today, only safer.
 2. **Month 2–3:** semi‑automate in‑house with the **same Cartesian axes and gripper** you already
    own, plus a manual ejector under the frame — the incremental cost is a used expander
    (or none if the vendor keeps expanding for you).
-3. **In parallel, qualify APD as a backup:** give them two sticks, two pairs of end‑face
+3. **In parallel, qualify APD as a backup:** give them two trays, two pairs of end‑face
    tweezers and a one‑page procedure (end faces only, middle 3 mm, no top contact, no
    facet contact), and inspect the first 50 dies they return. If they pass, they become
    the overflow path; if not, you have lost nothing.
@@ -103,5 +103,5 @@ So:
    Month 3 volumes justify it. It is the least‑used machine in the whole system.
 
 The reason to keep it in‑house is not cost. It is that the facet‑ and top‑surface rules
-cannot be verified from outside, and the sticks and jaw geometry are still changing
+cannot be verified from outside, and the tray pockets and jaw geometry are still changing
 weekly.

@@ -1,6 +1,6 @@
 # System Redesign Study — Batch Edge-Coupled Testing of Hundreds of 10 × 6 mm Photonic Dies
 
-**Status:** concept study for review (pre-CAD), rev. 2.6
+**Status:** concept study for review, rev. 2.7 (CAD of the gripper and the full station now in `docs/cad/`)
 **Scope:** ground-up redesign of the die-tester stage and handling system. The current
 machine is architected around a single manually loaded die; this study treats the whole
 stage system as open for redesign and asks what a machine looks like when the unit of
@@ -28,6 +28,11 @@ clearance (`docs/images/fig1…fig4`). Rev. 2.5 replaces the SCARA with a bench-
 3-axis Cartesian for the tester: the gripper must enter a straight ~13 mm corridor under
 the objective, a SCARA's vertical quill lands where the objective barrel is, and the
 articulated desktop arm first proposed for prototyping approaches from above and behind.
+Rev. 2.6 sizes the storage carrier as one **wafer tray** per 4″ wafer (8 × 14 pockets; the die
+returns to its own pocket) and moves the design into CAD (`docs/cad/`). Rev. 2.7 aligns the
+storage-carrier text with the tray, and records that the gripper and the complete station
+(nest, NanoMax fiber stages, microscope, Cartesian axes, tray) are modelled and
+clearance-checked there; the interactive model follows the same layout.
 
 Coordinate convention follows the brief: **X** = 10 mm die dimension, **Y** = 6 mm die
 dimension (optical propagation; fibers approach along ±Y), **Z** = vertical, **θ** =
@@ -430,15 +435,18 @@ and bins them into sticks. Geometry in Figs. 2–4:
 
 **Storage carrier: wafer trays with jaw slots (Fig. 4 shows one pocket row; rev. 2.6 — one 100 mm wafer ≈ 112 dies = one tray of 8 × 14 pockets, 128 × 106 mm; the die returns to its own pocket after test and the map carries the result).** Standard waffle packs have closed
 pocket floors and pocket walls hard against the die ends, so they are replaced by a
-machined (PEEK/Delrin) or SLA-printed stick whose pockets have: two backside **ledges**
-under the die's facet-edge strips, **jaw slots** ≥ 2 mm long at both X ends (floor cut
-down so the jaw noses reach ≥ 0.1 mm below the die bottom), Y retention walls at
-~0.4 mm clearance, lead-in chamfers on all walls, and a lid for transport. Pockets sit
-side by side along the stick at ~7.5 mm pitch with the die's X axis across the stick,
-so a 14-pocket stick is ≈ 16 × 105 mm; sticks carry a DataMatrix ID. Sticks are filled
-from the diced wafer on tape at the **tape-to-stick sorting station** (§6b), which uses
-the same gripper — the one bare-die handling step outside the tester. Preferably the
-dicing vendor performs it and delivers loaded sticks.
+machined (PEEK/Delrin) or SLA-printed **wafer tray** whose pockets have: two backside
+**ledges** under the die's facet-edge strips, a 12.0 × 6.8 mm cavity that retains the die
+by its corners to ±1.0 mm in X (inside the jaws' ±1.9 mm capture) and ±0.4 mm in Y,
+3.6 mm **nose slots** in both end walls (floor 0.85 mm below the nose bottoms), lead-in
+chamfers, and a lid for transport. Pockets sit 8 columns × 14 rows (16 mm pitch along
+die X, 7.5 mm along Y), so one tray is ≈ 130 × 106 mm and holds one 4″ wafer; trays carry
+a DataMatrix ID and pocket (row, column) mirrors the wafer map. *Rev. 2.7: the tray
+supersedes the 14-pocket "stick" used in the figures and in the text below — read
+"stick" as "tray" wherever it appears; the geometry of record is
+`docs/cad/station_assembly.py`.* Trays are filled from the diced wafer on tape at the
+**tape-to-tray sorting station** (§6b), which uses the same gripper — the one bare-die
+handling step outside the tester.
 
 **Transfer axes: bench-level 3-axis Cartesian (rev. 2.5; supersedes the SCARA choice).**
 The gripper must enter a ~13 mm wide corridor under the objective, horizontally along

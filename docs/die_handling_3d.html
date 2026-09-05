@@ -69,7 +69,7 @@
   .banner .t { font-weight: 600; font-size: 14px; }
   .banner .t .n { font-family: var(--font-mono); color: var(--accent); margin-right: 8px; }
   .banner .d { font-size: 12.5px; color: var(--ink-2); margin-top: 2px; }
-  .keylegend { position: absolute; left: 12px; bottom: 10px; display: flex; gap: 12px; font-size: 11.5px; color: var(--ink-2); pointer-events: none; }
+  .keylegend { position: absolute; left: 12px; bottom: 10px; display: flex; gap: 12px; font-size: 11.5px; color: var(--ink-2); pointer-events: none; flex-wrap: wrap; max-width: 80%; }
   .keylegend span::before { content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; background: var(--kc); }
   .viewhint { position: absolute; right: 12px; bottom: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
   .viewbtns { position: absolute; left: 12px; top: 10px; display: flex; gap: 6px; }
@@ -85,7 +85,7 @@
 <div class="app">
   <header>
     <h1>Die Handling Clearance Model</h1>
-    <span class="sub">10 × 6 × 0.5 mm air-clad photonic dies · end-face gripper on a bench-level Cartesian · backside-only support</span>
+    <span class="sub">10 × 6 × 0.5 mm air-clad photonic dies · end-face gripper on a bench-level Cartesian · one wafer tray · backside-only support</span>
     <span class="units">units mm · drag to orbit · wheel to zoom · shift-drag to pan</span>
   </header>
 
@@ -93,9 +93,9 @@
     <div class="block">
       <h2>Scene</h2>
       <div class="tabs" role="tablist">
-        <button class="tab" role="tab" data-scene="nest" aria-selected="true">Test nest exchange</button>
+        <button class="tab" role="tab" data-scene="nest" aria-selected="true">Test station exchange</button>
         <button class="tab" role="tab" data-scene="tape" aria-selected="false">Pick from dicing tape</button>
-        <button class="tab" role="tab" data-scene="stick" aria-selected="false">Place into stick</button>
+        <button class="tab" role="tab" data-scene="stick" aria-selected="false">Place into tray pocket</button>
         <button class="tab" role="tab" data-scene="station" aria-selected="false">Sorting station</button>
       </div>
     </div>
@@ -125,11 +125,11 @@
       <div class="legend">
         <span class="sw" style="background:#e05a3a"></span><span>Optical facets, waveguide ends. Never touched.</span>
         <span class="sw" style="background:#9fc4ea"></span><span>Top surface, exposed ridge waveguides. Never touched.</span>
-        <span class="sw" style="background:#3a9d5d"></span><span>End faces, middle 3 mm. Gripper jaws only.</span>
-        <span class="sw" style="background:#8f8f8f"></span><span>Backside. Rails, ledges, ejector pins.</span>
-        <span class="sw" style="background:#3d3d3d"></span><span>Jaws: 0.35 mm nose, top 0.10 mm below die surface; thin cantilever bars are the only tool parts under the objective.</span>
+        <span class="sw" style="background:#3a9d5d"></span><span>End faces, middle 3 mm. Gripper noses only.</span>
+        <span class="sw" style="background:#8f8f8f"></span><span>Backside. Nest rails, pocket ledges, ejector pins.</span>
+        <span class="sw" style="background:#3d3d3d"></span><span>Noses: 0.35 mm tall, top 0.10 mm below the die surface; the two 3 × 3 mm bars and tip blocks are the only tool parts under the objective.</span>
       </div>
-      <div class="hint">Dimensions follow the concept study rev. 2.4. Objective working distance and post-expansion street width are the two values still to be measured.</div>
+      <div class="hint">Geometry follows the CAD station assembly (<code>docs/cad/station_assembly.py</code>, gripper <code>gripper_module.py</code>) and the concept study rev. 2.6. Still to measure on the bench: fiber-axis height above the NanoMax platform, objective working distance and tube diameter.</div>
     </div>
   </aside>
 
@@ -146,7 +146,8 @@
     <div class="banner"><div class="t"><span class="n" id="bn">0</span><span id="bt"></span></div><div class="d" id="bd"></div></div>
     <div class="keylegend">
       <span style="--kc:#cfe3f7">die</span><span style="--kc:#e05a3a">facets</span><span style="--kc:#f0d080">fibers</span>
-      <span style="--kc:#8fb0d1">fixed axes</span><span style="--kc:#2f4f70">moving carriages · arm</span><span style="--kc:#3d3d3d">gripper</span><span style="--kc:#d9a441">objective keep-out</span>
+      <span style="--kc:#8fb0d1">fixed axes · NanoMax</span><span style="--kc:#2f4f70">moving carriages · arm · bracket</span><span style="--kc:#3d3d3d">gripper</span>
+      <span style="--kc:#d9cfae">wafer tray</span><span style="--kc:#d9a441">objective keep-out</span>
     </div>
     <div class="viewhint" id="viewhint"></div>
   </div>
@@ -162,9 +163,9 @@
   const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   const COL = {
     die: 0xcfe3f7, dieTop: 0x9fc4ea, dieEdge: 0x2b5d8a, facet: 0xe05a3a, endface: 0x3a9d5d,
-    back: 0x8f8f8f, jaw: 0x3d3d3d, jawBody: 0x6f6f6f, tape: 0xf4d35e, pin: 0x3a9d5d,
+    back: 0x8f8f8f, jaw: 0x3d3d3d, jawBody: 0x6f6f6f, tip: 0x2a2f36, blade: 0xb8bcc4, tape: 0xf4d35e, pin: 0x3a9d5d,
     rail: 0x8f8f8f, deck: 0xb9c0c9, stage: 0x9aa3ad, fiber: 0xf0d080, clamp: 0x5b6570, arm: 0x7d8792,
-    objective: 0x333a44, objNose: 0x22272e, stick: 0xd9cfae, anvil: 0xa9b0b8, neighbour: 0xbfd6ee,
+    objective: 0x333a44, objNose: 0x22272e, tray: 0xd9cfae, anvil: 0xa9b0b8, neighbour: 0xbfd6ee,
     gantry: 0xc4cad2, head: 0x555c66, table: 0xcfd5dc, ring: 0x3a4149, base: 0xe4e8ee,
     axisFixed: 0x8fb0d1, axisMove: 0x2f4f70, keepout: 0xd9a441
   };
@@ -233,13 +234,18 @@
   // ---------- helpers ----------
   const mat = (c, o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.75, metalness: 0.05 }, o));
   function box(w, h, d, m) { return new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); }
-  // box spanning [x0,x1]×[y0,y1]×[z0,z1]
+  // viewer frame: x = CAD X (die long axis), y = CAD Z (up), z = CAD Y (optical axis).
+  // box spanning viewer [x0,x1]×[y0,y1]×[z0,z1]
   function span(x0, x1, y0, y1, z0, z1, m) {
     const b = box(x1 - x0, y1 - y0, z1 - z0, m); b.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); return b;
   }
+  // box in CAD coordinates [X0,X1]×[Y0,Y1]×[Z0,Z1] (same argument order as docs/cad/*.py)
+  function cb(X0, X1, Y0, Y1, Z0, Z1, m) { return span(X0, X1, Z0, Z1, Y0, Y1, m); }
   function cyl(r, h, m, seg = 40) { return new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, seg), m); }
+  // vertical cylinder in CAD coordinates: axis at (X, Y), from Z0 to Z1
+  function vcyl(X, Y, r, Z0, Z1, m, seg = 40) { const c = cyl(r, Z1 - Z0, m, seg); c.position.set(X, (Z0 + Z1) / 2, Y); return c; }
 
-  // the die: x 0..10 (X), y 0..0.5 (Z up), z 0..6 (Y optical). Origin at its bottom corner.
+  // the die: X 0..10, Y 0..6 (optical axis), Z 0..0.5. Origin at its bottom corner.
   function makeDie(opts = {}) {
     const g = new THREE.Group();
     const mats = [mat(COL.endface), mat(COL.endface), mat(COL.dieTop), mat(COL.back), mat(COL.facet), mat(COL.facet)];
@@ -248,36 +254,82 @@
     const pts = [];
     for (let x = 1.5; x <= 8.5; x += 0.5) { pts.push(new THREE.Vector3(x, 0.503, 0), new THREE.Vector3(x, 0.503, 6)); }
     g.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: COL.dieEdge })));
-    // end-zone tint on the top (1 mm strips) - slightly darker strips
+    // end-zone tint on the top (1 mm strips)
     [0.5, 9.5].forEach((x) => { const s = box(1, 0.002, 6, mat(0x8fb4dc)); s.position.set(x, 0.502, 3); g.add(s); });
     if (opts.edges) g.add(new THREE.LineSegments(new THREE.EdgesGeometry(b.geometry), new THREE.LineBasicMaterial({ color: COL.dieEdge })).translateX(5).translateY(0.25).translateZ(3));
     return g;
   }
 
-  // Shared gripper module (same part on the Cartesian arm, the sorting head, or a fallback robot):
-  // actuator body offset to -X outside the objective footprint; two thin cantilever finger bars run
-  // along +X at 'armH' above the die top and end in stepped noses on the die's end faces.
-  // Local origin = die bottom corner when closed on a die at origin.
-  function makeGripper(armH) {
+  // Gripper module exactly as in docs/cad/gripper_module.py (CAD frame, die origin, closed on a 10.000 die):
+  // SMC MHZ2-6D body X -40..-20 / Y -2..8 / Z 25.2..64; fingers 4 x 4 x 14.2 (Y 1..5) ending at Z 11;
+  // NEAR arm: root plate on the near finger's -X face, 3 x 3 bar in the Y -1.8..1.2 lane at Z 5.5..8.5,
+  //   raised head Z 6.5..9.5 holding a 0.127 mm flexure blade whose lower end carries the near tip block (nose face X 0.065);
+  // FAR arm: root on the far finger's +X face, bar in the Y 4.8..7.8 lane to a head at X 11.9..15.9, rigid tip block (nose face X 9.935);
+  // bracket: 3 mm plate on the body's -Y face and a 6 mm top plate X -54..-22 with the 25 x 25 M4 pattern (Z 64..70).
+  function makeGripper() {
     const g = new THREE.Group();
-    const dieTop = 0.5, yBar = dieTop + armH;             // bar underside
-    const L = new THREE.Group(), R = new THREE.Group();
-    // left (near) finger: bar z 0.5..2.5, drop + nose centred on the die's middle 3 mm
-    L.add(span(-16, -0.3, yBar, yBar + 3, 0.5, 2.5, mat(COL.jawBody)));
-    L.add(span(-1.1, -0.3, 0.40, yBar + 3, 1.5, 4.5, mat(COL.jawBody)));
-    L.add(span(-0.8, 0, 0.05, 0.40, 1.5, 4.5, mat(COL.jaw)));            // nose (flexure-limited, 0.3 N)
-    // right (far) finger: bar z 3.5..5.5 passes over the die at armH, drop at x 10.3..11.1
-    R.add(span(-16, 11.1, yBar, yBar + 3, 3.5, 5.5, mat(COL.jawBody)));
-    R.add(span(10.3, 11.1, 0.40, yBar + 3, 1.5, 4.5, mat(COL.jawBody)));
-    R.add(span(10, 10.8, 0.05, 0.40, 1.5, 4.5, mat(COL.jaw)));           // rigid nose
-    // actuator body (SMC MHZ2-6D class, ~16 x 20 x 28) outside the objective footprint (x < -14)
-    const body = span(-34, -16, yBar - 2, yBar + 18, -2, 8, mat(COL.jaw));
-    const mount = span(-34, -16, yBar + 18, yBar + 24, -2, 8, mat(COL.axisMove));  // interface plate to the carrier
-    g.add(L, R, body, mount);
-    g.userData = { L, R, body, mount, armH };
+    const N = new THREE.Group(), F = new THREE.Group();
+    const mA = mat(COL.jawBody), mJ = mat(COL.jaw), mT = mat(COL.tip), mB = mat(COL.blade, { metalness: 0.4, roughness: 0.4 });
+    // near (compliant) side
+    N.add(cb(-34, -30, 1, 5, 11, 25.2, mJ));           // MHZ2 near finger
+    N.add(cb(-37, -34, 1, 5, 10, 21, mA));             // root plate (2 x M2)
+    N.add(cb(-37, -34, -1.8, 5, 9.0, 10, mA));         // transition block
+    N.add(cb(-37, -34, -1.8, 1.2, 5.5, 9.0, mA));      // drop into the low-Y lane
+    N.add(cb(-37, -0.735, -1.8, 1.2, 5.5, 8.5, mA));   // bar
+    N.add(cb(-5.735, -0.735, 1.2, 4.5, 6.5, 9.5, mA)); // raised head (blade slot + M2 clamp)
+    N.add(cb(-5.735, -0.735, 1.2, 1.5, 5.5, 6.5, mA)); // riser joining bar and head
+    N.add(cb(-1.80, -1.67, 1.5, 4.5, 0.5, 6.5, mB));   // flexure blade, 5 mm free length
+    N.add(cb(-1.935, -0.535, 1.5, 4.5, 0.05, 1.5, mT)); // near tip block (Semitron ESd 480)
+    N.add(cb(-0.535, 0.065, 1.5, 4.5, 0.05, 0.40, mJ)); // nose: 0.35 tall, top 0.10 below the die top
+    // far (rigid) side
+    F.add(cb(-30, -26, 1, 5, 11, 25.2, mJ));
+    F.add(cb(-26, -23, 1, 5, 10, 21, mA));
+    F.add(cb(-26, -23, 1, 7.8, 9.0, 10, mA));
+    F.add(cb(-26, -23, 4.8, 7.8, 5.5, 9.0, mA));
+    F.add(cb(-26, 15.935, 4.8, 7.8, 5.5, 8.5, mA));
+    F.add(cb(11.935, 15.935, 1.5, 4.5, 5.5, 8.5, mA)); // head
+    F.add(cb(10.535, 11.935, 1.5, 4.5, 0.05, 8.55, mT)); // far tip block
+    F.add(cb(9.935, 10.535, 1.5, 4.5, 0.05, 0.40, mJ)); // nose
+    // actuator body and bracket (fixed to the carrier)
+    const body = cb(-40, -20, -2, 8, 25.2, 64, mJ);
+    const vp = cb(-44, -22, -5, -2, 31.2, 70, mat(COL.axisMove));
+    const tp = cb(-54, -22, -14, 20, 64, 70, mat(COL.axisMove));
+    g.add(N, F, body, vp, tp);
+    g.userData = { N, F };
     return g;
   }
-  function setGripperOpen(gr, open) { gr.userData.L.position.x = -open; gr.userData.R.position.x = open; }
+  function setGripperOpen(gr, open) { gr.userData.N.position.x = -open; gr.userData.F.position.x = open; }
+
+  // Wafer-tray pocket walls as one extruded shape with a hole per pocket (cavity 12.0 x 6.8 + two 3.6 mm nose slots).
+  // cols: array of die X for each column; rows: array of die Y0 for each row. Wall from Z0 to Z1 (CAD).
+  function trayWalls(X0, X1, Y0, Y1, cols, rows, Z0, Z1, m) {
+    const sh = new THREE.Shape();
+    sh.moveTo(X0, Y0); sh.lineTo(X1, Y0); sh.lineTo(X1, Y1); sh.lineTo(X0, Y1); sh.closePath();
+    cols.forEach((xd) => rows.forEach((y0) => {
+      const h = new THREE.Path();
+      const pts = [
+        [xd - 3.2, y0 + 1.2], [xd - 1.0, y0 + 1.2], [xd - 1.0, y0 - 0.4], [xd + 11.0, y0 - 0.4], [xd + 11.0, y0 + 1.2],
+        [xd + 13.2, y0 + 1.2], [xd + 13.2, y0 + 4.8], [xd + 11.0, y0 + 4.8], [xd + 11.0, y0 + 6.4], [xd - 1.0, y0 + 6.4],
+        [xd - 1.0, y0 + 4.8], [xd - 3.2, y0 + 4.8]];
+      h.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) h.lineTo(pts[i][0], pts[i][1]); h.closePath();
+      sh.holes.push(h);
+    }));
+    const geo = new THREE.ExtrudeGeometry(sh, { depth: Z1 - Z0, bevelEnabled: false });
+    const mesh = new THREE.Mesh(geo, m);
+    mesh.rotation.x = Math.PI / 2;      // shape (X, Y) -> viewer (x, z); extrude -> viewer -y
+    mesh.position.y = Z1;
+    return mesh;
+  }
+  function trayLedges(cols, rows, Z0, Z1, m) {
+    const n = cols.length * rows.length * 2;
+    const inst = new THREE.InstancedMesh(new THREE.BoxGeometry(10, Z1 - Z0, 1.0), m, n);
+    const m4 = new THREE.Matrix4(); let k = 0;
+    cols.forEach((xd) => rows.forEach((y0) => {
+      m4.makeTranslation(xd + 5, (Z0 + Z1) / 2, y0 + 0.9); inst.setMatrixAt(k++, m4);
+      m4.makeTranslation(xd + 5, (Z0 + Z1) / 2, y0 + 5.1); inst.setMatrixAt(k++, m4);
+    }));
+    return inst;
+  }
 
   // ---------- label system ----------
   const labelLayer = document.getElementById('labels');
@@ -308,6 +360,7 @@
   };
   const clamp01 = (x) => Math.min(1, Math.max(0, x));
   const seg = (t, i) => clamp01(t - i);              // progress of step i in [0,1]
+  const sub = (t, i, a, b) => clamp01((seg(t, i) - a) / (b - a));   // progress of the sub-phase a..b of step i
   const ease = (x) => x * x * (3 - 2 * x);
   let current = null;
   const P = {};   // parameter values
@@ -343,182 +396,240 @@
     g.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) { (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => m.dispose()); } });
     while (g.children.length) g.remove(g.children[0]);
   }
-  function setGrid(size, step) {
+  function setGrid(size, step, y = 0) {
     if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
     grid = new THREE.GridHelper(size, size / step, css('--scene-grid'), css('--scene-grid'));
-    grid.material.transparent = true; grid.material.opacity = 0.55;
+    grid.material.transparent = true; grid.material.opacity = 0.55; grid.position.y = y;
     scene.add(grid);
   }
 
   // =====================================================================
-  // Scene 1: test nest exchange
+  // Scene 1: test station exchange (mirrors docs/cad/station_assembly.py)
   // =====================================================================
+  const ST = {
+    tableZ: -86, gapY: 45, nanoW: 112, nanoH: 62.5, platH: 4, protr: 12,
+    xAxisCy: -100, axisW: 102, axisH: 64, carT: 10, carLen: 102, xRiser: 76, xcNest: -120,
+    xBody: [-440, -60], zBodyLen: 150, yBody: [-38, 167],
+    cols: 8, rows: 14, colPitch: 16, rowPitch: 7.5, col0X: -150,
+    gxPark: -60,                         // gripper die-origin X while a die is measured (far tip at X -44, outside the nest and keep-out)
+    home: { c: 2, r: 5 }, next: { c: 3, r: 6 }   // pocket of the die under test, and of the next die
+  };
+  ST.colX = Array.from({ length: ST.cols }, (_, c) => ST.col0X - c * ST.colPitch);
+  ST.rowOff = (r) => -(r - (ST.rows - 1) / 2) * ST.rowPitch;     // Y-stage offset that brings row r to the die line (Y 0..6)
+
   const nestScene = {
-    id: 'nest', steps: 7,
+    id: 'nest', steps: 13,
     params: [
       { key: 'wd', label: 'Objective working distance', min: 8, max: 34, step: 0.5, value: 20, unit: 'mm', dec: 1 },
-      { key: 'armH', label: 'Finger bars above die top', min: 3, max: 12, step: 0.5, value: 5, unit: 'mm', dec: 1 },
       { key: 'retract', label: 'Fiber safety retract', min: 0.2, max: 5, step: 0.1, value: 1.0, unit: 'mm', dec: 1 },
-      { key: 'swing', label: 'Objective swings away during exchange (motorized pivot)', type: 'bool', value: false }
+      { key: 'swing', label: 'Objective swings away during exchange (motorized pivot on the column)', type: 'bool', value: false }
     ],
-    names: ['Measuring', 'Fibers retract', 'Arm descends (Z)', 'Jaws close', 'Die lifts off rails', 'Carry along X', 'Set into stick'],
+    names: ['Measuring', 'Fibers retract', 'Gripper enters along X', 'Z down beside the end faces', 'Jaws close', 'Rail vacuum off, lift',
+      'Carry to its own pocket', 'Set onto the pocket ledges', 'Release and rise', 'Move to the next die', 'Pick the next die', 'Return to the nest and seat', 'Release, retreat, fibers approach'],
     descs: [
-      'Fibers coupled at both facets from two NanoMax stages at ±Y; die held by rail vacuum; gripper parked outboard at −X. Dies move along X, never across the fiber line.',
-      'Fiber arms back off along Y by the safety retract. Small, because the gripper comes in along X, not through the fiber corridor.',
-      'Z lowers the arm. Only the two thin finger bars enter the orange keep-out under the objective; the gripper body stays outside it.',
-      'Jaws close on the middle 3 mm of each end face, 0.2–0.5 N. X and θ now defined by the jaw faces.',
-      'Rail vacuum off; Z lifts the die 3 mm. Nothing has touched the top surface or the facets.',
-      'X axis carries the die 160 mm to the stick station. The camera follows the die.',
-      'Z lowers the die onto the stick ledges, jaws open, Z rises. Next die is picked the same way in reverse.'
+      'Fibers coupled at both facets from the two NanoMax 300 stages at ±Y; die held by rail vacuum on the nest. The gripper waits at Z +8 mm, 60 mm out along X, clear of the objective footprint. Microscope column behind the nest at X +80.',
+      'Both NanoMax Y axes back the fibers off by the safety retract. Small, because the tool comes in along X, never through the fiber corridor.',
+      'X carriage −180 → −120: the two finger bars slide in 13.5 mm above the die, under the objective. Actuator body, bracket and arm stay outside the Ø40 tube.',
+      'Z −8 mm: the open noses (1.9 mm outside each end face) descend beside the middle 3 mm of the end faces. Near head top 11 mm under the front lens.',
+      'Jaws close to the finger-on-finger stop; the 0.127 mm blade preloads 0.32 N on the die. X and θ are now defined by the nose faces.',
+      'Rail vacuum off (switch reads atmosphere); Z +8 mm lifts the die. Nothing has touched the top surface or the facets.',
+      'X carriage runs 150 + 16·c mm along the die\'s long axis to column c of the wafer tray. Every die returns to the pocket it came from; the map holds the result.',
+      'Z −11 mm: die onto the ledges under its facet-edge strips, 3 mm below nest height. The open noses drop into the 3.6 mm slots in the end walls.',
+      'Jaws open 1.5 mm per side; the pocket retains the die to ±1.0 mm in X by its corners and ±0.4 mm in Y. Z +11 mm.',
+      'X selects the next column, the Y stage under the tray brings the next row to the die line (±48.75 mm). Both moves run together.',
+      'Z −11 mm, jaws close on the end faces, Z +11 mm. The pocket\'s ±1 mm X play is inside the noses\' ±1.9 mm capture, so no vision is needed here.',
+      'X back to the nest, Z −8 mm onto the rails, rail vacuum on (seat detection). Coarse placement is enough: the camera above measures X/Y/θ afterwards.',
+      'Jaws open, Z +8 mm, X out to the park position; only then do the fibers approach again. Camera pose, correction stage and first-light follow.'
     ],
     build() {
       const g = root;
-      // correction stage + deck (deck narrow in Y so the fiber corridors stay open)
-      g.add(span(-12, 22, -9, -3, -6, 12, mat(COL.stage)));
-      g.add(span(-4, 14, -3, 0, 0.6, 5.4, mat(COL.deck)));
-      // rails 1 mm inboard of facets
-      g.add(span(0, 10, 0, 1.5, 1.0, 1.9, mat(COL.rail)));
-      g.add(span(0, 10, 0, 1.5, 4.1, 5.0, mat(COL.rail)));
-      // die
-      this.die = makeDie(); this.die.position.set(0, 1.5, 0); g.add(this.die);
-      // ---- Cartesian axes (bench level, outboard at -X) ----
-      g.add(span(-270, -60, -75, -26, -10, 20, mat(COL.stage)));                   // X axis riser
-      g.add(span(-270, -60, -26, -12, -12, 22, mat(COL.axisFixed)));               // X axis body (210 mm)
-      this.xCar = span(-25, 25, -12, -4, -10, 20, mat(COL.axisMove)); g.add(this.xCar); // X carriage
-      this.zStage = new THREE.Group(); g.add(this.zStage);
-      this.zStage.add(span(-20, 0, -4, 62, -8, 18, mat(COL.axisFixed)));         // Z axis body (50 mm travel)
-      this.zCar = new THREE.Group(); this.zStage.add(this.zCar);
-      this.zCar.add(span(0, 12, -6, 20, -8, 18, mat(COL.axisMove)));             // Z carriage
-      this.arm = new THREE.Group(); this.zCar.add(this.arm);                      // arm + gripper move with Z carriage
-      // stick station at -X on a Y stage
-      g.add(span(-170, -130, -75, -60, -60, 60, mat(COL.stage)));                 // stick riser
-      g.add(span(-170, -130, -60, -12, -50, 50, mat(COL.axisFixed)));             // Y axis under the stick (150 mm travel)
-      this.stick = new THREE.Group(); g.add(this.stick);
-      this.stick.add(span(-166, -134, -12, -10, -20, 20, mat(COL.stick)));        // stick slab (5 pockets shown)
-      for (let i = -2; i <= 2; i++) {
-        const z0 = i * 7.5 - 3;
-        this.stick.add(span(-160, -150, -10, -9.2, z0 + 0.4, z0 + 1.4, mat(COL.rail)));
-        this.stick.add(span(-160, -150, -10, -9.2, z0 + 4.6, z0 + 5.6, mat(COL.rail)));
-        this.stick.add(span(-166, -134, -10, -8.4, z0 - 0.75, z0 - 0.05, mat(COL.stick)));
-        if (i !== 0) { const d = makeDie(); d.position.set(-160, -9.2, z0); this.stick.add(d); }
-      }
-      this.stick.add(span(-166, -134, -10, -8.4, 2 * 7.5 - 3 + 6.05, 2 * 7.5 - 3 + 6.75, mat(COL.stick)));
-      // optical-table plane: the NanoMax deck (62.5 mm) + fiber holder put the fiber axis at die-top height,
-      // so the nest sits on a ~75 mm riser. Table top at y = -75.
-      g.add(span(-300, 120, -78, -75, -140, 160, mat(0xd6dae0)));
-      g.add(span(-12, 22, -75, -9, -6, 12, mat(COL.stage)));                        // nest riser
-      // fibers: input at z<0, output at z>6. Each on a Thorlabs NanoMax 300 placeholder (112 x 112 footprint,
-      // 62.5 mm deck height, 4 mm travel) whose inner face is 'gapY' from the facet.
+      const tz = ST.tableZ;
+      // optical table and nest (kinematic base, riser, narrow rail insert, two rails 1 mm inboard of the facets)
+      g.add(cb(-540, 220, -280, 280, tz - 12, tz, mat(0xd6dae0)));
+      g.add(cb(-14, 24, -16, 22, tz, tz + 20, mat(COL.stage)));
+      g.add(cb(-8, 18, -10, 16, tz + 20, -4.5, mat(COL.stage)));
+      g.add(cb(-1, 11, 0.6, 5.4, -4.5, -1.5, mat(COL.deck)));
+      g.add(cb(0, 10, 1.0, 1.9, -1.5, 0, mat(COL.rail)));
+      g.add(cb(0, 10, 4.1, 5.0, -1.5, 0, mat(COL.rail)));
+      // NanoMax 300 stages (112 x 112 x 62.5, inner faces 45 mm from the facets) with fiber holders reaching in
       this.fibers = [];
-      const gapY = 45;                                                                // NanoMax inner face to facet
-      [-1, 1].forEach((sgn) => {
-        const f = new THREE.Group();
-        f.add(span(-51, 61, -75, -12.5, -(gapY + 112), -gapY, mat(COL.axisFixed)));          // NanoMax body 112 x 62.5 x 112
-        f.add(span(-41, 51, -12.5, -8.5, -(gapY + 100), -gapY - 8, mat(COL.gantry)));       // stage top platform (4 mm travel)
-        f.add(span(-1, 11, -8.5, 6.0, -(gapY + 30), -gapY + 6, mat(COL.clamp)));            // fiber-holder post on the deck
-        f.add(span(1, 9, 0.5, 3.5, -gapY + 6, -12, mat(COL.arm)));                          // holder arm reaching in
-        f.add(span(2, 8, 0, 4, -20, -12, mat(COL.clamp)));                                  // V-groove clamp
-        const fib = cyl(0.0625, 12, mat(COL.fiber, { roughness: 0.3 }), 12); fib.rotation.x = Math.PI / 2; fib.position.set(5, 2.0, -6.02); f.add(fib);
-        if (sgn > 0) { f.rotation.y = Math.PI; f.position.set(10, 0, 6); }
-        g.add(f); this.fibers.push({ g: f, s: sgn });
+      [-1, 1].forEach((s) => {
+        const yIn = s < 0 ? -ST.gapY : 6 + ST.gapY;                       // inner face
+        const y0 = s < 0 ? yIn - ST.nanoW : yIn, y1 = y0 + ST.nanoW;
+        g.add(cb(-51, 61, y0, y1, tz, tz + ST.nanoH, mat(COL.axisFixed)));
+        const mv = new THREE.Group();                                      // platform + holder + fiber (moves with the stage's Y axis)
+        mv.add(cb(-41, 51, y0 + 6, y1 - 6, tz + ST.nanoH, tz + ST.nanoH + ST.platH, mat(COL.gantry)));
+        const pt = tz + ST.nanoH + ST.platH;
+        if (s < 0) {
+          mv.add(cb(-4, 14, y1 - 14, y1 - 6, pt, 4.5, mat(COL.clamp)));
+          mv.add(cb(1, 9, y1 - 8, -ST.protr, -1, 2, mat(COL.arm)));
+          mv.add(cb(1, 9, -ST.protr - 8, -ST.protr, -1.5, 2.5, mat(COL.clamp)));
+        } else {
+          mv.add(cb(-4, 14, y0 + 6, y0 + 14, pt, 4.5, mat(COL.clamp)));
+          mv.add(cb(1, 9, 6 + ST.protr, y0 + 8, -1, 2, mat(COL.arm)));
+          mv.add(cb(1, 9, 6 + ST.protr, 6 + ST.protr + 8, -1.5, 2.5, mat(COL.clamp)));
+        }
+        const fib = cyl(0.0625, ST.protr, mat(COL.fiber, { roughness: 0.3 }), 12); fib.rotation.x = Math.PI / 2;
+        fib.position.set(5, 0.5, s < 0 ? -ST.protr / 2 : 6 + ST.protr / 2); mv.add(fib);
+        g.add(mv); this.fibers.push({ g: mv, s });
       });
-      this.gapY = gapY;
-      // objective on a column with a vertical pivot at +Y (swing-away option)
-      this.pivot = new THREE.Group(); this.pivot.position.set(5, 0, 100); g.add(this.pivot);
-      this.pivot.add(cyl(5, 110, mat(COL.gantry)).translateY(55));                 // column (thin post)
-      this.objArm = new THREE.Group(); this.pivot.add(this.objArm);
-      this.objArm.add(span(-4, 4, 62, 68, -100, 0, mat(COL.gantry)));           // horizontal arm to the objective
-      this.obj = new THREE.Group(); this.objArm.add(this.obj); this.obj.position.set(0, 0, -100);
-      const barrel = cyl(15, 30, mat(COL.objective, { roughness: 0.5, transparent: true, opacity: 0.35 })); barrel.position.y = 4 + 15; this.obj.add(barrel);
-      const nose = new THREE.Mesh(new THREE.CylinderGeometry(6, 10, 4, 40), mat(COL.objNose, { transparent: true, opacity: 0.6 })); nose.position.y = 2; this.obj.add(nose);
-      // keep-out volume under the objective: only thin finger bars may enter
+      // microscope: Ø34 objective + Ø40 tube on an arm to a Ø40 column at X 80 (behind the nest). Pivot for the swing-away option.
+      g.add(vcyl(80, 3, 20, tz, 260, mat(COL.gantry)));
+      this.pivot = new THREE.Group(); this.pivot.position.set(80, 0, 3); g.add(this.pivot);
+      this.pivot.add(cb(-75, 0, -15, 15, 100, 125, mat(COL.gantry)));                  // arm
+      this.obj = new THREE.Group(); this.obj.position.set(-75, 0, 0); this.pivot.add(this.obj);
+      const nose = new THREE.Mesh(new THREE.CylinderGeometry(12, 6, 4, 40), mat(COL.objNose, { transparent: true, opacity: 0.6 })); nose.position.y = 2; this.obj.add(nose);
+      const barrel = cyl(17, 40, mat(COL.objective, { roughness: 0.5, transparent: true, opacity: 0.35 })); barrel.position.y = 20; this.obj.add(barrel);
+      const tube = cyl(20, 60, mat(COL.objective, { roughness: 0.5, transparent: true, opacity: 0.35 })); tube.position.y = 70; this.obj.add(tube);
+      // keep-out under the objective: only the finger bars and tip blocks may enter
       this.keep = cyl(17, 1, mat(COL.keepout, { transparent: true, opacity: 0.14, depthWrite: false })); g.add(this.keep);
-      this.keepRing = new THREE.Mesh(new THREE.RingGeometry(16.6, 17, 64), new THREE.MeshBasicMaterial({ color: COL.keepout, side: THREE.DoubleSide })); this.keepRing.rotation.x = -Math.PI / 2; this.keepRing.position.set(5, 2.02, 3); g.add(this.keepRing);
+      this.keepRing = new THREE.Mesh(new THREE.RingGeometry(16.6, 17, 64), new THREE.MeshBasicMaterial({ color: COL.keepout, side: THREE.DoubleSide }));
+      this.keepRing.rotation.x = -Math.PI / 2; this.keepRing.position.set(5, 0.52, 3); g.add(this.keepRing);
+      // X axis (300 mm travel) on a 76 mm riser: body Z -10..54, centre-line Y -100, beside the input NanoMax
+      const ay0 = ST.xAxisCy - ST.axisW / 2, ay1 = ST.xAxisCy + ST.axisW / 2, zb = tz + ST.xRiser;
+      g.add(cb(ST.xBody[0], ST.xBody[1], ay0, ay1, zb, zb + ST.axisH, mat(COL.axisFixed)));
+      g.add(cb(ST.xBody[0] + 10, ST.xBody[1] - 10, ay0 + 6, ay1 - 6, tz, zb, mat(COL.stage)));
+      // X carriage -> Z body -> Z carriage -> L-arm -> gripper (positions relative to the carriage centre xc; gripper origin at xc + 120)
+      this.xCar = new THREE.Group(); g.add(this.xCar);
+      const zc0 = zb + ST.axisH;
+      this.xCar.add(cb(-ST.carLen / 2, ST.carLen / 2, ay0, ay1, zc0, zc0 + ST.carT, mat(COL.axisMove)));
+      this.xCar.add(cb(-ST.axisH / 2, ST.axisH / 2, ay0, ay1, zc0 + ST.carT, zc0 + ST.carT + ST.zBodyLen, mat(COL.axisFixed)));
+      this.zCar = new THREE.Group(); this.xCar.add(this.zCar);
+      const xf = ST.axisH / 2, gxr = -ST.xcNest;                                        // Z body +X face; gripper origin relative to xc
+      this.zCar.add(cb(xf, xf + 10, ay0, ay1, 50, 152, mat(COL.axisMove)));              // Z carriage plate
+      this.zCar.add(cb(gxr - 56, gxr - 22, -15, 25, 70, 78, mat(COL.axisMove)));         // end plate over the bracket interface
+      this.zCar.add(cb(gxr - 56, gxr - 31, ST.xAxisCy + 20, 25, 78, 103, mat(COL.axisMove)));   // 25 sq bar along Y
+      this.zCar.add(cb(xf + 10, gxr - 31, ST.xAxisCy + 20, ST.xAxisCy + 45, 78, 103, mat(COL.axisMove))); // 25 sq bar along X
+      this.gr = makeGripper(); this.gr.position.set(gxr, 0, 0); this.zCar.add(this.gr);
+      // Y stage (105 mm travel) under the wafer tray: 8 columns along X x 14 rows along Y = 112 pockets
+      const trayX0 = ST.colX[ST.cols - 1] - 4, trayX1 = ST.colX[0] + 14, trayCx = (trayX0 + trayX1) / 2, trayLenY = ST.rows * ST.rowPitch + 1.5;
+      g.add(cb(trayCx - ST.axisW / 2, trayCx + ST.axisW / 2, ST.yBody[0], ST.yBody[1], tz, tz + ST.axisH, mat(COL.axisFixed)));
+      this.yCar = new THREE.Group(); g.add(this.yCar);
+      const yc0 = tz + ST.axisH, yc = 3;                                                 // carriage centre when the middle row is on the die line
+      this.yCar.add(cb(trayCx - ST.axisW / 2, trayCx + ST.axisW / 2, yc - ST.carLen / 2, yc + ST.carLen / 2, yc0, yc0 + ST.carT, mat(COL.axisMove)));
+      this.yCar.add(cb(trayX0 - 8, trayX1 + 8, yc - trayLenY / 2 - 8, yc + trayLenY / 2 + 8, yc0 + ST.carT, -6, mat(COL.deck)));
+      const rowsY0 = Array.from({ length: ST.rows }, (_, k) => yc + (k - (ST.rows - 1) / 2) * ST.rowPitch - 3);
+      const mTray = mat(COL.tray);
+      this.yCar.add(cb(trayX0, trayX1, yc - trayLenY / 2, yc + trayLenY / 2, -6, -3.8, mTray));            // floor
+      this.yCar.add(trayWalls(trayX0, trayX1, yc - trayLenY / 2, yc + trayLenY / 2, ST.colX, rowsY0, -3.8, -2.2, mTray));
+      this.yCar.add(trayLedges(ST.colX, rowsY0, -3.8, -3.0, mat(COL.rail)));
+      // resident dies (all pockets except the one under test and the next one, which are animated)
+      const n = ST.cols * ST.rows;
+      const dies = new THREE.InstancedMesh(new THREE.BoxGeometry(10, 0.5, 6), mat(COL.die), n);
+      const tops = new THREE.InstancedMesh(new THREE.BoxGeometry(8, 0.01, 6), mat(COL.dieTop), n);
+      const m4 = new THREE.Matrix4(); let k = 0;
+      ST.colX.forEach((xd, c) => rowsY0.forEach((y0, r) => {
+        if ((c === ST.home.c && r === ST.home.r) || (c === ST.next.c && r === ST.next.r)) return;
+        m4.makeTranslation(xd + 5, -3 + 0.25, y0 + 3); dies.setMatrixAt(k, m4);
+        m4.makeTranslation(xd + 5, -3 + 0.505, y0 + 3); tops.setMatrixAt(k, m4); k++;
+      }));
+      dies.count = k; tops.count = k; this.yCar.add(dies, tops);
+      this.homeX = ST.colX[ST.home.c]; this.nextX = ST.colX[ST.next.c];
+      this.homeY0 = rowsY0[ST.home.r]; this.nextY0 = rowsY0[ST.next.r];
+      // the die under test (A) and the next die (B)
+      this.die = makeDie(); g.add(this.die);
+      this.die2 = makeDie(); g.add(this.die2);
       // labels
-      this.dieLabel = addLabel('die on nest rails', () => this.die.position.clone().add(new THREE.Vector3(5, 0.6, -1)));
+      addLabel('nest · rail vacuum · X-Y-θ correction below', () => new THREE.Vector3(5, -5, -12));
       addLabel('fiber', () => new THREE.Vector3(5, 2.4, -9));
       addLabel('fiber', () => new THREE.Vector3(5, 2.4, 15));
-      addLabel('NanoMax 300 (input fiber)', () => new THREE.Vector3(5, -6, -this.gapY - 56));
-      addLabel('NanoMax 300 (output fiber)', () => new THREE.Vector3(5, -6, 6 + this.gapY + 56));
-      addLabel('X axis (fixed)', () => new THREE.Vector3(-200, -12, 5));
-      addLabel('Z axis', () => this.zStage.localToWorld(new THREE.Vector3(-10, 64, 5)));
-      addLabel('gripper', () => this.gr.localToWorld(new THREE.Vector3(-25, 0.5 + P.armH + 26, 3)));
-      addLabel('stick · Y stage', () => new THREE.Vector3(-150, -6, 26));
-      this.objLabel = addLabel('', () => this.obj.localToWorld(new THREE.Vector3(0, 36, 0)));
+      addLabel('NanoMax 300 (input)', () => new THREE.Vector3(5, tz + 66, -ST.gapY - 56));
+      addLabel('NanoMax 300 (output)', () => new THREE.Vector3(5, tz + 66, 6 + ST.gapY + 56));
+      addLabel('microscope column X +80', () => new THREE.Vector3(80, 200, 3));
+      addLabel('X axis · 300 mm · on 76 mm riser', () => new THREE.Vector3(-300, zb + ST.axisH + 2, ST.xAxisCy));
+      addLabel('Z axis', () => this.xCar.localToWorld(new THREE.Vector3(0, zc0 + ST.carT + ST.zBodyLen + 2, ST.xAxisCy)));
+      addLabel('25 sq L-arm', () => this.zCar.localToWorld(new THREE.Vector3(gxr - 44, 105, -30)));
+      addLabel('gripper module (SMC MHZ2-6D)', () => this.gr.localToWorld(new THREE.Vector3(-30, 72, 3)));
+      addLabel('wafer tray · 8 × 14 = 112 pockets · Y stage', () => this.yCar.localToWorld(new THREE.Vector3(trayCx, 0, yc + trayLenY / 2 + 4)));
+      this.objLabel = addLabel('', () => this.obj.localToWorld(new THREE.Vector3(0, 44, 0)));
       addLabel('keep-out under objective Ø34', () => new THREE.Vector3(22, 2.2, -8), 'warn');
-      setGrid(400, 10);
+      this.dieLabel = addLabel('die under test', () => this.die.position.clone().add(new THREE.Vector3(5, 0.8, -1)));
+      this.die2Label = addLabel('next die', () => this.die2.position.clone().add(new THREE.Vector3(5, 0.8, -1)));
+      setGrid(800, 20, tz);
       this.rebuild();
     },
-    rebuild() {
-      if (this.gr) { this.arm.remove(this.gr); disposeGroup(this.gr); }
-      this.gr = makeGripper(P.armH);
-      // arm bar from the Z carriage (local x 0..12) out to the gripper mount
-      if (this.armBar) { this.arm.remove(this.armBar); disposeGroup(this.armBar); }
-      this.armBar = new THREE.Group();
-      const yTop = 0.5 + P.armH + 24;         // top of gripper mount plate (arm-local y; arm group sits at die bottom)
-      this.armBar.add(span(12, 86, yTop - 6, yTop, -2, 8, mat(COL.axisMove))); // reaches the gripper mount at world x = -34
-      this.arm.add(this.armBar, this.gr);
-      // gripper local origin (die corner) sits at world x=0 when the X carriage is at its nest position;
-      // the Z carriage's x is xCar + 0..12; gripper body spans -34..-16 -> place gripper at +80 from carriage
-      this.gr.position.set(80, 0, 0);
-      this.gr.userData.mount.position.y = 0;
-      this.pose(parseFloat(ui.t.value));
-    },
+    rebuild() { this.pose(parseFloat(ui.t.value)); },
     pose(t) {
-      const R = P.retract;
-      const retract = ease(seg(t, 1)) * R;
-      this.fibers.forEach((f) => { f.g.position.z = (f.s < 0 ? 0 : 6) + f.s * retract; });
-      const descend = 8 * (1 - ease(seg(t, 2)));
-      const open = 1.5 * (1 - ease(seg(t, 3)));
-      const lift = 3 * ease(seg(t, 4));
-      const carry = -160 * ease(seg(t, 5));
-      const setDown = ease(seg(t, 6));
-      const openEnd = 1.5 * setDown;
-      const dropToStick = (1.5 - (-9.2)) * setDown;          // nest die y 1.5 -> stick ledge top -9.2
-      // X carriage position: nest pose puts gripper origin at world x 0 => carriage x = -80
-      const xc = -80 + carry;
-      this.xCar.position.set(xc, 0, 0);
-      this.zStage.position.set(xc - 40, 0, 0);               // Z body sits on the carriage
-      const zLift = 1.5 + descend + lift - dropToStick;      // die-bottom height carried by the arm
-      this.zCar.position.set(0, zLift - 1.5, 0);
-      this.arm.position.set(0, 1.5, 0);                     // gripper origin at die bottom when zCar at 0
-      this.gr.position.set(80 + 40, 0, 0);                  // world x of gripper origin = xc + 40 + 120 - 160 => 0 at nest
-      this.gr.position.x = 0 - (xc - 40);                   // exact: local so that world x = 0 + carry
-      this.gr.position.x += carry;
-      setGripperOpen(this.gr, open + openEnd);
-      // die follows gripper after step 4 lift until set down
-      const held = t > 3.999 && setDown < 0.999;
-      this.die.position.set(0 + carry, 1.5 + lift - dropToStick, 0);
-      this.die.visible = true;
-      // objective: swing-away or fixed
-      this.obj.position.y = 2.0 + P.wd;
-      this.keep.scale.y = Math.max(0.1, P.wd); this.keep.position.set(5, 2.0 + P.wd / 2, 3);
+      const R = P.retract, e = ease;
+      const xA = this.homeX, xB = this.nextX, yA = ST.rowOff(ST.home.r), yB = ST.rowOff(ST.next.r);
+      // fibers: retract in step 1, approach again at the end of step 12 (after the gripper has left the footprint)
+      const retract = R * (e(seg(t, 1)) - e(sub(t, 12, 0.8, 1)));
+      this.fibers.forEach((f) => { f.g.position.z = f.s * retract; });
+      // gripper die-origin X
+      let gx = ST.gxPark;
+      gx += (0 - ST.gxPark) * e(seg(t, 2));
+      gx += (xA - 0) * e(seg(t, 6));
+      gx += (xB - xA) * e(sub(t, 9, 0, 0.6));
+      gx += (0 - xB) * e(sub(t, 11, 0, 0.4));
+      gx += (ST.gxPark - 0) * e(sub(t, 12, 0.5, 0.85));
+      // gripper die-bottom Z
+      let dz = 8;
+      dz -= 8 * e(seg(t, 3));
+      dz += 8 * e(seg(t, 5));
+      dz -= 11 * e(seg(t, 7));
+      dz += 11 * e(sub(t, 8, 0.5, 1));
+      dz -= 11 * e(sub(t, 10, 0, 0.4));
+      dz += 11 * e(sub(t, 10, 0.6, 1));
+      dz -= 8 * e(sub(t, 11, 0.4, 0.8));
+      dz += 8 * e(sub(t, 12, 0.2, 0.5));
+      // jaw opening (per side)
+      let open = 1.5;
+      open -= 1.5 * e(seg(t, 4));
+      open += 1.5 * e(sub(t, 8, 0, 0.5));
+      open -= 1.5 * e(sub(t, 10, 0.4, 0.6));
+      open += 1.5 * e(sub(t, 12, 0, 0.2));
+      // Y stage: row of die A on the die line until step 9, then row of die B
+      const yOff = yA + (yB - yA) * e(sub(t, 9, 0, 0.6));
+      this.xCar.position.x = ST.xcNest + gx;
+      this.zCar.position.y = dz;
+      this.yCar.position.z = yOff;
+      setGripperOpen(this.gr, open);
+      // die A: nest -> carried -> its pocket (moves with the tray afterwards)
+      const heldA = t >= 5 && t < 8;
+      if (t < 5) this.die.position.set(0, 0, 0);
+      else if (heldA) this.die.position.set(gx, dz, 0);
+      else this.die.position.set(xA, -3, yOff - yA);
+      // die B: its pocket -> carried -> nest
+      const heldB = t >= 10.6 && t < 11.8;
+      if (t < 10.6) this.die2.position.set(xB, -3, yOff - yB);
+      else if (heldB) this.die2.position.set(gx, dz, 0);
+      else this.die2.position.set(0, 0, 0);
+      // objective: WD and swing-away option
+      this.pivot.position.y = 0.5 + P.wd;
+      this.keep.scale.y = Math.max(0.1, P.wd); this.keep.position.set(5, 0.5 + P.wd / 2, 3);
       const swingOn = !!P.swing;
-      const swingAngle = swingOn ? (Math.PI / 3) * Math.min(ease(seg(t, 1)), 1 - ease(seg(t, 6))) : 0;
-      this.objArm.rotation.y = -swingAngle;
-      // readouts
-      const barTop = 2.0 + P.armH + 3;                       // finger bars are the highest thing under the objective
-      const clr = (2.0 + P.wd) - barTop;
+      const swingAngle = swingOn ? (Math.PI / 3) * Math.min(e(seg(t, 1)), 1 - e(sub(t, 12, 0.5, 1))) : 0;
+      this.pivot.rotation.y = swingAngle;
+      // readouts (static numbers from station_checks.txt; the objective gap follows the WD slider and the pose)
+      const headTop = 9.5 + Math.max(0, dz);                          // near head top is the highest tool part under the objective
+      const clr = (0.5 + P.wd) - headTop;
+      const inFootprint = gx > -35 && gx < 30;
       const rows = [
-        [swingOn ? 'Objective during exchange' : 'Objective nose to finger bars', swingOn ? 'swung clear' : clr.toFixed(1) + ' mm', swingOn ? 'good' : (clr < 2 ? 'bad' : 'good')],
-        ['Actuator body vs objective footprint', 'outside (X ≤ −16)', 'good'],
-        ['Jaw contact to nearest facet corner', '1.5 mm', 'good'],
-        ['Fiber tip to facet during exchange', (0.02 + retract).toFixed(2) + ' mm', retract < 0.5 && t > 1.5 ? 'bad' : ''],
-        ['Free space needed beyond each end face', '1.6 mm', ''],
-        ['Jaw top below die surface', '0.10 mm', 'good'],
-        ['Gap between NanoMax stages (Y)', (6 + 2 * this.gapY).toFixed(0) + ' mm', 'good'],
-        ['Gap between fiber clamps (Y)', '30 mm vs 10 mm gripper', 'good'],
+        [swingOn ? 'Objective during exchange' : 'Front lens to near head (now)', swingOn ? 'swung clear' : (inFootprint ? clr.toFixed(1) + ' mm' : 'tool outside footprint'), swingOn || !inFootprint ? 'good' : (clr < 2 ? 'bad' : 'good')],
+        ['Front lens to bars, gripper at die level', (0.5 + P.wd - 8.5).toFixed(1) + ' mm', (0.5 + P.wd - 8.5) < 3 ? 'bad' : 'good'],
+        ['Actuator body to Ø40 tube · to objective', '5 · 8 mm', 'good'],
+        ['Arm end plate / bracket to Ø40 tube', '7 mm', 'good'],
+        ['Bars to fiber holder arms (Y)', '10.2 mm', 'good'],
+        ['X axis to input NanoMax (X)', '9 mm, above its actuators', 'good'],
+        ['X carriage to NanoMax at the nest', '73 mm', 'good'],
+        ['Fiber tip to facet during exchange', (0.02 + retract).toFixed(2) + ' mm', retract < 0.5 && t > 1.5 && t < 12.8 ? 'bad' : ''],
+        ['X travel used (farthest column)', '262 of 300 mm', 'good'],
+        ['Y travel used (14 rows)', '97.5 of 105 mm', 'good'],
+        ['Pocket play vs nose capture', '±1.0 vs ±1.9 mm', 'good'],
         ['Die travel direction', 'along X, never across fibers', 'good']
       ];
       setReadouts(rows);
       if (this.objLabel) {
-        this.objLabel.textContent = 'objective · WD ' + P.wd.toFixed(1) + ' mm' + (!swingOn && clr < 2 ? ' · COLLISION with finger bars' : (swingOn && swingAngle > 0.01 ? ' · swung away' : ''));
-        this.objLabel.className = 'lbl' + (!swingOn && clr < 2 ? ' warn' : '');
+        const bad = !swingOn && inFootprint && clr < 2;
+        this.objLabel.textContent = 'objective Ø34 · WD ' + P.wd.toFixed(1) + ' mm' + (bad ? ' · COLLISION with the gripper head' : (swingOn && swingAngle > 0.01 ? ' · swung away' : ''));
+        this.objLabel.className = 'lbl' + (bad ? ' warn' : '');
       }
+      if (this.dieLabel) this.dieLabel.textContent = t < 8 ? 'die under test' : 'tested die back in its pocket';
+      if (this.die2Label) this.die2Label.textContent = t < 11.8 ? 'next die' : 'next die on the nest';
     },
-    follow() { return this.die.position.clone().add(new THREE.Vector3(5, 4, 3)); },
-    view: { target: [5, 6, 3], theta: -0.7, phi: 1.2, dist: 110 },
-    wide: { target: [-60, -10, 5], theta: -0.6, phi: 1.05, dist: 480 }
+    follow() { return new THREE.Vector3(this.xCar.position.x - ST.xcNest + 5, this.zCar.position.y + 4, 3); },
+    view: { target: [5, 6, 3], theta: -0.75, phi: 1.2, dist: 120 },
+    wide: { target: [-120, -30, -10], theta: -0.55, phi: 0.8, dist: 900 }
   };
 
   // =====================================================================
@@ -530,23 +641,22 @@
       { key: 'street', label: 'Street width after expansion', min: 0.05, max: 1.5, step: 0.05, value: 1.0, unit: 'mm', dec: 2 },
       { key: 'raise', label: 'Ejector raise', min: 0.3, max: 2.0, step: 0.1, value: 1.0, unit: 'mm', dec: 1 }
     ],
-    names: ['On tape', 'Ejector raises die', 'Jaws descend', 'Jaws close', 'Lift clear', 'Carry to stick'],
+    names: ['On tape', 'Ejector raises die', 'Jaws descend', 'Jaws close', 'Lift clear', 'Carry to the tray'],
     descs: [
       'Diced wafer on UV-released tape, expanded on the film frame. Anvil vacuum holds the tape flat. Neighbours on all four sides, facets facing facets along Y.',
       'Four Ø0.5 mm pins under the 1-mm end zones push up through the tape. The tape peels from the backside and tents; the die rises above its neighbours.',
-      'Jaws descend beside the end faces, entirely above the neighbours\' plane. With ~1 mm streets the lifted die cannot reach a neighbour\'s facet even if it tilts.',
+      'Noses descend beside the end faces, entirely above the neighbours\' plane. With ~1 mm streets the lifted die cannot reach a neighbour\'s facet even if it tilts.',
       'Jaws close on the middle 3 mm of each end face. The die is now held; the pin tips carry no load.',
       'Gripper lifts 3 mm; pins retract; tape relaxes. First and only bare-die pick from tape.',
-      'Head carries the die to the stick deck. Wafer map position becomes the stick pocket ID.'
+      'Head carries the die to the wafer tray. Wafer map position (row, column) becomes the pocket index.'
     ],
     build() {
       const g = root;
       g.add(span(-8, 18, -3, 0, -8, 14, mat(COL.anvil)));
-      // vacuum ports in the anvil
       [[-4, -1], [14, 7], [5, -4], [5, 10]].forEach(([x, z]) => { const p = cyl(0.3, 0.2, mat(0x333333)); p.position.set(x, 0.0, z); g.add(p); });
       this.die = makeDie(); g.add(this.die);
       this.pins = [[0.5, 1], [0.5, 5], [9.5, 1], [9.5, 5]].map(([x, z]) => { const p = cyl(0.25, 4, mat(COL.pin), 16); p.position.set(x, -2, z); g.add(p); return p; });
-      this.gr = makeGripper(5); g.add(this.gr);
+      this.gr = makeGripper(); g.add(this.gr);
       this.neigh = new THREE.Group(); g.add(this.neigh);
       this.tape = null;
       addLabel('ejector anvil · tape vacuum', () => new THREE.Vector3(-4, 0.2, 12));
@@ -592,7 +702,7 @@
       setReadouts([
         ['Street width after expansion', P.street.toFixed(2) + ' mm', P.street < 0.5 ? 'bad' : 'good'],
         ['Die raised above tape', raise.toFixed(2) + ' mm', ''],
-        ['Jaw nose bottom above neighbour top', c.toFixed(2) + ' mm', (t > 1.9 && c < 0.2) ? 'bad' : (c >= 0.2 ? 'good' : '')],
+        ['Nose bottom above neighbour top', c.toFixed(2) + ' mm', (t > 1.9 && c < 0.2) ? 'bad' : (c >= 0.2 ? 'good' : '')],
         ['Tilt to touch neighbour facet (2° would need)', (Math.tan(2 * Math.PI / 180) * 6 / 2).toFixed(2) + ' mm street', P.street < 0.1 ? 'bad' : ''],
         ['Pin contact', 'backside only', 'good']
       ]);
@@ -604,78 +714,71 @@
   };
 
   // =====================================================================
-  // Scene 3: place into stick pocket
+  // Scene 3: place into a wafer-tray pocket (pocket geometry from station_assembly.py)
   // =====================================================================
   const stickScene = {
     id: 'stick', steps: 4,
     params: [],
-    names: ['Arrive over pocket', 'Descend', 'Jaws open', 'Rise'],
+    names: ['Arrive over the pocket', 'Descend', 'Jaws open', 'Rise'],
     descs: [
-      'Gripper arrives 4 mm above an empty pocket. Pocket: two backside ledges under the facet-edge strips, 0.4 mm Y clearance, and 2 mm of free length beyond each end face for the jaws.',
-      'The die is lowered until its backside rests on the ledges. The jaw noses are 0.05 mm above the die bottom, so no slot recess is needed in the pocket floor.',
-      'Jaws open 1.5 mm per side and release the die. It sits on the ledges only; the pocket walls retain it in transport.',
-      'Gripper rises clear. Pocket pitch 7.5 mm along the stick; 14 pockets per 105 mm stick.'
+      'Gripper arrives 11 mm above the ledges (nest height + 8). Pocket: cavity 12.0 × 6.8 mm, two backside ledges under the facet-edge strips, 3.6 mm nose slots in both end walls.',
+      'The die is lowered onto the ledges; the noses (0.05 mm above the die bottom) drop into the slots, 0.85 mm above the pocket floor.',
+      'Jaws open 1.5 mm per side. The die is retained to ±1.0 mm in X by its corners against the end walls and ±0.4 mm in Y; both inside the noses\' ±1.9 mm capture on the next pick.',
+      'Gripper rises. Column pitch 16 mm along X (the die\'s long axis), row pitch 7.5 mm along Y; 8 × 14 pockets = one 4″ wafer.'
     ],
     build() {
       const g = root;
-      // stick slab: x -3..13 (die X across stick), z along stick
-      const pitch = 7.5, n = 3;
-      g.add(span(-3, 13, -2, 0, -0.75, n * pitch - 0.75, mat(COL.stick)));
-      for (let i = 0; i < n; i++) {
-        const z0 = i * pitch;
-        // ledges under facet-edge strips
-        g.add(span(0, 10, 0, 0.8, z0 + 0.4, z0 + 1.4, mat(COL.rail)));
-        g.add(span(0, 10, 0, 0.8, z0 + 4.6, z0 + 5.6, mat(COL.rail)));
-        // Y walls (along X), 0.7 thick, at z0-0.75..z0-0.05 and z0+6.05..z0+6.75
-        g.add(span(-3, 13, 0, 1.6, z0 - 0.75, z0 - 0.05, mat(COL.stick)));
-        // X end walls beyond the jaw slots
-        g.add(span(-3, -2, 0, 1.6, z0 - 0.05, z0 + 6.05, mat(COL.stick)));
-        g.add(span(12, 13, 0, 1.6, z0 - 0.05, z0 + 6.05, mat(COL.stick)));
-        if (i !== 1) { const d = makeDie(); d.position.set(0, 0.8, z0); g.add(d); }
-      }
-      g.add(span(-3, 13, 0, 1.6, n * pitch - 0.75 - 0.7, n * pitch - 0.75, mat(COL.stick)));
+      const cols = [0, -16], rows = [-7.5, 0, 7.5];
+      const X0 = cols[1] - 4, X1 = cols[0] + 14, Y0 = rows[0] - 0.75 - 3, Y1 = rows[2] + 6.75 + 3;
+      const mTray = mat(COL.tray);
+      g.add(cb(X0, X1, Y0, Y1, -2.2, 0, mTray));                        // floor (top at Z 0 = ledge bottom)
+      g.add(trayWalls(X0, X1, Y0, Y1, cols, rows, 0, 1.6, mTray));
+      g.add(trayLedges(cols, rows, 0, 0.8, mat(COL.rail)));
+      cols.forEach((xd) => rows.forEach((y0) => { if (xd === 0 && y0 === 0) return; const d = makeDie(); d.position.set(xd, 0.8, y0); g.add(d); }));
       this.die = makeDie(); g.add(this.die);
-      this.gr = makeGripper(5); g.add(this.gr);
-      addLabel('ledge under facet-edge strip', () => new THREE.Vector3(5, 1.0, 7.5 + 0.9));
-      addLabel('2 mm jaw space', () => new THREE.Vector3(-1, 1.0, 7.5 + 3));
-      addLabel('pocket pitch 7.5', () => new THREE.Vector3(13.5, 0.5, 7.5 * 1.5));
-      setGrid(60, 5);
+      this.gr = makeGripper(); g.add(this.gr);
+      addLabel('ledge under facet-edge strip', () => new THREE.Vector3(5, 1.2, 0.9));
+      addLabel('nose slot 3.6 wide', () => new THREE.Vector3(-2.1, 1.8, 3));
+      addLabel('end wall at ±1.0 mm (corner retention)', () => new THREE.Vector3(11.5, 1.8, 7));
+      addLabel('column pitch 16', () => new THREE.Vector3(-8, 0.5, -4));
+      addLabel('row pitch 7.5', () => new THREE.Vector3(15, 0.5, 3.75));
+      setGrid(80, 5);
       setReadouts([
-        ['Jaw nose bottom above pocket floor', '0.85 mm', 'good'],
-        ['Free length beyond each end face', '2.0 mm', 'good'],
-        ['Y clearance to pocket wall', '0.4 mm', ''],
-        ['Ledge width under facet-edge strip', '1.0 mm', '']
+        ['Nose bottom above pocket floor', '0.85 mm', 'good'],
+        ['Die play in X (corner retention)', '±1.0 mm', 'good'],
+        ['Nose capture on re-pick', '±1.9 mm', 'good'],
+        ['Y clearance to pocket wall', '±0.4 mm', ''],
+        ['Nose slot', '3.6 wide × 2.2 deep', ''],
+        ['Ledge under facet-edge strip', '1.0 wide × 0.8 tall', '']
       ]);
     },
     rebuild() { this.pose(parseFloat(ui.t.value)); },
     pose(t) {
-      const z0 = 7.5;
-      const down = 4 * (1 - ease(seg(t, 1)));
+      const down = 11 * (1 - ease(seg(t, 1)));
       const open = 1.5 * ease(seg(t, 2));
-      const rise = 6 * ease(seg(t, 3));
-      this.die.position.set(0, 0.8 + down, z0);
-      this.gr.position.set(0, 0.8 + down + rise, z0);
+      const rise = 11 * ease(seg(t, 3));
+      this.die.position.set(0, 0.8 + down, 0);
+      this.gr.position.set(0, 0.8 + down + rise, 0);
       setGripperOpen(this.gr, open);
     },
-    view: { target: [-2, 4, 9], theta: 0.9, phi: 1.05, dist: 75 }
+    view: { target: [0, 5, 3], theta: 0.8, phi: 1.05, dist: 90 }
   };
 
   // =====================================================================
-  // Scene 4: sorting station layout (macro)
+  // Scene 4: sorting station layout (macro): tape -> wafer tray
   // =====================================================================
   const stationScene = {
     id: 'station', steps: 3,
     params: [],
-    names: ['Table positions die', 'Pick', 'Carry to stick deck'],
+    names: ['Table positions die', 'Pick', 'Carry to the tray deck'],
     descs: [
       'The wafer X–Y–θ table moves the expanded film frame so the target die sits under the fixed pick point (ejector below the tape, camera above).',
       'Ejector raises the die; the head\'s jaws take it by the end faces. The pick point never moves, so the ejector and camera are fixed and simple.',
-      'The head gantry (X ≈ 600 mm, Y ≈ 330 mm, Z 60 mm) carries the die to the pass / fail / regrade / spare sticks. A gantry is fine here: nothing lives above the wafer.'
+      'The head gantry (X ≈ 500 mm, Y ≈ 330 mm, Z 60 mm) carries the die to the wafer tray and places it at its map (row, column). A gantry is fine here: nothing lives above the wafer.'
     ],
     build() {
       const g = root;
       g.add(span(0, 860, -20, 0, 0, 500, mat(COL.base)));
-      // wafer table
       g.add(span(20, 420, 0, 12, 60, 460, mat(COL.table)));
       this.table = new THREE.Group(); g.add(this.table);
       const ring = new THREE.Mesh(new THREE.TorusGeometry(128, 5, 12, 80), mat(COL.ring)); ring.rotation.x = Math.PI / 2; ring.position.set(0, 16, 0); this.table.add(ring);
@@ -684,16 +787,14 @@
       const dieMat = mat(COL.die);
       const inst = new THREE.InstancedMesh(dieGeo, dieMat, 400); let k = 0; const m4 = new THREE.Matrix4();
       for (let i = -5; i <= 5; i++) for (let j = -7; j <= 7; j++) {
-        const x = i * 11, z = j * 7.2; if (x * x + z * z < 100 * 100) { m4.makeTranslation(x, 16.6, z); inst.setMatrixAt(k++, m4); }
+        const x = i * 11, z = j * 7.2; if (x * x + z * z < 50 * 50) { m4.makeTranslation(x, 16.6, z); inst.setMatrixAt(k++, m4); }
       }
       inst.count = k; this.table.add(inst);
       this.table.position.set(220, 0, 270);
-      // pick point marker: ejector under table (shown as post) and camera above
       const pickX = 225, pickZ = 267;
       g.add(span(pickX - 8, pickX + 8, 0, 14, pickZ - 8, pickZ + 8, mat(COL.head)));
       const cam = cyl(12, 40, mat(COL.objective)); cam.position.set(pickX, 140, pickZ); g.add(cam);
       const camPost = span(pickX - 6, pickX + 6, 160, 300, pickZ - 6, pickZ + 6, mat(COL.gantry)); g.add(camPost);
-      // gantry: X beam along x at z=40 height 90; Y axis along z on right; head hangs
       g.add(span(200, 850, 80, 96, 30, 46, mat(COL.gantry)));
       g.add(span(836, 850, 60, 76, 46, 430, mat(COL.gantry)));
       [[210, 30], [830, 30], [843, 420]].forEach(([x, z]) => g.add(span(x - 8, x + 8, 0, 80, z - 8, z + 8, mat(COL.gantry))));
@@ -704,38 +805,41 @@
       this.yCarriage = span(-16, 16, 60, 96, -14, 14, mat(COL.gantry)); this.head.add(this.yCarriage);
       g.add(this.head);
       this.carried = box(10, 0.5, 6, mat(COL.die)); this.carried.position.set(0, 16.5, 0); this.head.add(this.carried);
-      // stick deck
+      // tray deck: the wafer tray being filled (8 x 14 pockets, 130 x 106) and an empty spare
       g.add(span(510, 840, 0, 10, 200, 500, mat(COL.table)));
-      for (let s = 0; s < 4; s++) {
-        const x0 = 544 + s * 74;
-        g.add(span(x0, x0 + 22, 10, 14, 234, 470, mat(COL.stick)));
-        for (let p = 0; p < 14; p++) { const d = box(10, 0.5, 6, mat(s === 0 && p < 9 ? COL.die : COL.base)); d.position.set(x0 + 11, 14.3, 240 + p * 16 + 3); g.add(d); }
-      }
+      const trays = [[560, 240, true], [720, 240, false]];
+      trays.forEach(([x0, z0, filling]) => {
+        g.add(span(x0, x0 + 130, 10, 16, z0, z0 + 106, mat(COL.tray)));
+        for (let c = 0; c < 8; c++) for (let r = 0; r < 14; r++) {
+          const full = filling && (r * 8 + c) < 37;
+          const d = box(10, 0.5, 6, mat(full ? COL.die : COL.base)); d.position.set(x0 + 12 + c * 16, 16.3, z0 + 5 + r * 7.5); g.add(d);
+        }
+      });
       g.add(span(40, 280, 0, 30, 470, 495, mat(0xc9b8e8)));
       addLabel('wafer X–Y–θ table', () => new THREE.Vector3(60, 14, 80));
       addLabel('fixed pick point · ejector below · camera above', () => new THREE.Vector3(pickX, 175, pickZ));
       addLabel('head X axis', () => new THREE.Vector3(500, 100, 38));
       addLabel('head Y axis', () => new THREE.Vector3(843, 80, 240));
-      addLabel('stick deck · pass / fail / regrade / spare', () => new THREE.Vector3(670, 12, 210));
+      addLabel('wafer tray being filled (map order)', () => new THREE.Vector3(625, 18, 236));
+      addLabel('spare tray', () => new THREE.Vector3(785, 18, 236));
       addLabel('UV cure box (offline)', () => new THREE.Vector3(160, 32, 482));
       this.pickPt = new THREE.Vector3(pickX, 0, pickZ);
       setGrid(1200, 100);
       setReadouts([
         ['Base plate', '860 × 500 mm', ''],
         ['Wafer table travel', '±70 mm, θ ±3°', ''],
-        ['Head travel', 'X 600 · Y 330 · Z 60 mm', ''],
-        ['Sticks on deck', '4 × 14 pockets', ''],
+        ['Head travel', 'X 500 · Y 330 · Z 60 mm', ''],
+        ['Trays on deck', '2 × (8 × 14) pockets', ''],
         ['Placement accuracy needed', '±0.3 mm, ±1°', 'good']
       ]);
     },
     rebuild() { this.pose(parseFloat(ui.t.value)); },
     pose(t) {
-      // table moves so a die comes to the pick point (step 0), head dips (step 1), head travels to deck (step 2)
       const tbl = ease(seg(t, 0));
       this.table.position.set(220 - 40 * (1 - tbl), 0, 270 + 30 * (1 - tbl));
       const dip = Math.sin(Math.PI * seg(t, 1)) * 30;
       const go = ease(seg(t, 2));
-      const hx = this.pickPt.x + (555 - this.pickPt.x) * go, hz = this.pickPt.z + (300 - this.pickPt.z) * go;
+      const hx = this.pickPt.x + (560 + 12 + 5 * 16 - this.pickPt.x) * go, hz = this.pickPt.z + (240 + 5 + 4 * 7.5 - this.pickPt.z) * go;
       this.head.position.set(hx, 14 - dip + 60 * Math.sin(Math.PI * go) * 0.4, hz);
       this.yCarriage.position.set(843 - hx, 0, 0);
       this.carried.visible = t > 1.5 && t < 2.98;
@@ -755,7 +859,7 @@
     ui.t.max = current.steps; ui.t.value = 0;
     current.build(); setView(current.view); onT();
     document.querySelectorAll('.tab').forEach((b) => b.setAttribute('aria-selected', b.dataset.scene === id ? 'true' : 'false'));
-    ui.viewhint.textContent = { nest: 'X → right · Z up · fibers along Y', tape: 'X → right · Z up · film frame plane', stick: 'X across the stick · pockets along Z', station: '1 unit = 1 mm · plan of the bench' }[id];
+    ui.viewhint.textContent = { nest: 'X → right (die long axis, transfer) · Z up · fibers along Y · microscope column at +X', tape: 'X → right · Z up · film frame plane', stick: 'X → right · rows along Y', station: '1 unit = 1 mm · plan of the bench' }[id];
   }
   const bn = document.getElementById('bn'), bt = document.getElementById('bt'), bd = document.getElementById('bd');
   function onT() {
