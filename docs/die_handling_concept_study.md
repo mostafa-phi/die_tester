@@ -505,6 +505,12 @@ photonics-oriented services offer this). The film frame is **not** integrated in
 tester: a 200/300 mm frame plus ejector is a large mechanism unrelated to optical
 testing, and decoupling keeps the tester's hotel simple.
 
+**Interactive 3-D model.** `docs/die_handling_3d.html` is a self-contained three.js
+page (open it in a browser) with four scenes — nest exchange, pick from tape, place into
+stick, sorting-station layout — each with a step scrubber, the two undetermined
+parameters as sliders (objective working distance, street width after expansion) and
+live clearance readouts that turn red on interference.
+
 **Station layout and pick geometry (Figs. 1–3).**
 
 ![Fig. 1 — sorting station layout](images/fig1_sorter_layout.svg)

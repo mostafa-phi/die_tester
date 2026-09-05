@@ -1,0 +1,702 @@
+<title>Die Handling Clearance Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #eef1f5; --panel: #f7f9fb; --ink: #1b2430; --ink-2: #4c5866; --ink-3: #7c8794;
+    --line: #d5dbe3; --accent: #2b5d8a; --accent-ink: #ffffff; --warn: #c02020; --ok: #2f7d4a;
+    --scene-bg: #e6eaf0; --scene-grid: #c9d0da; --scene-ground: #dde2e9;
+    --chip: #e3e9f1; --focus: #2b5d8a;
+    --font-ui: "IBM Plex Sans", "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12161d; --panel: #181d25; --ink: #e3e8f0; --ink-2: #aab4c1; --ink-3: #74808e;
+      --line: #2a323d; --accent: #8dbbe8; --accent-ink: #0e1622; --warn: #ff7a6b; --ok: #6cc48a;
+      --scene-bg: #1a2029; --scene-grid: #2c3540; --scene-ground: #222a34;
+      --chip: #232b36; --focus: #8dbbe8;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12161d; --panel: #181d25; --ink: #e3e8f0; --ink-2: #aab4c1; --ink-3: #74808e;
+    --line: #2a323d; --accent: #8dbbe8; --accent-ink: #0e1622; --warn: #ff7a6b; --ok: #6cc48a;
+    --scene-bg: #1a2029; --scene-grid: #2c3540; --scene-ground: #222a34;
+    --chip: #232b36; --focus: #8dbbe8;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 14px; line-height: 1.45; }
+  .app { display: grid; grid-template-columns: 340px 1fr; grid-template-rows: auto 1fr; height: 100vh; min-height: 560px; }
+  header { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 16px; padding: 12px 18px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  header h1 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: 0.01em; }
+  header .sub { color: var(--ink-3); font-size: 12.5px; }
+  header .units { margin-left: auto; font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
+  aside { display: flex; flex-direction: column; gap: 14px; padding: 14px 16px; border-right: 1px solid var(--line); background: var(--panel); overflow-y: auto; }
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .tab { appearance: none; border: 1px solid var(--line); background: transparent; color: var(--ink-2); font: 500 12.5px var(--font-ui); padding: 8px 10px; border-radius: 4px; cursor: pointer; text-align: left; }
+  .tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .tab:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  h2 { margin: 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); }
+  .block { display: flex; flex-direction: column; gap: 8px; }
+  .steps { display: flex; align-items: center; gap: 10px; }
+  .steps input[type=range] { flex: 1; accent-color: var(--accent); }
+  .play { appearance: none; border: 1px solid var(--line); background: var(--chip); color: var(--ink); width: 34px; height: 30px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .stepname { font-weight: 600; font-size: 13.5px; }
+  .stepname .n { font-family: var(--font-mono); color: var(--accent); margin-right: 8px; }
+  .stepdesc { color: var(--ink-2); font-size: 13px; min-height: 3.6em; }
+  .param { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; }
+  .param label { font-size: 12.5px; color: var(--ink-2); }
+  .param output { font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .param input[type=range] { grid-column: 1 / -1; accent-color: var(--accent); width: 100%; }
+  .readouts { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; font-size: 12.5px; }
+  .readouts .k { color: var(--ink-2); }
+  .readouts .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+  .readouts .v.bad { color: var(--warn); font-weight: 500; }
+  .readouts .v.good { color: var(--ok); }
+  .legend { display: grid; grid-template-columns: 14px 1fr; gap: 6px 8px; align-items: center; font-size: 12.5px; color: var(--ink-2); }
+  .sw { width: 14px; height: 14px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.15); }
+  .hint { color: var(--ink-3); font-size: 12px; }
+  .stage { position: relative; overflow: hidden; background: var(--scene-bg); }
+  canvas { display: block; width: 100%; height: 100%; }
+  .labels { position: absolute; inset: 0; pointer-events: none; }
+  .lbl { position: absolute; transform: translate(-50%, -100%); font-family: var(--font-mono); font-size: 11px; color: var(--ink); background: color-mix(in srgb, var(--panel) 82%, transparent); border: 1px solid var(--line); padding: 1px 5px; border-radius: 3px; white-space: nowrap; }
+  .lbl.warn { color: var(--warn); border-color: var(--warn); }
+  .lbl.ok { color: var(--ok); }
+  .viewhint { position: absolute; right: 12px; bottom: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
+  .viewbtns { position: absolute; left: 12px; top: 10px; display: flex; gap: 6px; }
+  .viewbtns button { appearance: none; border: 1px solid var(--line); background: var(--panel); color: var(--ink-2); font: 500 11.5px var(--font-mono); padding: 4px 8px; border-radius: 3px; cursor: pointer; }
+  @media (max-width: 860px) {
+    .app { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr; height: auto; min-height: 100vh; }
+    aside { border-right: 0; border-bottom: 1px solid var(--line); }
+    .stage { min-height: 60vh; }
+  }
+  @media (prefers-reduced-motion: reduce) { .play { display: none; } }
+</style>
+
+<div class="app">
+  <header>
+    <h1>Die Handling Clearance Model</h1>
+    <span class="sub">10 × 6 × 0.5 mm air-clad photonic dies · end-face gripper · backside-only support</span>
+    <span class="units">units mm · drag to orbit · wheel to zoom · shift-drag to pan</span>
+  </header>
+
+  <aside>
+    <div class="block">
+      <h2>Scene</h2>
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" data-scene="nest" aria-selected="true">Test nest exchange</button>
+        <button class="tab" role="tab" data-scene="tape" aria-selected="false">Pick from dicing tape</button>
+        <button class="tab" role="tab" data-scene="stick" aria-selected="false">Place into stick</button>
+        <button class="tab" role="tab" data-scene="station" aria-selected="false">Sorting station</button>
+      </div>
+    </div>
+
+    <div class="block" id="stepblock">
+      <h2>Sequence</h2>
+      <div class="steps">
+        <button class="play" id="play" aria-label="Play sequence">▶</button>
+        <input type="range" id="t" min="0" max="6" step="0.01" value="0" aria-label="Sequence position">
+      </div>
+      <div class="stepname"><span class="n" id="stepn">0</span><span id="stepname"></span></div>
+      <div class="stepdesc" id="stepdesc"></div>
+    </div>
+
+    <div class="block" id="params">
+      <h2>Parameters</h2>
+      <div id="paramlist"></div>
+    </div>
+
+    <div class="block">
+      <h2>Clearances</h2>
+      <div class="readouts" id="readouts"></div>
+    </div>
+
+    <div class="block">
+      <h2>Contact rules</h2>
+      <div class="legend">
+        <span class="sw" style="background:#e05a3a"></span><span>Optical facets, waveguide ends. Never touched.</span>
+        <span class="sw" style="background:#9fc4ea"></span><span>Top surface, exposed ridge waveguides. Never touched.</span>
+        <span class="sw" style="background:#3a9d5d"></span><span>End faces, middle 3 mm. Gripper jaws only.</span>
+        <span class="sw" style="background:#8f8f8f"></span><span>Backside. Rails, ledges, ejector pins.</span>
+        <span class="sw" style="background:#3d3d3d"></span><span>Jaws: 0.35 mm nose, top 0.10 mm below die surface.</span>
+      </div>
+      <div class="hint">Dimensions follow the concept study rev. 2.4. Objective working distance and post-expansion street width are the two values still to be measured.</div>
+    </div>
+  </aside>
+
+  <div class="stage" id="stage">
+    <canvas id="c"></canvas>
+    <div class="labels" id="labels"></div>
+    <div class="viewbtns">
+      <button data-view="iso">iso</button>
+      <button data-view="side">along X</button>
+      <button data-view="front">along Y</button>
+      <button data-view="top">top</button>
+    </div>
+    <div class="viewhint" id="viewhint"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  if (!window.THREE) { document.getElementById('viewhint').textContent = 'three.js failed to load'; return; }
+
+  // ---------- theme-aware colors ----------
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const COL = {
+    die: 0xcfe3f7, dieTop: 0x9fc4ea, dieEdge: 0x2b5d8a, facet: 0xe05a3a, endface: 0x3a9d5d,
+    back: 0x8f8f8f, jaw: 0x3d3d3d, jawBody: 0x6f6f6f, tape: 0xf4d35e, pin: 0x3a9d5d,
+    rail: 0x8f8f8f, deck: 0xb9c0c9, stage: 0x9aa3ad, fiber: 0xf0d080, clamp: 0x5b6570, arm: 0x7d8792,
+    objective: 0x333a44, objNose: 0x22272e, stick: 0xd9cfae, anvil: 0xa9b0b8, neighbour: 0xbfd6ee,
+    gantry: 0xc4cad2, head: 0x555c66, table: 0xcfd5dc, ring: 0x3a4149, base: 0xe4e8ee
+  };
+
+  // ---------- renderer / camera ----------
+  const stage = document.getElementById('stage');
+  const canvas = document.getElementById('c');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 5000);
+  const scene = new THREE.Scene();
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x6b7280, 0.85); scene.add(hemi);
+  const sun = new THREE.DirectionalLight(0xffffff, 0.75); sun.position.set(30, 60, 40); scene.add(sun);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.35); fill.position.set(-40, 20, -30); scene.add(fill);
+
+  function applyTheme() {
+    renderer.setClearColor(new THREE.Color(css('--scene-bg')));
+    if (grid) { grid.material.color = new THREE.Color(css('--scene-grid')); }
+  }
+  let grid = null;
+
+  // ---------- simple orbit controls ----------
+  const orbit = { target: new THREE.Vector3(5, 1, 3), theta: 0.9, phi: 1.05, dist: 60 };
+  function updateCamera() {
+    const sp = Math.sin(orbit.phi), cp = Math.cos(orbit.phi);
+    camera.position.set(
+      orbit.target.x + orbit.dist * sp * Math.sin(orbit.theta),
+      orbit.target.y + orbit.dist * cp,
+      orbit.target.z + orbit.dist * sp * Math.cos(orbit.theta));
+    camera.lookAt(orbit.target);
+  }
+  let drag = null;
+  canvas.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, y: e.clientY, pan: e.shiftKey || e.button === 2 }; canvas.setPointerCapture(e.pointerId); });
+  canvas.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY;
+    if (drag.pan) {
+      const right = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+      camera.getWorldDirection(right); right.cross(up).normalize();
+      const k = orbit.dist * 0.0016;
+      orbit.target.addScaledVector(right, -dx * k).addScaledVector(up, dy * k);
+    } else {
+      orbit.theta -= dx * 0.008; orbit.phi = Math.min(1.55, Math.max(0.08, orbit.phi - dy * 0.008));
+    }
+    updateCamera();
+  });
+  canvas.addEventListener('pointerup', () => { drag = null; });
+  canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+  canvas.addEventListener('wheel', (e) => { e.preventDefault(); orbit.dist *= Math.exp(e.deltaY * 0.0012); orbit.dist = Math.min(4000, Math.max(3, orbit.dist)); updateCamera(); }, { passive: false });
+  let pinch = null;
+  canvas.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2) {
+      const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      if (pinch) { orbit.dist *= pinch / d; updateCamera(); }
+      pinch = d; e.preventDefault();
+    }
+  }, { passive: false });
+  canvas.addEventListener('touchend', () => { pinch = null; });
+
+  function resize() {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+
+  // ---------- helpers ----------
+  const mat = (c, o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.75, metalness: 0.05 }, o));
+  function box(w, h, d, m) { return new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); }
+  // box spanning [x0,x1]×[y0,y1]×[z0,z1]
+  function span(x0, x1, y0, y1, z0, z1, m) {
+    const b = box(x1 - x0, y1 - y0, z1 - z0, m); b.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); return b;
+  }
+  function cyl(r, h, m, seg = 40) { return new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, seg), m); }
+
+  // the die: x 0..10 (X), y 0..0.5 (Z up), z 0..6 (Y optical). Origin at its bottom corner.
+  function makeDie(opts = {}) {
+    const g = new THREE.Group();
+    const mats = [mat(COL.endface), mat(COL.endface), mat(COL.dieTop), mat(COL.back), mat(COL.facet), mat(COL.facet)];
+    const b = box(10, 0.5, 6, mats); b.position.set(5, 0.25, 3); g.add(b);
+    // exposed waveguides on the top surface
+    const pts = [];
+    for (let x = 1.5; x <= 8.5; x += 0.5) { pts.push(new THREE.Vector3(x, 0.503, 0), new THREE.Vector3(x, 0.503, 6)); }
+    g.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: COL.dieEdge })));
+    // end-zone tint on the top (1 mm strips) - slightly darker strips
+    [0.5, 9.5].forEach((x) => { const s = box(1, 0.002, 6, mat(0x8fb4dc)); s.position.set(x, 0.502, 3); g.add(s); });
+    if (opts.edges) g.add(new THREE.LineSegments(new THREE.EdgesGeometry(b.geometry), new THREE.LineBasicMaterial({ color: COL.dieEdge })).translateX(5).translateY(0.25).translateZ(3));
+    return g;
+  }
+
+  // gripper: two jaws hanging from a bridge. Local origin = die bottom corner when closed on a die at origin.
+  // open = extra jaw separation per side; bridgeH = bridge underside height above the die top.
+  function makeGripper(bridgeH) {
+    const g = new THREE.Group();
+    const L = new THREE.Group(), R = new THREE.Group();
+    const dieTop = 0.5;
+    const nose = () => span(-0.8, 0, 0.05, 0.40, 1.5, 4.5, mat(COL.jaw));
+    const finger = () => span(-1.6, -0.3, 0.40, dieTop + bridgeH, 1.5, 4.5, mat(COL.jawBody));
+    L.add(nose(), finger());
+    const nR = nose(); nR.position.x += 10.8;                       // nose 10.0..10.8
+    const fR = span(10.3, 11.6, 0.40, dieTop + bridgeH, 1.5, 4.5, mat(COL.jawBody)); // finger 10.3..11.6
+    R.add(nR, fR);
+    const bridge = span(-1.6, 11.6, dieTop + bridgeH, dieTop + bridgeH + 3, 1.0, 5.0, mat(COL.jawBody));
+    const stem = span(3.5, 6.5, dieTop + bridgeH + 3, dieTop + bridgeH + 14, 2, 4, mat(COL.head));
+    g.add(L, R, bridge, stem);
+    g.userData = { L, R, bridge };
+    return g;
+  }
+  function setGripperOpen(gr, open) { gr.userData.L.position.x = -open; gr.userData.R.position.x = open; }
+
+  // ---------- label system ----------
+  const labelLayer = document.getElementById('labels');
+  let labels = [];
+  function addLabel(text, getPos, cls) {
+    const el = document.createElement('div'); el.className = 'lbl' + (cls ? ' ' + cls : ''); el.textContent = text; labelLayer.appendChild(el);
+    labels.push({ el, getPos });
+    return el;
+  }
+  function clearLabels() { labels.forEach((l) => l.el.remove()); labels = []; }
+  const v = new THREE.Vector3();
+  function projectLabels() {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    labels.forEach((l) => {
+      const p = l.getPos(); v.copy(p).project(camera);
+      const vis = v.z < 1 && v.x > -1.05 && v.x < 1.05 && v.y > -1.05 && v.y < 1.05;
+      l.el.style.display = vis ? 'block' : 'none';
+      if (vis) { l.el.style.left = ((v.x + 1) / 2 * w) + 'px'; l.el.style.top = ((1 - v.y) / 2 * h - 6) + 'px'; }
+    });
+  }
+
+  // ---------- scene registry ----------
+  const root = new THREE.Group(); scene.add(root);
+  const ui = {
+    t: document.getElementById('t'), stepn: document.getElementById('stepn'), stepname: document.getElementById('stepname'),
+    stepdesc: document.getElementById('stepdesc'), params: document.getElementById('paramlist'), readouts: document.getElementById('readouts'),
+    viewhint: document.getElementById('viewhint'), stepblock: document.getElementById('stepblock'), paramsblock: document.getElementById('params')
+  };
+  const clamp01 = (x) => Math.min(1, Math.max(0, x));
+  const seg = (t, i) => clamp01(t - i);              // progress of step i in [0,1]
+  const ease = (x) => x * x * (3 - 2 * x);
+  let current = null;
+  const P = {};   // parameter values
+
+  function buildParams(list) {
+    ui.params.innerHTML = '';
+    ui.paramsblock.style.display = list.length ? '' : 'none';
+    list.forEach((p) => {
+      if (P[p.key] === undefined) P[p.key] = p.value;
+      const wrap = document.createElement('div'); wrap.className = 'param';
+      const lab = document.createElement('label'); lab.textContent = p.label; lab.htmlFor = 'p_' + p.key;
+      const out = document.createElement('output'); out.textContent = P[p.key].toFixed(p.dec) + ' ' + p.unit;
+      const inp = document.createElement('input'); inp.type = 'range'; inp.id = 'p_' + p.key; inp.min = p.min; inp.max = p.max; inp.step = p.step; inp.value = P[p.key];
+      inp.addEventListener('input', () => { P[p.key] = parseFloat(inp.value); out.textContent = P[p.key].toFixed(p.dec) + ' ' + p.unit; current.rebuild && current.rebuild(); });
+      wrap.append(lab, out, inp); ui.params.appendChild(wrap);
+    });
+  }
+  function setReadouts(rows) {
+    ui.readouts.innerHTML = '';
+    rows.forEach((r) => {
+      const k = document.createElement('div'); k.className = 'k'; k.textContent = r[0];
+      const val = document.createElement('div'); val.className = 'v' + (r[2] ? ' ' + r[2] : ''); val.textContent = r[1];
+      ui.readouts.append(k, val);
+    });
+  }
+  function disposeGroup(g) {
+    g.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) { (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => m.dispose()); } });
+    while (g.children.length) g.remove(g.children[0]);
+  }
+  function setGrid(size, step) {
+    if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
+    grid = new THREE.GridHelper(size, size / step, css('--scene-grid'), css('--scene-grid'));
+    grid.material.transparent = true; grid.material.opacity = 0.55;
+    scene.add(grid);
+  }
+
+  // =====================================================================
+  // Scene 1: test nest exchange
+  // =====================================================================
+  const nestScene = {
+    id: 'nest', steps: 6,
+    params: [
+      { key: 'wd', label: 'Objective working distance', min: 8, max: 34, step: 0.5, value: 20, unit: 'mm', dec: 1 },
+      { key: 'bridge', label: 'Gripper bridge height above die top', min: 3, max: 15, step: 0.5, value: 12, unit: 'mm', dec: 1 },
+      { key: 'retract', label: 'Fiber safety retract', min: 0.2, max: 5, step: 0.1, value: 1.0, unit: 'mm', dec: 1 }
+    ],
+    names: ['Measuring', 'Fibers retract', 'Jaws descend', 'Jaws close', 'Die lifts off rails', 'Carry to bin'],
+    descs: [
+      'Lensed fibers coupled at both facets, ~20 µm from the facet. Die held by rail vacuum. Gripper parked above and open.',
+      'Both fiber arms back off along Y by the safety retract. Only a small retract is needed because the jaws come from above at the die ends, not through the fiber corridor.',
+      'Jaws descend beside the two non-optical end faces. The jaw noses stop with their top 0.10 mm below the die surface.',
+      'Centering jaws close on the middle 3 mm of each end face at 0.2–0.5 N. X and θ are now defined by the jaw faces.',
+      'Rail vacuum off; the gripper lifts the die 3 mm clear of the rails. Nothing has touched the top surface or the facets.',
+      'The SCARA carries the die along +X, the only direction free of fiber arms and objective, to its bin stick. The next die arrives the same way in reverse.'
+    ],
+    build() {
+      const g = root;
+      // correction stage + deck (deck narrow in Y so the fiber corridors stay open)
+      g.add(span(-12, 22, -9, -3, -6, 12, mat(COL.stage)));
+      g.add(span(-4, 14, -3, 0, 0.6, 5.4, mat(COL.deck)));
+      // rails 1 mm inboard of facets
+      g.add(span(0, 10, 0, 1.5, 1.0, 1.9, mat(COL.rail)));
+      g.add(span(0, 10, 0, 1.5, 4.1, 5.0, mat(COL.rail)));
+      // die
+      this.die = makeDie(); this.die.position.set(0, 1.5, 0); g.add(this.die);
+      // gripper
+      this.gr = makeGripper(P.bridge); this.gr.position.set(0, 1.5, 0); g.add(this.gr);
+      // fibers: input at z<0, output at z>6
+      this.fibers = [];
+      [-1, 1].forEach((s) => {
+        const f = new THREE.Group();
+        const fib = cyl(0.0625, 12, mat(COL.fiber, { roughness: 0.3 }), 12); fib.rotation.x = Math.PI / 2; fib.position.set(5, 2.0, -6.02); f.add(fib);
+        const clampB = span(2, 8, 0, 4, -20, -12, mat(COL.clamp)); f.add(clampB);
+        const arm = span(1, 9, 0.5, 3.5, -60, -20, mat(COL.arm)); f.add(arm);
+        if (s > 0) { f.rotation.y = Math.PI; f.position.set(10, 0, 6); }
+        g.add(f); this.fibers.push({ g: f, s });
+      });
+      // objective
+      this.obj = new THREE.Group();
+      const barrel = cyl(15, 30, mat(COL.objective, { roughness: 0.5 })); barrel.position.y = 4 + 15; this.obj.add(barrel);
+      const nose = new THREE.Mesh(new THREE.CylinderGeometry(6, 10, 4, 40), mat(COL.objNose)); nose.position.y = 2; this.obj.add(nose);
+      this.obj.position.set(5, 0, 3); g.add(this.obj);
+      // labels (created before the first pose so readout labels exist)
+      addLabel('facet Y=0 · never touched', () => new THREE.Vector3(5, 2.2, 0), 'warn');
+      addLabel('facet Y=6 · never touched', () => new THREE.Vector3(5, 2.2, 6), 'warn');
+      addLabel('rail · 1 mm inboard of facet', () => new THREE.Vector3(12.5, 0.8, 1.45));
+      addLabel('input lensed fiber', () => new THREE.Vector3(5, 2.6, -8));
+      addLabel('output lensed fiber', () => new THREE.Vector3(5, 2.6, 14));
+      addLabel('jaw nose 0.8×0.35×3', () => { const p = this.gr.userData.L.getWorldPosition(new THREE.Vector3()); return p.add(new THREE.Vector3(-0.4, 0.45 + 1.5, 3)); });
+      this.objLabel = addLabel('', () => new THREE.Vector3(5, 2 + P.wd + 0.5, 3));
+      addLabel('X–Y–θ correction stage', () => new THREE.Vector3(-10, -3, 11));
+      setGrid(60, 5);
+      this.rebuild();
+    },
+    rebuild() {
+      // gripper bridge height changes -> rebuild gripper
+      if (this.gr) { root.remove(this.gr); disposeGroup(this.gr); }
+      this.gr = makeGripper(P.bridge); this.gr.position.set(0, 1.5, 0); root.add(this.gr);
+      this.pose(parseFloat(ui.t.value));
+    },
+    pose(t) {
+      const R = P.retract;
+      const retract = ease(seg(t, 1)) * R;
+      this.fibers.forEach((f) => { f.g.position.z = (f.s < 0 ? 0 : 6) + f.s * retract; });
+      const descend = 8 * (1 - ease(seg(t, 2)));
+      const open = 1.5 * (1 - ease(seg(t, 3)));
+      const lift = 3 * ease(seg(t, 4));
+      const carry = 30 * ease(seg(t, 5));
+      this.gr.position.set(carry, 1.5 + descend + lift, 0);
+      setGripperOpen(this.gr, open);
+      this.die.position.set(carry, 1.5 + lift, 0);
+      this.obj.position.y = 2.0 + P.wd;
+      // readouts
+      const bridgeTop = 2.0 + P.bridge + 3;
+      const clr = (2.0 + P.wd) - bridgeTop;
+      const jawFacet = 1.5; // jaw z 1.5..4.5 vs facets at 0 and 6
+      setReadouts([
+        ['Objective nose to gripper bridge', clr.toFixed(1) + ' mm', clr < 2 ? 'bad' : 'good'],
+        ['Jaw contact to nearest facet corner', jawFacet.toFixed(1) + ' mm', 'good'],
+        ['Fiber tip to facet during exchange', (0.02 + retract).toFixed(2) + ' mm', retract < 0.5 && t > 1.5 ? 'bad' : ''],
+        ['Free space needed beyond each end face', '1.6 mm', ''],
+        ['Jaw top below die surface', '0.10 mm', 'good']
+      ]);
+      if (this.objLabel) this.objLabel.textContent = 'objective · WD ' + P.wd.toFixed(1) + ' mm' + (clr < 2 ? ' · COLLISION with gripper' : '');
+      if (this.objLabel) this.objLabel.className = 'lbl' + (clr < 2 ? ' warn' : '');
+    },
+    view: { target: [5, 8, 3], theta: 0.8, phi: 1.15, dist: 95 }
+  };
+
+  // =====================================================================
+  // Scene 2: pick from tape
+  // =====================================================================
+  const tapeScene = {
+    id: 'tape', steps: 6,
+    params: [
+      { key: 'street', label: 'Street width after expansion', min: 0.05, max: 1.5, step: 0.05, value: 1.0, unit: 'mm', dec: 2 },
+      { key: 'raise', label: 'Ejector raise', min: 0.3, max: 2.0, step: 0.1, value: 1.0, unit: 'mm', dec: 1 }
+    ],
+    names: ['On tape', 'Ejector raises die', 'Jaws descend', 'Jaws close', 'Lift clear', 'Carry to stick'],
+    descs: [
+      'Diced wafer on UV-released tape, expanded on the film frame. Anvil vacuum holds the tape flat. Neighbours on all four sides, facets facing facets along Y.',
+      'Four Ø0.5 mm pins under the 1-mm end zones push up through the tape. The tape peels from the backside and tents; the die rises above its neighbours.',
+      'Jaws descend beside the end faces, entirely above the neighbours\' plane. With ~1 mm streets the lifted die cannot reach a neighbour\'s facet even if it tilts.',
+      'Jaws close on the middle 3 mm of each end face. The die is now held; the pin tips carry no load.',
+      'Gripper lifts 3 mm; pins retract; tape relaxes. First and only bare-die pick from tape.',
+      'Head carries the die to the stick deck. Wafer map position becomes the stick pocket ID.'
+    ],
+    build() {
+      const g = root;
+      g.add(span(-8, 18, -3, 0, -8, 14, mat(COL.anvil)));
+      // vacuum ports in the anvil
+      [[-4, -1], [14, 7], [5, -4], [5, 10]].forEach(([x, z]) => { const p = cyl(0.3, 0.2, mat(0x333333)); p.position.set(x, 0.0, z); g.add(p); });
+      this.die = makeDie(); g.add(this.die);
+      this.pins = [[0.5, 1], [0.5, 5], [9.5, 1], [9.5, 5]].map(([x, z]) => { const p = cyl(0.25, 4, mat(COL.pin), 16); p.position.set(x, -2, z); g.add(p); return p; });
+      this.gr = makeGripper(12); g.add(this.gr);
+      this.neigh = new THREE.Group(); g.add(this.neigh);
+      this.tape = null;
+      addLabel('ejector anvil · tape vacuum', () => new THREE.Vector3(-4, 0.2, 12));
+      addLabel('pins Ø0.5 under end zones', () => new THREE.Vector3(0.5, 1.6, 5));
+      this.streetLabel = addLabel('', () => new THREE.Vector3(-P.street / 2, 0.9, 3));
+      addLabel('neighbour facet', () => new THREE.Vector3(5, 0.8, -P.street), 'warn');
+      addLabel('lifted die', () => this.die.position.clone().add(new THREE.Vector3(5, 0.9, 3)));
+      setGrid(60, 5);
+      this.rebuild();
+    },
+    rebuild() {
+      disposeGroup(this.neigh);
+      const s = P.street;
+      const nb = (x0, z0) => { const n = makeDie(); n.position.set(x0, 0.1, z0); this.neigh.add(n); };
+      nb(-(10 + s), 0); nb(10 + s, 0); nb(0, -(6 + s)); nb(0, 6 + s);
+      nb(-(10 + s), -(6 + s)); nb(10 + s, -(6 + s)); nb(-(10 + s), 6 + s); nb(10 + s, 6 + s);
+      this.pose(parseFloat(ui.t.value));
+    },
+    tent(h) {
+      if (this.tape) { root.remove(this.tape); this.tape.geometry.dispose(); }
+      const s = P.street;
+      const sh = new THREE.Shape();
+      sh.moveTo(-10 - s, 0); sh.lineTo(-s, 0); sh.lineTo(0.5, h); sh.lineTo(9.5, h); sh.lineTo(10 + s, 0); sh.lineTo(20 + s, 0);
+      sh.lineTo(20 + s, 0.1); sh.lineTo(10 + s, 0.1); sh.lineTo(9.5, h + 0.1); sh.lineTo(0.5, h + 0.1); sh.lineTo(-s, 0.1); sh.lineTo(-10 - s, 0.1); sh.closePath();
+      const geo = new THREE.ExtrudeGeometry(sh, { depth: 20, bevelEnabled: false });
+      this.tape = new THREE.Mesh(geo, mat(COL.tape, { roughness: 0.6, transparent: true, opacity: 0.85 }));
+      this.tape.position.z = -7; root.add(this.tape);
+    },
+    pose(t) {
+      const raise = P.raise * ease(seg(t, 1));
+      const descend = 8 * (1 - ease(seg(t, 2)));
+      const open = 1.5 * (1 - ease(seg(t, 3)));
+      const lift = 3 * ease(seg(t, 4));
+      const pinsDown = ease(seg(t, 4));
+      const carry = 30 * ease(seg(t, 5));
+      this.tent(raise * (1 - pinsDown) + 0.001);
+      this.die.position.set(carry, 0.1 + raise + lift, 0);
+      this.pins.forEach((p) => { p.position.y = -2 + raise * (1 - pinsDown); });
+      this.gr.position.set(carry, 0.1 + raise + descend + lift, 0);
+      setGripperOpen(this.gr, open);
+      const noseBottom = 0.1 + raise + 0.05, neighTop = 0.6;
+      const c = noseBottom - neighTop;
+      setReadouts([
+        ['Street width after expansion', P.street.toFixed(2) + ' mm', P.street < 0.5 ? 'bad' : 'good'],
+        ['Die raised above tape', raise.toFixed(2) + ' mm', ''],
+        ['Jaw nose bottom above neighbour top', c.toFixed(2) + ' mm', (t > 1.9 && c < 0.2) ? 'bad' : (c >= 0.2 ? 'good' : '')],
+        ['Tilt to touch neighbour facet (2° would need)', (Math.tan(2 * Math.PI / 180) * 6 / 2).toFixed(2) + ' mm street', P.street < 0.1 ? 'bad' : ''],
+        ['Pin contact', 'backside only', 'good']
+      ]);
+      if (this.streetLabel) this.streetLabel.textContent = 'street ' + P.street.toFixed(2) + ' mm';
+      if (this.streetLabel) this.streetLabel.className = 'lbl' + (P.street < 0.5 ? ' warn' : '');
+    },
+    view: { target: [5, 4, 3], theta: 0.7, phi: 1.1, dist: 75 }
+  };
+
+  // =====================================================================
+  // Scene 3: place into stick pocket
+  // =====================================================================
+  const stickScene = {
+    id: 'stick', steps: 4,
+    params: [],
+    names: ['Arrive over pocket', 'Descend', 'Jaws open', 'Rise'],
+    descs: [
+      'Gripper arrives 4 mm above an empty pocket. Pocket: two backside ledges under the facet-edge strips, 0.4 mm Y clearance, and 2 mm of free length beyond each end face for the jaws.',
+      'The die is lowered until its backside rests on the ledges. The jaw noses are 0.05 mm above the die bottom, so no slot recess is needed in the pocket floor.',
+      'Jaws open 1.5 mm per side and release the die. It sits on the ledges only; the pocket walls retain it in transport.',
+      'Gripper rises clear. Pocket pitch 7.5 mm along the stick; 14 pockets per 105 mm stick.'
+    ],
+    build() {
+      const g = root;
+      // stick slab: x -3..13 (die X across stick), z along stick
+      const pitch = 7.5, n = 3;
+      g.add(span(-3, 13, -2, 0, -0.75, n * pitch - 0.75, mat(COL.stick)));
+      for (let i = 0; i < n; i++) {
+        const z0 = i * pitch;
+        // ledges under facet-edge strips
+        g.add(span(0, 10, 0, 0.8, z0 + 0.4, z0 + 1.4, mat(COL.rail)));
+        g.add(span(0, 10, 0, 0.8, z0 + 4.6, z0 + 5.6, mat(COL.rail)));
+        // Y walls (along X), 0.7 thick, at z0-0.75..z0-0.05 and z0+6.05..z0+6.75
+        g.add(span(-3, 13, 0, 1.6, z0 - 0.75, z0 - 0.05, mat(COL.stick)));
+        // X end walls beyond the jaw slots
+        g.add(span(-3, -2, 0, 1.6, z0 - 0.05, z0 + 6.05, mat(COL.stick)));
+        g.add(span(12, 13, 0, 1.6, z0 - 0.05, z0 + 6.05, mat(COL.stick)));
+        if (i !== 1) { const d = makeDie(); d.position.set(0, 0.8, z0); g.add(d); }
+      }
+      g.add(span(-3, 13, 0, 1.6, n * pitch - 0.75 - 0.7, n * pitch - 0.75, mat(COL.stick)));
+      this.die = makeDie(); g.add(this.die);
+      this.gr = makeGripper(12); g.add(this.gr);
+      addLabel('ledge under facet-edge strip', () => new THREE.Vector3(5, 1.0, 7.5 + 0.9));
+      addLabel('2 mm jaw space', () => new THREE.Vector3(-1, 1.0, 7.5 + 3));
+      addLabel('pocket pitch 7.5', () => new THREE.Vector3(13.5, 0.5, 7.5 * 1.5));
+      setGrid(60, 5);
+      setReadouts([
+        ['Jaw nose bottom above pocket floor', '0.85 mm', 'good'],
+        ['Free length beyond each end face', '2.0 mm', 'good'],
+        ['Y clearance to pocket wall', '0.4 mm', ''],
+        ['Ledge width under facet-edge strip', '1.0 mm', '']
+      ]);
+    },
+    rebuild() { this.pose(parseFloat(ui.t.value)); },
+    pose(t) {
+      const z0 = 7.5;
+      const down = 4 * (1 - ease(seg(t, 1)));
+      const open = 1.5 * ease(seg(t, 2));
+      const rise = 6 * ease(seg(t, 3));
+      this.die.position.set(0, 0.8 + down, z0);
+      this.gr.position.set(0, 0.8 + down + rise, z0);
+      setGripperOpen(this.gr, open);
+    },
+    view: { target: [5, 4, 9], theta: 0.9, phi: 1.05, dist: 65 }
+  };
+
+  // =====================================================================
+  // Scene 4: sorting station layout (macro)
+  // =====================================================================
+  const stationScene = {
+    id: 'station', steps: 3,
+    params: [],
+    names: ['Table positions die', 'Pick', 'Carry to stick deck'],
+    descs: [
+      'The wafer X–Y–θ table moves the expanded film frame so the target die sits under the fixed pick point (ejector below the tape, camera above).',
+      'Ejector raises the die; the head\'s jaws take it by the end faces. The pick point never moves, so the ejector and camera are fixed and simple.',
+      'The head gantry (X ≈ 600 mm, Y ≈ 330 mm, Z 60 mm) carries the die to the pass / fail / regrade / spare sticks. A gantry is fine here: nothing lives above the wafer.'
+    ],
+    build() {
+      const g = root;
+      g.add(span(0, 860, -20, 0, 0, 500, mat(COL.base)));
+      // wafer table
+      g.add(span(20, 420, 0, 12, 60, 460, mat(COL.table)));
+      this.table = new THREE.Group(); g.add(this.table);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(128, 5, 12, 80), mat(COL.ring)); ring.rotation.x = Math.PI / 2; ring.position.set(0, 16, 0); this.table.add(ring);
+      const tape = cyl(112, 0.6, mat(COL.tape, { transparent: true, opacity: 0.85 })); tape.position.set(0, 16, 0); this.table.add(tape);
+      const dieGeo = new THREE.BoxGeometry(10, 0.5, 6);
+      const dieMat = mat(COL.die);
+      const inst = new THREE.InstancedMesh(dieGeo, dieMat, 400); let k = 0; const m4 = new THREE.Matrix4();
+      for (let i = -5; i <= 5; i++) for (let j = -7; j <= 7; j++) {
+        const x = i * 11, z = j * 7.2; if (x * x + z * z < 100 * 100) { m4.makeTranslation(x, 16.6, z); inst.setMatrixAt(k++, m4); }
+      }
+      inst.count = k; this.table.add(inst);
+      this.table.position.set(220, 0, 270);
+      // pick point marker: ejector under table (shown as post) and camera above
+      const pickX = 225, pickZ = 267;
+      g.add(span(pickX - 8, pickX + 8, 0, 14, pickZ - 8, pickZ + 8, mat(COL.head)));
+      const cam = cyl(12, 40, mat(COL.objective)); cam.position.set(pickX, 140, pickZ); g.add(cam);
+      const camPost = span(pickX - 6, pickX + 6, 160, 300, pickZ - 6, pickZ + 6, mat(COL.gantry)); g.add(camPost);
+      // gantry: X beam along x at z=40 height 90; Y axis along z on right; head hangs
+      g.add(span(200, 850, 80, 96, 30, 46, mat(COL.gantry)));
+      g.add(span(836, 850, 60, 76, 46, 430, mat(COL.gantry)));
+      [[210, 30], [830, 30], [843, 420]].forEach(([x, z]) => g.add(span(x - 8, x + 8, 0, 80, z - 8, z + 8, mat(COL.gantry))));
+      this.head = new THREE.Group();
+      this.head.add(span(-12, 12, 20, 60, -10, 10, mat(COL.head)));
+      this.head.add(span(-14, -11, 16, 24, -3, 3, mat(COL.jaw)));
+      this.head.add(span(11, 14, 16, 24, -3, 3, mat(COL.jaw)));
+      this.yCarriage = span(-16, 16, 60, 96, -14, 14, mat(COL.gantry)); this.head.add(this.yCarriage);
+      g.add(this.head);
+      this.carried = box(10, 0.5, 6, mat(COL.die)); this.carried.position.set(0, 16.5, 0); this.head.add(this.carried);
+      // stick deck
+      g.add(span(510, 840, 0, 10, 200, 500, mat(COL.table)));
+      for (let s = 0; s < 4; s++) {
+        const x0 = 544 + s * 74;
+        g.add(span(x0, x0 + 22, 10, 14, 234, 470, mat(COL.stick)));
+        for (let p = 0; p < 14; p++) { const d = box(10, 0.5, 6, mat(s === 0 && p < 9 ? COL.die : COL.base)); d.position.set(x0 + 11, 14.3, 240 + p * 16 + 3); g.add(d); }
+      }
+      g.add(span(40, 280, 0, 30, 470, 495, mat(0xc9b8e8)));
+      addLabel('wafer X–Y–θ table', () => new THREE.Vector3(60, 14, 80));
+      addLabel('fixed pick point · ejector below · camera above', () => new THREE.Vector3(pickX, 175, pickZ));
+      addLabel('head X axis', () => new THREE.Vector3(500, 100, 38));
+      addLabel('head Y axis', () => new THREE.Vector3(843, 80, 240));
+      addLabel('stick deck · pass / fail / regrade / spare', () => new THREE.Vector3(670, 12, 210));
+      addLabel('UV cure box (offline)', () => new THREE.Vector3(160, 32, 482));
+      this.pickPt = new THREE.Vector3(pickX, 0, pickZ);
+      setGrid(1200, 100);
+      setReadouts([
+        ['Base plate', '860 × 500 mm', ''],
+        ['Wafer table travel', '±70 mm, θ ±3°', ''],
+        ['Head travel', 'X 600 · Y 330 · Z 60 mm', ''],
+        ['Sticks on deck', '4 × 14 pockets', ''],
+        ['Placement accuracy needed', '±0.3 mm, ±1°', 'good']
+      ]);
+    },
+    rebuild() { this.pose(parseFloat(ui.t.value)); },
+    pose(t) {
+      // table moves so a die comes to the pick point (step 0), head dips (step 1), head travels to deck (step 2)
+      const tbl = ease(seg(t, 0));
+      this.table.position.set(220 - 40 * (1 - tbl), 0, 270 + 30 * (1 - tbl));
+      const dip = Math.sin(Math.PI * seg(t, 1)) * 30;
+      const go = ease(seg(t, 2));
+      const hx = this.pickPt.x + (555 - this.pickPt.x) * go, hz = this.pickPt.z + (300 - this.pickPt.z) * go;
+      this.head.position.set(hx, 14 - dip + 60 * Math.sin(Math.PI * go) * 0.4, hz);
+      this.yCarriage.position.set(843 - hx, 0, 0);
+      this.carried.visible = t > 1.5 && t < 2.98;
+    },
+    view: { target: [430, 40, 260], theta: 0.6, phi: 0.95, dist: 1150 }
+  };
+
+  const scenes = { nest: nestScene, tape: tapeScene, stick: stickScene, station: stationScene };
+
+  // ---------- scene switching ----------
+  function setView(vw) { orbit.target.set(vw.target[0], vw.target[1], vw.target[2]); orbit.theta = vw.theta; orbit.phi = vw.phi; orbit.dist = vw.dist; updateCamera(); }
+  function load(id) {
+    stopPlay();
+    disposeGroup(root); clearLabels();
+    current = scenes[id];
+    buildParams(current.params);
+    ui.t.max = current.steps; ui.t.value = 0;
+    current.build(); setView(current.view); onT();
+    document.querySelectorAll('.tab').forEach((b) => b.setAttribute('aria-selected', b.dataset.scene === id ? 'true' : 'false'));
+    ui.viewhint.textContent = { nest: 'X → right · Z up · fibers along Y', tape: 'X → right · Z up · film frame plane', stick: 'X across the stick · pockets along Z', station: '1 unit = 1 mm · plan of the bench' }[id];
+  }
+  function onT() {
+    const t = parseFloat(ui.t.value);
+    const i = Math.min(current.steps - 1, Math.floor(t + 1e-6));
+    ui.stepn.textContent = String(i);
+    ui.stepname.textContent = current.names[i];
+    ui.stepdesc.textContent = current.descs[i];
+    current.pose(t);
+  }
+  ui.t.addEventListener('input', onT);
+  document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => load(b.dataset.scene)));
+  document.querySelectorAll('.viewbtns button').forEach((b) => b.addEventListener('click', () => {
+    const vw = current.view, d = orbit.dist;
+    const views = { iso: { theta: vw.theta, phi: vw.phi }, side: { theta: Math.PI / 2, phi: Math.PI / 2 - 0.02 }, front: { theta: 0, phi: Math.PI / 2 - 0.02 }, top: { theta: 0, phi: 0.08 } };
+    Object.assign(orbit, views[b.dataset.view]); orbit.dist = d; updateCamera();
+  }));
+
+  // ---------- play ----------
+  let playing = false, raf = 0, last = 0;
+  const playBtn = document.getElementById('play');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function stopPlay() { playing = false; playBtn.textContent = '▶'; }
+  playBtn.addEventListener('click', () => {
+    if (playing) { stopPlay(); return; }
+    if (parseFloat(ui.t.value) >= current.steps - 0.01) ui.t.value = 0;
+    playing = true; playBtn.textContent = '❚❚'; last = performance.now();
+  });
+
+  // ---------- main loop ----------
+  function frame(now) {
+    if (playing && !reduced) {
+      const dt = (now - last) / 1000; last = now;
+      let t = parseFloat(ui.t.value) + dt * 0.6;
+      if (t >= current.steps) { t = current.steps; stopPlay(); }
+      ui.t.value = t; onT();
+    }
+    renderer.render(scene, camera); projectLabels();
+    raf = requestAnimationFrame(frame);
+  }
+
+  // theme changes
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  mq.addEventListener && mq.addEventListener('change', applyTheme);
+  new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  resize(); applyTheme(); load('nest'); applyTheme();
+  requestAnimationFrame(frame);
+})();
+</script>
