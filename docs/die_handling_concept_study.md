@@ -1,6 +1,6 @@
 # System Redesign Study — Batch Edge-Coupled Testing of Hundreds of 10 × 6 mm Photonic Dies
 
-**Status:** concept study for review (pre-CAD), rev. 2.2
+**Status:** concept study for review (pre-CAD), rev. 2.3
 **Scope:** ground-up redesign of the die-tester stage and handling system. The current
 machine is architected around a single manually loaded die; this study treats the whole
 stage system as open for redesign and asks what a machine looks like when the unit of
@@ -18,6 +18,9 @@ fiber-arm envelope, enclosure and fiber management — into §3 and §6. Rev. 2.
 that the dies have **no top cladding** (exposed ridge waveguides): the nest becomes
 backside-only with vision registration (§3), and §6a selects the pick-and-place system
 (SCARA + backside vacuum tongue) and the slotted storage stick that goes with it.
+Rev. 2.3 adds §6b: dies arrive diced on tape with kerf-width streets, so a separate
+tape-to-stick sorting step (UV release, tape expansion, backside ejector, end-face edge
+gripper) is defined, and the edge gripper is recorded as a candidate tester tool.
 
 Coordinate convention follows the brief: **X** = 10 mm die dimension, **Y** = 6 mm die
 dimension (optical propagation; fibers approach along ±Y), **Z** = vertical, **θ** =
@@ -387,10 +390,10 @@ retention walls on all four sides, generous lead-in chamfers, and a lid for tran
 Pockets are arranged in a row along **Y** so every channel opens to the stick's long
 edges (a 12-pocket stick ≈ 16 × 105 mm); sticks sit on the hotel deck with ~20 mm gaps
 for the tool holder. A 2-D tray variant with an access well at each pocket's X end is
-possible if deck area becomes the constraint. Operators load sticks at a bench from
-dicing tape or Gel-Pak, gripping the **non-optical X-end faces** with tweezers as they
-do today — the one remaining manual touch per die, performed far from the tester.
-Preferably the dicing vendor delivers directly into these sticks.
+possible if deck area becomes the constraint. Sticks are filled from the diced wafer
+on tape at the **tape-to-stick sorting station** (§6b), which grips dies only by their
+**non-optical X-end faces** after backside ejection — the one bare-die handling step
+outside the tester. Preferably the dicing vendor performs it and delivers loaded sticks.
 
 **Robot type: 4-axis SCARA.** The task is a horizontal slide-in along one axis at a
 fixed height, a few-tenths-of-a-mm vertical lift, and a carry of 300–450 mm — exactly a
@@ -422,6 +425,60 @@ screening regime the incoming die is pre-staged on a second tongue before the fi
 retract, making the swap itself ~5 s and the full exchange 15–25 s including vision
 registration and correction. Operator role: remove stick lids, load the hotel, press
 start.
+
+### 6b. From dicing tape to sticks
+
+Dies arrive **on dicing tape on a film frame, with kerf-width streets (tens of µm)**
+between them, facets facing facets along the optical axis. Neither the tongue nor any
+backside tool can pick from tape: the backside is glued down, there is no channel, and
+lifting one die with kerf-width gaps tilts it into a neighbor's facet. The standard
+tape pick — ejector needles below, vacuum collet on top — is excluded by the no-top-
+contact rule. Tape release is therefore a **separate process step, done once, off the
+tester**, producing loaded sticks.
+
+**Release recipe (standard die-attach practice, adapted to end-face gripping):**
+
+1. **UV-release dicing tape.** Confirm the vendor's tape; if UV-release (Lintec Adwill
+   D-series, Nitto UV types), a 365 nm cure of a few minutes drops adhesion ~10×.
+   Specify UV tape for future lots. Plain acrylic tape still works with more peel
+   force. **No thermal-release tape** — LN is pyroelectric and heating charges the dies.
+2. **Tape expansion.** A film-frame expander stretches the tape radially and locks it in
+   a grip ring. At 10 mm pitch, ~10 % expansion opens the streets to ~1 mm — no die can
+   touch a neighbor while lifted, and the stretch pre-breaks adhesion at the edges.
+3. **Ejector from below.** A vacuum anvil holds the tape down around the target die
+   while pins push up through the tape and peel it from the backside, leaving the die
+   on the pin tips ~1 mm above its neighbors. Four rounded pins under the corners of
+   the 1 mm end zones (or a needle-less dome ejector). Backside contact only.
+4. **Grip by the non-optical end faces.** A parallel micro-gripper with thin PEEK/Vespel
+   jaws takes the raised die by its two X-end faces entirely above the neighbors'
+   plane. A **stepped jaw** whose top lies below the die's top surface makes contact
+   with the waveguides geometrically impossible. Force 0.2–0.5 N (≈ 0.4 MPa on a
+   0.3 × 4 mm patch — negligible for LN). The gripper lifts clear and lowers the die
+   onto the rails of a stick pocket; pockets get end-face jaw clearance slots.
+5. **Wafer map → stick map.** Every die on tape has a known grid position and the same
+   orientation, so the sorting step yields die IDs and orientation for free: the 180°
+   ambiguity disappears and the robot's θ axis is no longer needed for it.
+
+**Where it lives:** a **bench tape-to-stick sorting station** — film-frame holder with
+expander, UV lamp, ejector, camera, and a small XY carrying the edge-grip head;
+semi-automatic is sufficient at hundreds of dies. Alternatives: buy a small commercial
+die sorter and fit an edge-grip head, or have the dicing vendor deliver into sticks or
+Gel-Pak using an edge-grip/Bernoulli head with **no top collet** (some
+photonics-oriented services offer this). The film frame is **not** integrated into the
+tester: a 200/300 mm frame plus ejector is a large mechanism unrelated to optical
+testing, and decoupling keeps the tester's hotel simple.
+
+**Consequence for the tester tool:** the tape step forces an end-face edge gripper into
+the system regardless. Once it has proven itself on hundreds of dies at the sorter, it
+is a legitimate candidate to replace the tongue on the tester too — one tool and one
+contact mode (end faces + backside rails) everywhere, with X and θ fixed mechanically
+by the jaw faces. The tongue keeps two advantages: insensitivity to die thickness and Z
+precision, and no need for clearance beside the die. **Decision rule:** tongue stays the
+tester baseline; "same gripper on the tester" is decided *after* sorter trials
+(≥ 300 picks, facet and end-face inspection), not before.
+
+**For future layouts:** 300–500 µm streets would make tape release markedly easier and
+safer; at 10 × 6 mm dies the area cost is a few percent.
 
 **Why via S3:** the single highest-risk item is now: does backside-only handling with
 vision registration deliver ±10–25 µm / ±0.05° at the fibers over hundreds of cycles
@@ -474,9 +531,10 @@ one lights-out day.
    data for S1 vs S2.
 5. **First-light capture range in practice** (from existing logs: raster window sizes
    that converge reliably) → confirms the ±10–25 µm / ±0.05° presentation budget.
-6. **Carrier decision:** confirm the slotted-stick format with the dicing vendor
-   (direct delivery into sticks) or size the bench transfer step from the incoming
-   format (waffle pack / Gel-Pak tack level) → hotel deck design and operator time.
+6. **Incoming format — settled: diced wafer on tape on a film frame.** To determine:
+   tape type (UV-release or not), frame size, actual street width after dicing, die
+   thickness on tape → sorting-station specification (§6b) and whether the vendor can
+   deliver into sticks with an edge-grip head instead.
 9. **Vision registration accuracy at the nest:** camera µm/pixel (already measured by
    the `SoftwareFence` calibration), facet-edge and fiducial detection repeatability →
    confirms X/Y/θ can be zeroed to inside the presentation budget without side datums.
@@ -497,9 +555,11 @@ one lights-out day.
 - Rail recess (~1 mm inboard of the facet) versus the true fiber/clamp envelope — a
   fiber crash now meets a rail instead of empty space; the software fence and rail
   material (no harder than the fiber ferrule) must reflect that.
-- Custom stick adoption: if dies keep arriving in waffle packs or Gel-Pak, the bench
-  transfer step remains and its facet risk must be managed with tooling (end-face
-  tweezers, chamfered pockets).
+- Tape release at kerf-width streets: without expansion, a lifted die can tilt into a
+  neighbor's facet; the expander and UV cure are therefore mandatory, not optional, in
+  the sorting recipe (§6b). Verify expansion ratio achievable with the vendor's tape.
+- Edge-gripper reliability on diced end faces (chipping, non-parallel faces): sorter
+  trials decide whether it also replaces the tongue on the tester.
 - Correction-stage motion per die adds ~5–10 s and a moving element under the nest;
   its stiffness and settling must be characterized so nothing sample-side drifts
   during a measurement.
