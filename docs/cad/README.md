@@ -82,3 +82,79 @@ nest rails and a translucent 20 mm objective keep-out cylinder.
   → thinner stock, 0.004″).
 - Bracket is on the −Y face; if the fiber holder on that side needs the room, mirror it
   to +Y (one parameter).
+
+---
+
+# Full station assembly — layout, movement pattern, compatibility
+
+Model: `station_assembly.py` → `out/station_assembly.step`, `out/view_station_*.svg`,
+`out/view_nest_closeup_*.svg`, `out/station_checks.txt`. It places the gripper module,
+the nest, the transport axes, the two **Thorlabs NanoMax 300** fiber stages with holder
+arms, and the **microscope column behind the nest at +X** (where it stands in the bench
+photo) on one optical-table plane, and computes clearances. Bought parts are envelopes
+(Velmex BiSlide MN10 class 102 × 64 mm bodies, NanoMax 112 × 112 × 62.5 mm); replace
+them with vendor STEP in Fusion.
+
+![station iso](out/view_station_iso.svg)
+![station plan](out/view_station_plan.svg)
+![nest close-up](out/view_nest_closeup_iso.svg)
+
+## Layout (gripper frame: X = die long axis, Y = optical axis, Z up, die bottom at nest = 0)
+
+| Element | Position | Why |
+|---|---|---|
+| Optical table plane | Z −86 | NanoMax deck 62.5 + platform 4 + holder 20 puts the fiber axis at die-top height (Z 0.5); all risers follow from this. |
+| Nest | riser X −8…18, Y −10…16 on a KB1X1-class kinematic base; rail insert Y 0.6…5.4 | Narrow at the top so both fiber corridors stay open. |
+| NanoMax 300 (input / output) | inner faces 45 mm from the facets: Y −157…−45 and Y 51…163; X −51…61 | Fiber holders reach in from the platforms; clamps at 12 mm from the facets. |
+| Microscope | objective Ø34 centred on the die, front lens at WD 20; Ø40 tube above; arm to a Ø40 column at **X = 80** | Behind the nest, as on the bench. |
+| **X axis** (300 mm travel) | along X, centre-line **Y = −100**, on a **76 mm riser** so the body sits at Z −10…54, i.e. *above* the NanoMax envelope; body X −440…−60 | Beside the input fiber stage, outside the fiber corridor, and above the stage's protruding actuators. |
+| **Z axis** (50–100 mm travel) | vertical on the X carriage; nest position carriage centre X −120 | Carriage end at X −69 vs NanoMax face at X −51 in the other Y band; 73 mm true clearance. |
+| **Arm** | 25 mm square L-bar from the Z carriage: +X to X −54, then +Y from the axis band to the die line; end plate over the gripper interface at Z 70–78 | Passes 7 mm outside the Ø40 tube; nothing of it enters the objective footprint. |
+| **Gripper module** | actuator body X −40…−20, Y −2…8; bars 5 mm above the die | Only the two 3 mm bars and the tip blocks enter the objective footprint. |
+| **Y stage** (105 mm travel) + stick | under the stick at X −296…−194, body Y −38…167; stick pockets along Y at 7.5 mm pitch; die in pocket at **X −250** | 11 mm from the X axis band; the gripper never crosses the fiber line. |
+
+## Movement pattern (one exchange)
+
+Coordinates are X-carriage centre / Z-carriage height of the arm end plate / Y-stage
+pocket position. Fibers are only ever moved by their own NanoMax stages.
+
+| Step | Axis | From → to | Interlock |
+|---|---|---|---|
+| 1 | NanoMax Y (both) | fibers retract 1.0 mm along ±Y | fibers-retracted flag set |
+| 2 | Z | +8 mm (arm end plate Z 70 → 78), gripper open | fibers retracted, objective gap ≥ 11 mm |
+| 3 | Z | −8 mm: noses descend beside the die's end faces | — |
+| 4 | gripper | close (finger-on-finger stop; 0.32 N on the die) | — |
+| 5 | nest | rail vacuum off; **Z +8 mm** lifts the die | vacuum switch reads atmosphere |
+| 6 | X | −120 → **−370** (250 mm, along the die's long axis, front of the bench) | Z at +8 |
+| 7 | Y stage | brings pocket *k* to Y = 3 (±52.5 mm) | can pre-position during step 6 |
+| 8 | Z | −8 −3 mm: die onto the stick ledges (3 mm below nest height) | — |
+| 9 | gripper | open (+1.5 mm per side) | — |
+| 10 | Z | +11 mm; then steps 6–9 in reverse with the next die; at the nest: rails vacuum on, jaws open, Z +8, camera pose, correction, fibers approach | seat detection by rail vacuum |
+
+Exchange time budget: ~20 s with lead-screw stages at 20 mm/s; the X move dominates.
+
+## Compatibility results (from `station_checks.txt`)
+
+- **Microscope:** finger bars 12.0 mm below the objective front lens (WD 20); near head
+  11.0 mm; actuator body 8 mm outside the barrel and 5 mm outside a Ø40 tube; arm end
+  plate and bracket 7 mm outside the tube; nothing within 44 mm of the column. If the
+  tube above the objective is wider than Ø40 (nosepiece, turret), move the actuator
+  further out with `body_cx`; the arms lengthen by the same amount.
+- **Fiber stages and holders:** gripper bars 10.2 mm from each holder arm (in Y);
+  actuator body 20.7 mm from both holders; X axis 9 mm from the input NanoMax body in X
+  and above its actuator zone; X carriage 73 mm from it; Z tower 84 mm from the holder.
+  The die's travel path (after the 8 mm lift) clears both holders by 3.6 mm and both
+  fibers by 7.5 mm, and never crosses the fiber line.
+- **Stick side:** Z tower at the stick position 86 mm from the Y-stage body; the stick
+  walls 4.7 mm under the far bar at the placing height.
+
+## Open dimensions to measure before ordering the axes and risers
+
+1. Fiber axis height above the NanoMax platform (`holder_axis_above_deck`, assumed 20):
+   sets every riser height.
+2. Objective working distance and the diameter of whatever sits above it (`obj_wd`,
+   `tube_dia`).
+3. NanoMax actuator protrusions and which faces they are on (the raised X axis assumes
+   they stay below Z −10).
+4. Vendor carriage bolt patterns (Velmex / Zaber / Thorlabs) for the riser, tower bracket
+   and arm end plate.

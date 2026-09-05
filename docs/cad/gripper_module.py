@@ -52,7 +52,7 @@ P = dict(
     act_m3_from_front=13.3, act_m3_pitch=12.0,       # body through-holes along Y
     act_port_from_rear=(5.5, 22.5), act_port_offset=1.6,
     # placement
-    body_cx=-26.0,        # actuator centre X (body -36..-16, outside objective footprint -12..22)
+    body_cx=-30.0,        # actuator centre X (body -40..-20; objective barrel to X -12, tube to X -15)
     finger_tip_z=None,    # computed: bars top + 2.5
     # root plates / heads
     root_t=3.0,           # plate thickness bolted to the finger outer face
@@ -244,17 +244,18 @@ def blade():
 def bracket():
     bt, tt = P["bracket_t"], P["top_t"]
     y_face = die_cy - P["act_body_y"] / 2           # -2.0 (body -Y face)
-    vp = box(cx - 14, cx + 14, y_face - bt, y_face, body_z0 + 6, body_z1 + tt)
+    vp = box(cx - 14, cx + 8, y_face - bt, y_face, body_z0 + 6, body_z1 + tt)          # stays at X <= cx+8 = -22
     zh = body_z0 + P["act_m3_from_front"]
     for dx in (-P["act_m3_pitch"] / 2, P["act_m3_pitch"] / 2):
         vp = vp.cut(cq.Workplane("XZ").center(cx + dx, zh).circle(1.7).extrude(-bt - 1).translate((0, y_face - bt - 0.5, 0)))
-    tp = box(cx - 22, cx + 22, die_cy - 17, die_cy + 17, body_z1, body_z1 + tt)
-    pitch = P["iface_pitch"]
+    # top plate: X cx-24 .. cx+8 (never past X = -22, i.e. 7 mm clear of a dia-40 microscope tube); pattern centred at cx-8
+    tp = box(cx - 24, cx + 8, die_cy - 17, die_cy + 17, body_z1, body_z1 + tt)
+    pitch = P["iface_pitch"]; pcx = cx - 8
     for dx in (-pitch / 2, pitch / 2):
         for dy in (-pitch / 2, pitch / 2):
-            tp = tp.cut(cq.Workplane("XY").center(cx + dx, die_cy + dy).circle(2.25).extrude(tt + 1).translate((0, 0, body_z1 - 0.5)))
+            tp = tp.cut(cq.Workplane("XY").center(pcx + dx, die_cy + dy).circle(2.25).extrude(tt + 1).translate((0, 0, body_z1 - 0.5)))
     for dx in (-pitch / 2, pitch / 2):     # 3 mm dowel holes on the X axis
-        tp = tp.cut(cq.Workplane("XY").center(cx + dx, die_cy).circle(1.5).extrude(tt + 1).translate((0, 0, body_z1 - 0.5)))
+        tp = tp.cut(cq.Workplane("XY").center(pcx + dx, die_cy).circle(1.5).extrude(tt + 1).translate((0, 0, body_z1 - 0.5)))
     return vp.union(tp)
 
 
@@ -310,7 +311,8 @@ def main():
         f"far bar top above die top  : {bar_z1 - die_top:.2f} mm  (far bar lane Y {far_bar_y0:.1f}..{far_bar_y1:.1f}, near lane Y {near_bar_y0:.1f}..{near_bar_y1:.1f})",
         f"near head X extent         : {near_face_x - blade_plane_off - P['head_x'] :.2f} .. {near_face_x - blade_plane_off + 1.0:.2f}",
         f"near head top above die top: {near_head_top - die_top:.2f} mm  <- tallest tool part inside objective footprint",
-        f"actuator body X extent     : {cx - P['act_body_x']/2:.1f} .. {cx + P['act_body_x']/2:.1f} (objective footprint -12 .. 22)",
+        f"actuator body X extent     : {cx - P['act_body_x']/2:.1f} .. {cx + P['act_body_x']/2:.1f} (objective barrel -12..22, tube -15..25)",
+        f"bracket/interface X extent : {cx - 24:.1f} .. {cx + 8:.1f}  (pattern centre X {cx - 8:.1f}, Y {die_cy:.1f})",
         f"module height above die top: {body_z1 + P['top_t'] - die_top:.1f} mm (to interface plate top)",
         f"body Y extent              : {die_cy - P['act_body_y']/2:.1f} .. {die_cy + P['act_body_y']/2:.1f}  (fiber clamps at Y <= -12 and >= 18)",
     ]
