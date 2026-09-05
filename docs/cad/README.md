@@ -22,8 +22,9 @@ nest rails and a translucent 20 mm objective keep-out cylinder.
 | Grip force | 0.32 N ± 0.06 N over the ±25 µm die-length tolerance |
 | Nose top below die top surface | 0.100 mm |
 | Tallest tool part inside the objective footprint | near head top, 9.0 mm above die top (far bar 8.0 mm) |
-| Actuator body X extent | −36 … −16 mm (objective footprint is −12 … 22) |
+| Actuator body X extent | −40 … −20 mm (objective barrel to X −12, Ø40 tube to X −15) |
 | Body Y extent | −2 … 8 mm (fiber clamps at Y ≤ −12 and ≥ 18) |
+| Bracket / interface plate X extent | −54 … −22 mm; 25 × 25 pattern centred at X −38, Y 3 |
 | Module height, die top to interface plate top | 69.5 mm |
 
 ## Parts
@@ -36,7 +37,7 @@ nest rails and a translucent 20 mm objective keep-out cylinder.
 | 4 | `far_tip_block_semitron.step` | **Semitron ESd 480** | 1 (+2 spare) | CNC | 3 wide × 2 thick × 8.5 tall. Nose band 0.35 tall protrudes 0.6 toward the die at Z 0.05–0.40. M2 clearance + countersink from the die side. Ø0.6 through hole at Z 0.25 for a thru-beam fiber sensor. |
 | 5 | `near_tip_block_semitron.step` | Semitron ESd 480 | 1 (+2 spare) | CNC | 3 × 2 × 1.45 mm, same nose, blade slot 1 mm deep from the top, Ø0.6 sensor hole. Bonded to the blade. |
 | 6 | `flexure_blade_0p127_steel.step` | 0.005″ feeler-gauge stock (C1095 spring steel) | 1 (+5 spare) | cut from stock | 3.0 wide × 9.0 long (1 in block, 5 free, 3 clamped). Cut with shears, deburr, degrease. |
-| 7 | `bracket_6061.step` | 6061‑T6 | 1 | CNC | L-bracket: 3 mm vertical plate on the body's −Y face (2 × M3 through the body), 6 mm top plate with 4 × M4 clearance on 25 × 25 and 2 × Ø3 dowel holes. Same pattern goes on every carrier. |
+| 7 | `bracket_6061.step` | 6061‑T6 | 1 | CNC | L-bracket: 3 mm vertical plate on the body's −Y face (2 × M3 through the body), 6 mm top plate (X −54…−22, kept 7 mm outside a Ø40 microscope tube) with 4 × M4 clearance on 25 × 25 centred at X −38 and 2 × Ø3 dowel holes. Same pattern goes on every carrier. |
 | 8 | — | M2 × 6 SHCS ×4, M2 × 5 ×2, M3 × 16 ×2, M4 ×4, Ø3 × 8 dowels ×2, 0.05 mm shim stock | — | McMaster | Stainless. |
 | 9 | — | Loctite EA 9460 (or Hysol) for blade-to-block bond | — | — | Cure 24 h; bond line inside the block slot only. |
 | 10 | — | Gauge die 10.000 × 6 × 0.500 mm, steel or ceramic | 1 | grind | Sets switch positions and verifies the 0.10 mm top gap. |
