@@ -49,9 +49,10 @@
   .param label { font-size: 12.5px; color: var(--ink-2); }
   .param output { font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
   .param input[type=range] { grid-column: 1 / -1; accent-color: var(--accent); width: 100%; }
+  .param input[type=checkbox] { grid-column: 1 / -1; justify-self: start; accent-color: var(--accent); width: 16px; height: 16px; margin: 2px 0 6px; }
   .readouts { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; font-size: 12.5px; }
   .readouts .k { color: var(--ink-2); }
-  .readouts .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+  .readouts .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
   .readouts .v.bad { color: var(--warn); font-weight: 500; }
   .readouts .v.good { color: var(--ok); }
   .legend { display: grid; grid-template-columns: 14px 1fr; gap: 6px 8px; align-items: center; font-size: 12.5px; color: var(--ink-2); }
@@ -77,7 +78,7 @@
 <div class="app">
   <header>
     <h1>Die Handling Clearance Model</h1>
-    <span class="sub">10 × 6 × 0.5 mm air-clad photonic dies · end-face gripper · backside-only support</span>
+    <span class="sub">10 × 6 × 0.5 mm air-clad photonic dies · end-face gripper on a bench-level Cartesian · backside-only support</span>
     <span class="units">units mm · drag to orbit · wheel to zoom · shift-drag to pan</span>
   </header>
 
@@ -119,7 +120,7 @@
         <span class="sw" style="background:#9fc4ea"></span><span>Top surface, exposed ridge waveguides. Never touched.</span>
         <span class="sw" style="background:#3a9d5d"></span><span>End faces, middle 3 mm. Gripper jaws only.</span>
         <span class="sw" style="background:#8f8f8f"></span><span>Backside. Rails, ledges, ejector pins.</span>
-        <span class="sw" style="background:#3d3d3d"></span><span>Jaws: 0.35 mm nose, top 0.10 mm below die surface.</span>
+        <span class="sw" style="background:#3d3d3d"></span><span>Jaws: 0.35 mm nose, top 0.10 mm below die surface; thin cantilever bars are the only tool parts under the objective.</span>
       </div>
       <div class="hint">Dimensions follow the concept study rev. 2.4. Objective working distance and post-expansion street width are the two values still to be measured.</div>
     </div>
@@ -239,22 +240,27 @@
     return g;
   }
 
-  // gripper: two jaws hanging from a bridge. Local origin = die bottom corner when closed on a die at origin.
-  // open = extra jaw separation per side; bridgeH = bridge underside height above the die top.
-  function makeGripper(bridgeH) {
+  // Shared gripper module (same part on the Cartesian arm, the sorting head, or a fallback robot):
+  // actuator body offset to -X outside the objective footprint; two thin cantilever finger bars run
+  // along +X at 'armH' above the die top and end in stepped noses on the die's end faces.
+  // Local origin = die bottom corner when closed on a die at origin.
+  function makeGripper(armH) {
     const g = new THREE.Group();
+    const dieTop = 0.5, yBar = dieTop + armH;             // bar underside
     const L = new THREE.Group(), R = new THREE.Group();
-    const dieTop = 0.5;
-    const nose = () => span(-0.8, 0, 0.05, 0.40, 1.5, 4.5, mat(COL.jaw));
-    const finger = () => span(-1.6, -0.3, 0.40, dieTop + bridgeH, 1.5, 4.5, mat(COL.jawBody));
-    L.add(nose(), finger());
-    const nR = nose(); nR.position.x += 10.8;                       // nose 10.0..10.8
-    const fR = span(10.3, 11.6, 0.40, dieTop + bridgeH, 1.5, 4.5, mat(COL.jawBody)); // finger 10.3..11.6
-    R.add(nR, fR);
-    const bridge = span(-1.6, 11.6, dieTop + bridgeH, dieTop + bridgeH + 3, 1.0, 5.0, mat(COL.jawBody));
-    const stem = span(3.5, 6.5, dieTop + bridgeH + 3, dieTop + bridgeH + 14, 2, 4, mat(COL.head));
-    g.add(L, R, bridge, stem);
-    g.userData = { L, R, bridge };
+    // left (near) finger: bar z 0.5..2.5, drop + nose centred on the die's middle 3 mm
+    L.add(span(-16, -0.3, yBar, yBar + 3, 0.5, 2.5, mat(COL.jawBody)));
+    L.add(span(-1.1, -0.3, 0.40, yBar + 3, 1.5, 4.5, mat(COL.jawBody)));
+    L.add(span(-0.8, 0, 0.05, 0.40, 1.5, 4.5, mat(COL.jaw)));            // nose (flexure-limited, 0.3 N)
+    // right (far) finger: bar z 3.5..5.5 passes over the die at armH, drop at x 10.3..11.1
+    R.add(span(-16, 11.1, yBar, yBar + 3, 3.5, 5.5, mat(COL.jawBody)));
+    R.add(span(10.3, 11.1, 0.40, yBar + 3, 1.5, 4.5, mat(COL.jawBody)));
+    R.add(span(10, 10.8, 0.05, 0.40, 1.5, 4.5, mat(COL.jaw)));           // rigid nose
+    // actuator body (SMC MHZ2-6D class, ~16 x 20 x 28) outside the objective footprint (x < -14)
+    const body = span(-34, -16, yBar - 2, yBar + 18, -2, 8, mat(COL.head));
+    const mount = span(-34, -16, yBar + 18, yBar + 24, -2, 8, mat(COL.gantry));  // interface plate to the carrier
+    g.add(L, R, body, mount);
+    g.userData = { L, R, body, mount, armH };
     return g;
   }
   function setGripperOpen(gr, open) { gr.userData.L.position.x = -open; gr.userData.R.position.x = open; }
@@ -299,7 +305,13 @@
       if (P[p.key] === undefined) P[p.key] = p.value;
       const wrap = document.createElement('div'); wrap.className = 'param';
       const lab = document.createElement('label'); lab.textContent = p.label; lab.htmlFor = 'p_' + p.key;
-      const out = document.createElement('output'); out.textContent = P[p.key].toFixed(p.dec) + ' ' + p.unit;
+      const out = document.createElement('output'); out.textContent = (typeof P[p.key] === 'number') ? P[p.key].toFixed(p.dec) + ' ' + p.unit : '';
+      if (p.type === 'bool') {
+        const inp = document.createElement('input'); inp.type = 'checkbox'; inp.id = 'p_' + p.key; inp.checked = !!P[p.key];
+        out.textContent = P[p.key] ? 'on' : 'off';
+        inp.addEventListener('change', () => { P[p.key] = inp.checked; out.textContent = inp.checked ? 'on' : 'off'; current.rebuild && current.rebuild(); });
+        wrap.append(lab, out, inp); ui.params.appendChild(wrap); return;
+      }
       const inp = document.createElement('input'); inp.type = 'range'; inp.id = 'p_' + p.key; inp.min = p.min; inp.max = p.max; inp.step = p.step; inp.value = P[p.key];
       inp.addEventListener('input', () => { P[p.key] = parseFloat(inp.value); out.textContent = P[p.key].toFixed(p.dec) + ' ' + p.unit; current.rebuild && current.rebuild(); });
       wrap.append(lab, out, inp); ui.params.appendChild(wrap);
@@ -328,20 +340,22 @@
   // Scene 1: test nest exchange
   // =====================================================================
   const nestScene = {
-    id: 'nest', steps: 6,
+    id: 'nest', steps: 7,
     params: [
       { key: 'wd', label: 'Objective working distance', min: 8, max: 34, step: 0.5, value: 20, unit: 'mm', dec: 1 },
-      { key: 'bridge', label: 'Gripper bridge height above die top', min: 3, max: 15, step: 0.5, value: 12, unit: 'mm', dec: 1 },
-      { key: 'retract', label: 'Fiber safety retract', min: 0.2, max: 5, step: 0.1, value: 1.0, unit: 'mm', dec: 1 }
+      { key: 'armH', label: 'Finger bars above die top', min: 3, max: 12, step: 0.5, value: 5, unit: 'mm', dec: 1 },
+      { key: 'retract', label: 'Fiber safety retract', min: 0.2, max: 5, step: 0.1, value: 1.0, unit: 'mm', dec: 1 },
+      { key: 'swing', label: 'Objective swings away during exchange (motorized pivot)', type: 'bool', value: false }
     ],
-    names: ['Measuring', 'Fibers retract', 'Jaws descend', 'Jaws close', 'Die lifts off rails', 'Carry to bin'],
+    names: ['Measuring', 'Fibers retract', 'Arm descends (Z)', 'Jaws close', 'Die lifts off rails', 'Carry along X', 'Set into stick'],
     descs: [
-      'Lensed fibers coupled at both facets, ~20 µm from the facet. Die held by rail vacuum. Gripper parked above and open.',
-      'Both fiber arms back off along Y by the safety retract. Only a small retract is needed because the jaws come from above at the die ends, not through the fiber corridor.',
-      'Jaws descend beside the two non-optical end faces. The jaw noses stop with their top 0.10 mm below the die surface.',
-      'Centering jaws close on the middle 3 mm of each end face at 0.2–0.5 N. X and θ are now defined by the jaw faces.',
-      'Rail vacuum off; the gripper lifts the die 3 mm clear of the rails. Nothing has touched the top surface or the facets.',
-      'The SCARA carries the die along +X, the only direction free of fiber arms and objective, to its bin stick. The next die arrives the same way in reverse.'
+      'Lensed fibers coupled at both facets. Die held by rail vacuum. The Cartesian X axis and Z axis park the gripper arm outboard at −X; the objective is over the die.',
+      'Both fiber arms back off along Y by the safety retract. Only a small retract is needed: the gripper comes in along X, never through the fiber corridor.',
+      'The Z axis lowers the arm. Two thin finger bars slide in under the objective along X at the set height; only bars and noses ever enter the objective footprint — the actuator body stays outboard at X < −14 mm.',
+      'Centering jaws close on the middle 3 mm of each end face at a flexure-limited 0.2–0.5 N. X and θ are now defined by the jaw faces.',
+      'Rail vacuum off; Z lifts the die 3 mm clear of the rails. Nothing has touched the top surface or the facets.',
+      'The X axis carries the die to the stick station at −X. The stages themselves never enter the microscope or fiber volumes; the swept volume is a box.',
+      'Z lowers the die onto the stick ledges (Y stage under the stick indexes the pocket), jaws open, Z rises. The next die is picked the same way in reverse.'
     ],
     build() {
       const g = root;
@@ -353,39 +367,73 @@
       g.add(span(0, 10, 0, 1.5, 4.1, 5.0, mat(COL.rail)));
       // die
       this.die = makeDie(); this.die.position.set(0, 1.5, 0); g.add(this.die);
-      // gripper
-      this.gr = makeGripper(P.bridge); this.gr.position.set(0, 1.5, 0); g.add(this.gr);
+      // ---- Cartesian axes (bench level, outboard at -X) ----
+      g.add(span(-270, -60, -30, -12, -12, 22, mat(COL.gantry)));                  // X axis body (210 mm)
+      this.xCar = span(-25, 25, -12, -4, -10, 20, mat(COL.head)); g.add(this.xCar); // X carriage
+      this.zStage = new THREE.Group(); g.add(this.zStage);
+      this.zStage.add(span(-20, 0, -4, 90, -8, 18, mat(COL.gantry)));            // Z axis body
+      this.zCar = new THREE.Group(); this.zStage.add(this.zCar);
+      this.zCar.add(span(0, 12, -6, 20, -8, 18, mat(COL.head)));                 // Z carriage
+      this.arm = new THREE.Group(); this.zCar.add(this.arm);                      // arm + gripper move with Z carriage
+      // stick station at -X on a Y stage
+      g.add(span(-170, -130, -20, -12, -50, 50, mat(COL.gantry)));                // Y axis under the stick
+      this.stick = new THREE.Group(); g.add(this.stick);
+      this.stick.add(span(-166, -134, -12, -10, -20, 20, mat(COL.stick)));        // stick slab (5 pockets shown)
+      for (let i = -2; i <= 2; i++) {
+        const z0 = i * 7.5 - 3;
+        this.stick.add(span(-160, -150, -10, -9.2, z0 + 0.4, z0 + 1.4, mat(COL.rail)));
+        this.stick.add(span(-160, -150, -10, -9.2, z0 + 4.6, z0 + 5.6, mat(COL.rail)));
+        this.stick.add(span(-166, -134, -10, -8.4, z0 - 0.75, z0 - 0.05, mat(COL.stick)));
+        if (i !== 0) { const d = makeDie(); d.position.set(-160, -9.2, z0); this.stick.add(d); }
+      }
+      this.stick.add(span(-166, -134, -10, -8.4, 2 * 7.5 - 3 + 6.05, 2 * 7.5 - 3 + 6.75, mat(COL.stick)));
       // fibers: input at z<0, output at z>6
       this.fibers = [];
-      [-1, 1].forEach((s) => {
+      [-1, 1].forEach((sgn) => {
         const f = new THREE.Group();
         const fib = cyl(0.0625, 12, mat(COL.fiber, { roughness: 0.3 }), 12); fib.rotation.x = Math.PI / 2; fib.position.set(5, 2.0, -6.02); f.add(fib);
-        const clampB = span(2, 8, 0, 4, -20, -12, mat(COL.clamp)); f.add(clampB);
-        const arm = span(1, 9, 0.5, 3.5, -60, -20, mat(COL.arm)); f.add(arm);
-        if (s > 0) { f.rotation.y = Math.PI; f.position.set(10, 0, 6); }
-        g.add(f); this.fibers.push({ g: f, s });
+        f.add(span(2, 8, 0, 4, -20, -12, mat(COL.clamp)));
+        f.add(span(1, 9, 0.5, 3.5, -60, -20, mat(COL.arm)));
+        if (sgn > 0) { f.rotation.y = Math.PI; f.position.set(10, 0, 6); }
+        g.add(f); this.fibers.push({ g: f, s: sgn });
       });
-      // objective
-      this.obj = new THREE.Group();
+      // objective on a column with a vertical pivot at +Y (swing-away option)
+      this.pivot = new THREE.Group(); this.pivot.position.set(5, 0, 76); g.add(this.pivot);
+      this.pivot.add(span(-8, 8, 0, 120, -8, 8, mat(COL.gantry)));                // column
+      this.objArm = new THREE.Group(); this.pivot.add(this.objArm);
+      this.objArm.add(span(-6, 6, 60, 68, -76, 0, mat(COL.gantry)));            // horizontal arm to the objective
+      this.obj = new THREE.Group(); this.objArm.add(this.obj); this.obj.position.set(0, 0, -76);
       const barrel = cyl(15, 30, mat(COL.objective, { roughness: 0.5 })); barrel.position.y = 4 + 15; this.obj.add(barrel);
       const nose = new THREE.Mesh(new THREE.CylinderGeometry(6, 10, 4, 40), mat(COL.objNose)); nose.position.y = 2; this.obj.add(nose);
-      this.obj.position.set(5, 0, 3); g.add(this.obj);
-      // labels (created before the first pose so readout labels exist)
+      // labels
       addLabel('facet Y=0 · never touched', () => new THREE.Vector3(5, 2.2, 0), 'warn');
       addLabel('facet Y=6 · never touched', () => new THREE.Vector3(5, 2.2, 6), 'warn');
       addLabel('rail · 1 mm inboard of facet', () => new THREE.Vector3(12.5, 0.8, 1.45));
       addLabel('input lensed fiber', () => new THREE.Vector3(5, 2.6, -8));
       addLabel('output lensed fiber', () => new THREE.Vector3(5, 2.6, 14));
-      addLabel('jaw nose 0.8×0.35×3', () => { const p = this.gr.userData.L.getWorldPosition(new THREE.Vector3()); return p.add(new THREE.Vector3(-0.4, 0.45 + 1.5, 3)); });
-      this.objLabel = addLabel('', () => new THREE.Vector3(5, 2 + P.wd + 0.5, 3));
+      addLabel('X axis · 210 mm', () => new THREE.Vector3(-165, -12, 5));
+      addLabel('Z axis', () => this.zStage.localToWorld(new THREE.Vector3(-10, 92, 5)));
+      addLabel('gripper module · body outside objective footprint', () => this.gr.localToWorld(new THREE.Vector3(-25, 0.5 + P.armH + 26, 3)));
+      addLabel('stick on Y stage', () => new THREE.Vector3(-150, -6, 24));
+      this.objLabel = addLabel('', () => this.obj.localToWorld(new THREE.Vector3(0, 36, 0)));
       addLabel('X–Y–θ correction stage', () => new THREE.Vector3(-10, -3, 11));
-      setGrid(60, 5);
+      addLabel('column pivot (swing-away option)', () => new THREE.Vector3(5, 124, 76));
+      setGrid(400, 10);
       this.rebuild();
     },
     rebuild() {
-      // gripper bridge height changes -> rebuild gripper
-      if (this.gr) { root.remove(this.gr); disposeGroup(this.gr); }
-      this.gr = makeGripper(P.bridge); this.gr.position.set(0, 1.5, 0); root.add(this.gr);
+      if (this.gr) { this.arm.remove(this.gr); disposeGroup(this.gr); }
+      this.gr = makeGripper(P.armH);
+      // arm bar from the Z carriage (local x 0..12) out to the gripper mount
+      if (this.armBar) { this.arm.remove(this.armBar); disposeGroup(this.armBar); }
+      this.armBar = new THREE.Group();
+      const yTop = 0.5 + P.armH + 24;         // top of gripper mount plate (arm-local y; arm group sits at die bottom)
+      this.armBar.add(span(12, 86, yTop - 6, yTop, -2, 8, mat(COL.gantry)));   // reaches the gripper mount at world x = -34
+      this.arm.add(this.armBar, this.gr);
+      // gripper local origin (die corner) sits at world x=0 when the X carriage is at its nest position;
+      // the Z carriage's x is xCar + 0..12; gripper body spans -34..-16 -> place gripper at +80 from carriage
+      this.gr.position.set(80, 0, 0);
+      this.gr.userData.mount.position.y = 0;
       this.pose(parseFloat(ui.t.value));
     },
     pose(t) {
@@ -395,26 +443,49 @@
       const descend = 8 * (1 - ease(seg(t, 2)));
       const open = 1.5 * (1 - ease(seg(t, 3)));
       const lift = 3 * ease(seg(t, 4));
-      const carry = 30 * ease(seg(t, 5));
-      this.gr.position.set(carry, 1.5 + descend + lift, 0);
-      setGripperOpen(this.gr, open);
-      this.die.position.set(carry, 1.5 + lift, 0);
+      const carry = -160 * ease(seg(t, 5));
+      const setDown = ease(seg(t, 6));
+      const openEnd = 1.5 * setDown;
+      const dropToStick = (1.5 - (-9.2)) * setDown;          // nest die y 1.5 -> stick ledge top -9.2
+      // X carriage position: nest pose puts gripper origin at world x 0 => carriage x = -80
+      const xc = -80 + carry;
+      this.xCar.position.set(xc, 0, 0);
+      this.zStage.position.set(xc - 40, 0, 0);               // Z body sits on the carriage
+      const zLift = 1.5 + descend + lift - dropToStick;      // die-bottom height carried by the arm
+      this.zCar.position.set(0, zLift - 1.5, 0);
+      this.arm.position.set(0, 1.5, 0);                     // gripper origin at die bottom when zCar at 0
+      this.gr.position.set(80 + 40, 0, 0);                  // world x of gripper origin = xc + 40 + 120 - 160 => 0 at nest
+      this.gr.position.x = 0 - (xc - 40);                   // exact: local so that world x = 0 + carry
+      this.gr.position.x += carry;
+      setGripperOpen(this.gr, open + openEnd);
+      // die follows gripper after step 4 lift until set down
+      const held = t > 3.999 && setDown < 0.999;
+      this.die.position.set(0 + carry, 1.5 + lift - dropToStick, 0);
+      this.die.visible = true;
+      // objective: swing-away or fixed
       this.obj.position.y = 2.0 + P.wd;
+      const swingOn = !!P.swing;
+      const swingAngle = swingOn ? (Math.PI / 3) * Math.min(ease(seg(t, 1)), 1 - ease(seg(t, 6))) : 0;
+      this.objArm.rotation.y = -swingAngle;
       // readouts
-      const bridgeTop = 2.0 + P.bridge + 3;
-      const clr = (2.0 + P.wd) - bridgeTop;
-      const jawFacet = 1.5; // jaw z 1.5..4.5 vs facets at 0 and 6
-      setReadouts([
-        ['Objective nose to gripper bridge', clr.toFixed(1) + ' mm', clr < 2 ? 'bad' : 'good'],
-        ['Jaw contact to nearest facet corner', jawFacet.toFixed(1) + ' mm', 'good'],
+      const barTop = 2.0 + P.armH + 3;                       // finger bars are the highest thing under the objective
+      const clr = (2.0 + P.wd) - barTop;
+      const rows = [
+        [swingOn ? 'Objective during exchange' : 'Objective nose to finger bars', swingOn ? 'swung clear' : clr.toFixed(1) + ' mm', swingOn ? 'good' : (clr < 2 ? 'bad' : 'good')],
+        ['Actuator body vs objective footprint', 'outside (X ≤ −16)', 'good'],
+        ['Jaw contact to nearest facet corner', '1.5 mm', 'good'],
         ['Fiber tip to facet during exchange', (0.02 + retract).toFixed(2) + ' mm', retract < 0.5 && t > 1.5 ? 'bad' : ''],
         ['Free space needed beyond each end face', '1.6 mm', ''],
-        ['Jaw top below die surface', '0.10 mm', 'good']
-      ]);
-      if (this.objLabel) this.objLabel.textContent = 'objective · WD ' + P.wd.toFixed(1) + ' mm' + (clr < 2 ? ' · COLLISION with gripper' : '');
-      if (this.objLabel) this.objLabel.className = 'lbl' + (clr < 2 ? ' warn' : '');
+        ['Jaw top below die surface', '0.10 mm', 'good'],
+        ['Axes inside microscope or fiber volumes', 'never', 'good']
+      ];
+      setReadouts(rows);
+      if (this.objLabel) {
+        this.objLabel.textContent = 'objective · WD ' + P.wd.toFixed(1) + ' mm' + (!swingOn && clr < 2 ? ' · COLLISION with finger bars' : (swingOn && swingAngle > 0.01 ? ' · swung away' : ''));
+        this.objLabel.className = 'lbl' + (!swingOn && clr < 2 ? ' warn' : '');
+      }
     },
-    view: { target: [5, 8, 3], theta: 0.8, phi: 1.15, dist: 95 }
+    view: { target: [-50, 20, 10], theta: -0.75, phi: 1.2, dist: 230 }
   };
 
   // =====================================================================
@@ -442,7 +513,7 @@
       [[-4, -1], [14, 7], [5, -4], [5, 10]].forEach(([x, z]) => { const p = cyl(0.3, 0.2, mat(0x333333)); p.position.set(x, 0.0, z); g.add(p); });
       this.die = makeDie(); g.add(this.die);
       this.pins = [[0.5, 1], [0.5, 5], [9.5, 1], [9.5, 5]].map(([x, z]) => { const p = cyl(0.25, 4, mat(COL.pin), 16); p.position.set(x, -2, z); g.add(p); return p; });
-      this.gr = makeGripper(12); g.add(this.gr);
+      this.gr = makeGripper(5); g.add(this.gr);
       this.neigh = new THREE.Group(); g.add(this.neigh);
       this.tape = null;
       addLabel('ejector anvil · tape vacuum', () => new THREE.Vector3(-4, 0.2, 12));
@@ -495,7 +566,7 @@
       if (this.streetLabel) this.streetLabel.textContent = 'street ' + P.street.toFixed(2) + ' mm';
       if (this.streetLabel) this.streetLabel.className = 'lbl' + (P.street < 0.5 ? ' warn' : '');
     },
-    view: { target: [5, 4, 3], theta: 0.7, phi: 1.1, dist: 75 }
+    view: { target: [-2, 4, 3], theta: 0.7, phi: 1.1, dist: 85 }
   };
 
   // =====================================================================
@@ -530,7 +601,7 @@
       }
       g.add(span(-3, 13, 0, 1.6, n * pitch - 0.75 - 0.7, n * pitch - 0.75, mat(COL.stick)));
       this.die = makeDie(); g.add(this.die);
-      this.gr = makeGripper(12); g.add(this.gr);
+      this.gr = makeGripper(5); g.add(this.gr);
       addLabel('ledge under facet-edge strip', () => new THREE.Vector3(5, 1.0, 7.5 + 0.9));
       addLabel('2 mm jaw space', () => new THREE.Vector3(-1, 1.0, 7.5 + 3));
       addLabel('pocket pitch 7.5', () => new THREE.Vector3(13.5, 0.5, 7.5 * 1.5));
@@ -552,7 +623,7 @@
       this.gr.position.set(0, 0.8 + down + rise, z0);
       setGripperOpen(this.gr, open);
     },
-    view: { target: [5, 4, 9], theta: 0.9, phi: 1.05, dist: 65 }
+    view: { target: [-2, 4, 9], theta: 0.9, phi: 1.05, dist: 75 }
   };
 
   // =====================================================================

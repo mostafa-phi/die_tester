@@ -341,12 +341,17 @@ Ratings: ● strong / ◐ adequate / ○ weak.
   working-distance objective (≥ 30 mm) with a low-profile end-effector that enters
   horizontally along ±X beneath it. Option (b) removes a moving element from the
   optical path and is preferred if the magnification budget allows; (a) is the
-  fallback. With the end-face gripper (§6a, Fig. 4) the jaw bodies rise above the die
-  only outboard of X = −1.6 … 11.6 mm, so the objective barrel must clear a ~13 mm wide
-  corridor centred on the die; with a barrel diameter and working distance to be
-  measured (§8) a fixed column is plausible but not yet certain. In both cases the
-  objective-to-die gap is a hard interlock input for the robot, exactly like fiber
-  retract.
+  fallback; (c) since the present column can be **rotated away by hand**, motorize that
+  pivot (a stepper or pneumatic rotary with a hard stop) and swing the objective clear
+  for every exchange. With the gripper module of §6a the only tool parts under the
+  objective are two thin finger bars, ~3 mm tall at 5 mm above the die top, so option
+  (b) needs a working distance of only ~11 mm and is the baseline; option (c) is the
+  fallback for short-WD objectives and is harmless to vision registration **provided
+  the die pose is measured relative to nest fiducials in the same image**, which makes
+  the pivot's return repeatability irrelevant. It costs ~2–5 s per exchange and one
+  more interlocked mechanism. In every case the objective-to-die gap (or the
+  swung-clear state) is a hard interlock input for the transfer axes, exactly like
+  fiber retract.
 - **Transfer:** a bench-level **3-axis Cartesian** beside the optical table, carrying the
   stepped-jaw **end-face edge gripper** on a low horizontal arm that enters under the
   objective along X — the only direction not occupied by fiber arms (±Y) — descends
@@ -382,6 +387,15 @@ Ratings: ● strong / ◐ adequate / ○ weak.
 ### 6a. Pick-and-place system and die pickup
 
 **How a die is picked up — one tool everywhere (rev. 2.4): the end-face edge gripper.**
+The gripper is a **self-contained module** — actuator, flexure fingers, position
+switches, valve — with a plain bolt-and-air interface (one plate, four screws, one air
+pair, one sensor cable). The same module bolts to the Cartesian Z-arm at the tester,
+to the sorting-station head, and, if ever needed, to a fallback robot's flange through
+an adapter plate. It is engineered once, separately from whatever carries it, because
+it is the only part every handling step shares. Its actuator body sits **outboard at
+X ≤ −16 mm**, outside the objective footprint; only two thin cantilever finger bars
+(~3 mm tall, ~5 mm above the die top) and the noses ever enter the space under the
+objective (3-D model, nest scene).
 Because the top surface carries exposed waveguides and the facet edges are fragile, the
 die is gripped only by the **middle 3 mm of its two non-optical X-end faces**, and is
 otherwise supported only on its backside (ejector pins, nest rails, stick ledges). The
