@@ -159,8 +159,8 @@ def y_stage_and_tray(active_col_x, active_row_y):
     The tray is positioned so that the pocket in column 'active_col_x' (die X) and the active row sits at Y = active_row_y."""
     nc, nr, pc, pr = S["tray_cols"], S["tray_rows"], S["tray_col_pitch"], S["tray_row_pitch"]
     x_first = S["tray_col0_x"]                                       # die X of column 0 (nearest the nest)
-    tray_x0 = x_first - (nc - 1) * pc - 3.0                          # tray spans all columns (+3 mm rim)
-    tray_x1 = x_first + 13.0
+    tray_x0 = x_first - (nc - 1) * pc - 4.0                          # tray spans all columns (+4 mm rim beyond the nose slots)
+    tray_x1 = x_first + 14.0
     tray_len_y = nr * pr + 1.5
     tray_cx = (tray_x0 + tray_x1) / 2
     xw0, xw1 = tray_cx - S["axis_w"] / 2, tray_cx + S["axis_w"] / 2
@@ -181,7 +181,11 @@ def y_stage_and_tray(active_col_x, active_row_y):
         for k in range(nr):
             yc = ycar_c + (k - (nr - 1) / 2) * pr
             y0 = yc - 3.0
-            cavities.append(box(xd - 2, xd + 12, y0 - 0.4, y0 + 6.4, z_top_deck + 2.2, z_led + 1.0).val())   # 14 x 6.8 cavity (2 mm jaw space each end)
+            # cavity retains the die to +/-1.0 mm in X by its corners (jaw capture is +/-1.9), +/-0.4 in Y;
+            # 3.6 mm wide nose slots in the middle of both end walls let the open jaws (noses at X -2.7..-1.9 / 11.9..12.7) descend
+            cavities.append(box(xd - 1.0, xd + 11.0, y0 - 0.4, y0 + 6.4, z_top_deck + 2.2, z_led + 1.0).val())
+            cavities.append(box(xd - 3.2, xd - 1.0, y0 + 1.2, y0 + 4.8, z_top_deck + 2.2, z_led + 1.0).val())
+            cavities.append(box(xd + 11.0, xd + 13.2, y0 + 1.2, y0 + 4.8, z_top_deck + 2.2, z_led + 1.0).val())
             ledges.append(box(xd, xd + 10, y0 + 0.4, y0 + 1.4, z_top_deck + 2.2, z_led).val())
             ledges.append(box(xd, xd + 10, y0 + 4.6, y0 + 5.6, z_top_deck + 2.2, z_led).val())
     tray = tray.cut(cq.Workplane().add(cq.Compound.makeCompound(cavities)))

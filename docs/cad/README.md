@@ -134,7 +134,9 @@ pocket position. Fibers are only ever moved by their own NanoMax stages.
 
 Exchange time budget: ~20 s with lead-screw stages at 20 mm/s; the X move dominates.
 
-**Container assumption.** One wafer (~100–112 dies of 10 × 6 mm) = one tray. Pocket
+**Pocket geometry.** Cavity 12.0 × 6.8 mm: the die is retained to ±1.0 mm in X by its four corners against the end walls and ±0.4 mm in Y, inside the jaws' ±1.9 mm capture. Each end wall carries a 3.6 mm wide nose slot (Y 1.2–4.8) reaching 2.2 mm beyond the wall so the open jaw noses (0.8 mm wide, 1.9 mm outside the die) descend freely. Ledges 1.0 mm wide under the facet-edge strips, 0.8 mm tall.
+
+**Container assumption.** One 4″ wafer (~100–112 dies of 10 × 6 mm, all in one orientation) = one tray. Pocket
 indices mirror the wafer map (row, column), so a die's identity is its pocket. The tray
 (128 × 106 × 6 mm, SLA-printed, lidded, DataMatrix on the rim) fits a Form 3 bed and a
 5″ wafer box. Physical pass/fail binning is not done at the tester; it is a map
