@@ -81,7 +81,7 @@ split, plus the optical engines:
   elevator or a flat deck), plus output positions for binning. Capacity target:
   ≥ 200 dies resident.
 - **Transfer** places the selected die into the test nest and returns it after test.
-  It needs only ~±0.3 mm, ±1° placement accuracy — the nest's self-registration closes
+  It needs only ~±0.3 mm, ±1° placement accuracy — vision registration at the nest closes
   the rest. This is deliberately a cheap, robust motion system, not a precision stage.
 - **Precision presentation** is one fixed nest (§3) on a small fine-correction stage.
   No long-travel precision axis exists anywhere in the machine: the die never travels
