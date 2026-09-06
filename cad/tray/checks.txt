@@ -17,26 +17,26 @@ pocket members vs the die on its ledges (only the ledges touch; positive = clear
 pocket members vs the open gripper at the set-down height (jaws +/-1.5):
   -X wall (-Y of slot)   vs near_tip (open)   :    0.30  TIGHT
   -X wall (+Y of slot)   vs near_tip (open)   :    0.30  TIGHT
-  +X wall (-Y of slot)   vs near_tip (open)   :   12.43  OK 
-  +X wall (+Y of slot)   vs near_tip (open)   :   12.43  OK 
-  -X rim (slot end)      vs near_tip (open)   :    0.37  OK 
-  +X rim (slot end)      vs near_tip (open)   :   15.23  OK 
+  +X wall (-Y of slot)   vs near_tip (open)   :   12.44  OK 
+  +X wall (+Y of slot)   vs near_tip (open)   :   12.44  OK 
+  -X rim (slot end)      vs near_tip (open)   :    0.36  OK 
+  +X rim (slot end)      vs near_tip (open)   :   15.24  OK 
   -Y side wall           vs near_tip (open)   :    1.90  OK 
   +Y side wall           vs near_tip (open)   :    1.90  OK 
   floor                  vs near_tip (open)   :    0.85  OK 
-  -Y ledge               vs near_tip (open)   :    1.43  OK 
-  +Y ledge               vs near_tip (open)   :    1.43  OK 
-  -X wall (-Y of slot)   vs far_tip (open)    :   12.43  OK 
-  -X wall (+Y of slot)   vs far_tip (open)    :   12.43  OK 
+  -Y ledge               vs near_tip (open)   :    1.44  OK 
+  +Y ledge               vs near_tip (open)   :    1.44  OK 
+  -X wall (-Y of slot)   vs far_tip (open)    :   12.44  OK 
+  -X wall (+Y of slot)   vs far_tip (open)    :   12.44  OK 
   +X wall (-Y of slot)   vs far_tip (open)    :    0.30  TIGHT
   +X wall (+Y of slot)   vs far_tip (open)    :    0.30  TIGHT
-  -X rim (slot end)      vs far_tip (open)    :   15.23  OK 
-  +X rim (slot end)      vs far_tip (open)    :    0.37  OK 
+  -X rim (slot end)      vs far_tip (open)    :   15.24  OK 
+  +X rim (slot end)      vs far_tip (open)    :    0.36  OK 
   -Y side wall           vs far_tip (open)    :    1.90  OK 
   +Y side wall           vs far_tip (open)    :    1.90  OK 
   floor                  vs far_tip (open)    :    0.85  OK 
-  -Y ledge               vs far_tip (open)    :    1.43  OK 
-  +Y ledge               vs far_tip (open)    :    1.43  OK 
+  -Y ledge               vs far_tip (open)    :    1.44  OK 
+  +Y ledge               vs far_tip (open)    :    1.44  OK 
   -X wall (-Y of slot)   vs blade (open)      :    0.30  TIGHT
   -X wall (+Y of slot)   vs blade (open)      :    0.30  TIGHT
   +X wall (-Y of slot)   vs blade (open)      :   14.17  OK 

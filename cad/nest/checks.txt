@@ -33,70 +33,70 @@ cage blocks vs the die (only the +X stop pads touch the seated die):
   Y guard +X+Y                       vs die set down (-0.2 X)     :    0.60  OK 
   Y guard +X+Y                       vs die Y-offset -0.4         :    1.00  OK 
 cage blocks vs the gripper, jaws CLOSED on the seated die:
-  X guard -X-Y                       vs far_tip (closed)          :   10.33  OK 
+  X guard -X-Y                       vs far_tip (closed)          :   10.34  OK 
   X guard -X-Y                       vs near_tip (closed)         :    0.30  OK 
   X guard -X-Y                       vs blade (closed)            :    0.67  OK 
   X guard -X-Y                       vs near_arm (closed)         :    5.20  OK 
   X guard -X-Y                       vs far_arm (closed)          :    5.20  OK 
-  Y guard -X-Y                       vs far_tip (closed)          :    9.43  OK 
+  Y guard -X-Y                       vs far_tip (closed)          :    9.44  OK 
   Y guard -X-Y                       vs near_tip (closed)         :    2.10  OK 
   Y guard -X-Y                       vs blade (closed)            :    2.10  OK 
   Y guard -X-Y                       vs near_arm (closed)         :    5.20  OK 
   Y guard -X-Y                       vs far_arm (closed)          :    5.20  OK 
-  X guard -X+Y                       vs far_tip (closed)          :   10.33  OK 
+  X guard -X+Y                       vs far_tip (closed)          :   10.34  OK 
   X guard -X+Y                       vs near_tip (closed)         :    0.30  OK 
   X guard -X+Y                       vs blade (closed)            :    0.67  OK 
   X guard -X+Y                       vs near_arm (closed)         :    5.20  OK 
   X guard -X+Y                       vs far_arm (closed)          :    5.20  OK 
-  Y guard -X+Y                       vs far_tip (closed)          :    9.43  OK 
+  Y guard -X+Y                       vs far_tip (closed)          :    9.44  OK 
   Y guard -X+Y                       vs near_tip (closed)         :    2.10  OK 
   Y guard -X+Y                       vs blade (closed)            :    2.10  OK 
   Y guard -X+Y                       vs near_arm (closed)         :    5.20  OK 
   Y guard -X+Y                       vs far_arm (closed)          :    5.20  OK 
   stop pad +X-Y                      vs far_tip (closed)          :    0.30  OK 
-  stop pad +X-Y                      vs near_tip (closed)         :    9.93  OK 
+  stop pad +X-Y                      vs near_tip (closed)         :    9.94  OK 
   stop pad +X-Y                      vs blade (closed)            :   11.67  OK 
   stop pad +X-Y                      vs near_arm (closed)         :   10.73  OK 
   stop pad +X-Y                      vs far_arm (closed)          :    5.20  OK 
   Y guard +X-Y                       vs far_tip (closed)          :    2.10  OK 
-  Y guard +X-Y                       vs near_tip (closed)         :    9.43  OK 
+  Y guard +X-Y                       vs near_tip (closed)         :    9.44  OK 
   Y guard +X-Y                       vs blade (closed)            :   11.17  OK 
   Y guard +X-Y                       vs near_arm (closed)         :   10.23  OK 
   Y guard +X-Y                       vs far_arm (closed)          :    5.20  OK 
   stop pad +X+Y                      vs far_tip (closed)          :    0.30  OK 
-  stop pad +X+Y                      vs near_tip (closed)         :    9.93  OK 
+  stop pad +X+Y                      vs near_tip (closed)         :    9.94  OK 
   stop pad +X+Y                      vs blade (closed)            :   11.67  OK 
   stop pad +X+Y                      vs near_arm (closed)         :   10.73  OK 
   stop pad +X+Y                      vs far_arm (closed)          :    5.20  OK 
   Y guard +X+Y                       vs far_tip (closed)          :    2.10  OK 
-  Y guard +X+Y                       vs near_tip (closed)         :    9.43  OK 
+  Y guard +X+Y                       vs near_tip (closed)         :    9.44  OK 
   Y guard +X+Y                       vs blade (closed)            :   11.17  OK 
   Y guard +X+Y                       vs near_arm (closed)         :   10.23  OK 
   Y guard +X+Y                       vs far_arm (closed)          :    5.20  OK 
 cage blocks vs the gripper, jaws OPEN at the set-down position:
-  X guard -X-Y                       vs far_tip (open)            :   11.63  OK 
-  X guard -X-Y                       vs near_tip (open)           :    0.63  OK 
+  X guard -X-Y                       vs far_tip (open)            :   11.64  OK 
+  X guard -X-Y                       vs near_tip (open)           :    0.64  OK 
   X guard -X-Y                       vs blade (open)              :    2.37  OK 
-  Y guard -X-Y                       vs far_tip (open)            :   10.73  OK 
+  Y guard -X-Y                       vs far_tip (open)            :   10.74  OK 
   Y guard -X-Y                       vs near_tip (open)           :    2.10  OK 
   Y guard -X-Y                       vs blade (open)              :    2.37  OK 
-  X guard -X+Y                       vs far_tip (open)            :   11.63  OK 
-  X guard -X+Y                       vs near_tip (open)           :    0.63  OK 
+  X guard -X+Y                       vs far_tip (open)            :   11.64  OK 
+  X guard -X+Y                       vs near_tip (open)           :    0.64  OK 
   X guard -X+Y                       vs blade (open)              :    2.37  OK 
-  Y guard -X+Y                       vs far_tip (open)            :   10.73  OK 
+  Y guard -X+Y                       vs far_tip (open)            :   10.74  OK 
   Y guard -X+Y                       vs near_tip (open)           :    2.10  OK 
   Y guard -X+Y                       vs blade (open)              :    2.37  OK 
-  stop pad +X-Y                      vs far_tip (open)            :    0.63  OK 
-  stop pad +X-Y                      vs near_tip (open)           :   11.63  OK 
+  stop pad +X-Y                      vs far_tip (open)            :    0.64  OK 
+  stop pad +X-Y                      vs near_tip (open)           :   11.64  OK 
   stop pad +X-Y                      vs blade (open)              :   13.37  OK 
   Y guard +X-Y                       vs far_tip (open)            :    2.10  OK 
-  Y guard +X-Y                       vs near_tip (open)           :   11.13  OK 
+  Y guard +X-Y                       vs near_tip (open)           :   11.14  OK 
   Y guard +X-Y                       vs blade (open)              :   12.87  OK 
-  stop pad +X+Y                      vs far_tip (open)            :    0.63  OK 
-  stop pad +X+Y                      vs near_tip (open)           :   11.63  OK 
+  stop pad +X+Y                      vs far_tip (open)            :    0.64  OK 
+  stop pad +X+Y                      vs near_tip (open)           :   11.64  OK 
   stop pad +X+Y                      vs blade (open)              :   13.37  OK 
   Y guard +X+Y                       vs far_tip (open)            :    2.10  OK 
-  Y guard +X+Y                       vs near_tip (open)           :   11.13  OK 
+  Y guard +X+Y                       vs near_tip (open)           :   11.14  OK 
   Y guard +X+Y                       vs blade (open)              :   12.87  OK 
 cage blocks vs the gripper during the push (jaws open, +X indexed):
   X guard -X-Y                       vs far_tip (push)            :   13.57  OK 

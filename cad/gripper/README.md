@@ -26,6 +26,8 @@ has the real SMC body and fingers.
 | Flexure stiffness | 2.46 N/mm (0.127 mm × 3 mm spring steel, 5 mm free) |
 | Grip force | 0.32 N ± 0.06 N over the ±25 µm die-length tolerance |
 | Nose top below die top surface | 0.100 mm |
+| Nose crown across the 3 mm band | R 30 mm, sag 38 µm at the band edges; squaring couple ≈ 0.39 mN·m per degree of die yaw |
+| Friction hold vs die weight | 64 / 190 mN at µ 0.1 / 0.3 vs 1.4 mN (friction-only grip, no toe) |
 | Tallest tool part inside the objective footprint | near head top, 9.0 mm above die top (far bar 8.0 mm) |
 | Actuator body X extent | −40 … −20 mm (objective barrel to X −12, Ø40 tube to X −15) |
 | Body Y extent | −2 … 8 mm (fiber holders at Y ≤ −5 and ≥ 11) |
@@ -39,8 +41,8 @@ has the real SMC body and fingers.
 | 1 | `cad/vendor/smc_MHZ2-6D.step` | SMC **MHZ2-6D-M9N** | 1 | buy | Ø6 parallel gripper, 2 × D-M9N switches. Fingers 4 × 4 mm at ±4…8 mm from the centre when closed (8 mm gap; 12 mm open), 2 × M2 on each finger at 2.5 / 7.5 from the tip. Body mounts by 2 × M3 through-threads along Y. |
 | 2 | `STEP/far_arm_6061.step` | 6061-T6, hard anodize | 1 | CNC (Protolabs/Xometry) | Rigid arm. Root plate on the far finger's +X face (2 × M2 SHCS, counterbored), transition block, 3 × 3 bar in the Y 4.8–7.8 lane, head with M2 tapped hole for the tip block. |
 | 3 | `STEP/near_arm_6061.step` | 6061-T6, hard anodize | 1 | CNC | Compliant arm. Root plate on the near finger's −X face, bar in the Y −1.8–1.2 lane, raised head (top 9.0 above die) with a 0.18 × 3.1 × 3 mm blade slot and an M2 clamp screw. |
-| 4 | `STEP/far_tip_block_semitron.step` | **Semitron ESd 480** | 1 (+2 spare) | CNC | 3 wide × 2 thick × 8.5 tall. Nose band 0.35 tall protrudes 0.6 toward the die at Z 0.05–0.40. M2 clearance + countersink from the die side. Ø0.6 through hole at Z 0.25 for a thru-beam fiber sensor. |
-| 5 | `STEP/near_tip_block_semitron.step` | Semitron ESd 480 | 1 (+2 spare) | CNC | 3 × 2 × 1.45 mm, same nose, blade slot 1 mm deep from the top, Ø0.6 sensor hole. Bonded to the blade. |
+| 4 | `STEP/far_tip_block_semitron.step` | **Semitron ESd 480** | 1 (+2 spare) | CNC | 3 wide × 2 thick × 8.5 tall. Nose band 0.35 tall protrudes 0.6 toward the die at Z 0.05–0.40, crowned R 30 across its width (apex on the nominal nose plane). M2 clearance + countersink from the die side. Ø0.6 through hole at Z 0.25 for a thru-beam fiber sensor (provision; see the design note on sensing). |
+| 5 | `STEP/near_tip_block_semitron.step` | Semitron ESd 480 | 1 (+2 spare) | CNC | 3 × 2 × 1.45 mm, same crowned nose, blade slot 1 mm deep from the top, Ø0.6 sensor hole. Bonded to the blade. |
 | 6 | `STEP/flexure_blade_0p127_steel.step` | 0.005″ feeler-gauge stock (C1095 spring steel) | 1 (+5 spare) | cut from stock | 3.0 wide × 9.0 long (1 in block, 5 free, 3 clamped). Cut with shears, deburr, degrease. |
 | 7 | `STEP/bracket_6061.step` | 6061-T6 | 1 | CNC | L-bracket: 3 mm vertical plate on the body's −Y face (2 × M3 through the body), 6 mm top plate (X −54…−22, kept 7 mm outside a Ø40 microscope tube) with 4 × M4 clearance on 25 × 25 centred at X −38 and 2 × Ø3 dowel holes. Same pattern goes on every carrier. |
 | 8 | — | M2 × 6 SHCS ×4, M2 × 5 ×2, M3 × 16 ×2, M4 ×4, Ø3 × 8 dowels ×2, 0.05 mm shim stock | — | McMaster | Stainless. |
@@ -53,7 +55,7 @@ STL files (same names) are for printing check fixtures and for quick viewing; th
 
 - Nose contact face position relative to the arm's root-plate bolt face: ±0.02 mm on both
   arms (sets the 9.87 gap; shims correct the rest).
-- Nose band height 0.35 ± 0.02; nose top at 0.40 ± 0.02 from the block bottom.
+- Nose band height 0.35 ± 0.02; nose top at 0.40 ± 0.02 from the block bottom; crown apex on the nose plane within 0.01.
 - Contact faces parallel to the root-plate face within 0.02 over 3 mm.
 - Bar straightness 0.05 over the length; arms must not sag into the die (5 mm nominal
   clearance above the die top).

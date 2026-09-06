@@ -38,11 +38,11 @@ on record as the fallback if the hand-cycling trials show slip.
   the top edge of a diced face, the most chip-prone line, is never loaded; the bottom is 0.05 mm above
   the die bottom so the backside lands on its support before a nose could.
 - **Crown across the band width**: the contact face is a cylinder of radius 30 mm with its axis
-  vertical and its apex at the nominal nose plane (sag 37 µm at the band edges). A die whose end face is
+  vertical and its apex at the nominal nose plane (sag 38 µm at the band edges). A die whose end face is
   not square to the jaws then meets the nose on a line inside the band instead of on the nose's edge.
   Two crowned noses square the die as flat ones do: the contact points move to ±R·θ and the normals
   through the crown axes give a restoring couple 2·F·(L/2 + R)·θ, so the jaws still define X and yaw
-  (0.35 mN·m per degree at 0.32 N). The crown is on the noses, not the die.
+  (0.39 mN·m per degree at 0.32 N). The crown is on the noses, not the die.
 - **Material**: Semitron ESd 480 (static-dissipative PEEK) noses, both replaceable; 0.6 mm setback
   above the band so the tip blocks never touch the die.
 

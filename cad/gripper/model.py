@@ -40,6 +40,9 @@ P = dict(
     nose_h=C.NOSE_H,               # contact band height on the end face
     nose_gap_top=C.NOSE_GAP_TOP,   # nose top below die top surface
     nose_setback=0.60,             # tip block face set back above the nose
+    nose_crown_r=30.0,             # crown across the band width (cylinder, axis vertical, apex on the nominal nose plane): a die
+                                   # whose end face is not square meets the nose on a line inside the band, not on the nose edge;
+                                   # two crowned noses still square the die (restoring couple 2 F (L/2 + R) theta). docs/pick_and_place_design.md
     nose_w=C.CONTACT_Y1 - C.CONTACT_Y0,   # contact width along Y (die middle 3 mm)
     nose_y0=C.CONTACT_Y0,          # contact band from Y=1.5 to 4.5
     # arm bars: only these pass under the objective
@@ -269,6 +272,7 @@ def far_tip_block():
     x_face = far_face_x
     blk = box(x_face + P["nose_setback"], x_face + 2.0, blk_y0, blk_y1, 0.05, bar_z1 + 0.05)
     nose = box(x_face, x_face + P["nose_setback"] + 0.01, blk_y0, blk_y1, 0.05, 0.05 + P["nose_h"])
+    nose = nose.intersect(cyl_z(x_face + P["nose_crown_r"], die_cy, 0.0, 0.5, P["nose_crown_r"]))   # crown, apex at x_face
     blk = blk.union(nose)
     # M2 clearance + countersink from the die side (head sits 6.5 mm above the die top)
     blk = blk.cut(cq.Workplane("YZ").center(die_cy, bar_z0 + 1.5).circle(1.1).extrude(3).translate((x_face - 0.5, 0, 0)))
@@ -286,6 +290,7 @@ def near_tip_block():
     top = 1.5
     blk = box(x_face - 2.0, x_face - P["nose_setback"], blk_y0, blk_y1, 0.05, top)
     nose = box(x_face - P["nose_setback"] - 0.01, x_face, blk_y0, blk_y1, 0.05, 0.05 + P["nose_h"])
+    nose = nose.intersect(cyl_z(x_face - P["nose_crown_r"], die_cy, 0.0, 0.5, P["nose_crown_r"]))   # crown, apex at x_face
     blk = blk.union(nose)
     # blade slot from the top, at the blade plane (1.8 behind the nose face)
     slot_x = x_face - blade_plane_off
@@ -382,6 +387,9 @@ def main():
         f"flexure stiffness          : {k / 1000:.2f} N/mm  (t={P['blade_t']} mm, w={P['blade_w']} mm, L={P['blade_free']} mm)",
         f"grip force                 : {F:.2f} N  +/- {Ftol:.2f} N for die length +/- {P['die_len_tol']} mm",
         f"nose top below die top     : {P['die_thk'] - (0.05 + P['nose_h']):.3f} mm",
+        f"nose crown                 : R {P['nose_crown_r']:.0f} mm across the {P['nose_w']:.0f} mm band, sag {1e3 * (P['nose_w'] / 2) ** 2 / (2 * P['nose_crown_r']):.0f} um at the band edges; "
+        f"squaring couple {2 * F * (P['die_len'] / 2 + P['nose_crown_r']) * 1e-3 * 3.14159 / 180 * 1e6:.0f} uN.m per degree of die yaw",
+        f"friction hold (mu 0.1 / 0.3): {2 * 0.1 * F * 1e3:.0f} / {2 * 0.3 * F * 1e3:.0f} mN vs die weight {1.4:.1f} mN  (friction-only grip, no toe: docs/pick_and_place_design.md)",
         f"far bar top above die top  : {bar_z1 - die_top:.2f} mm  (far bar lane Y {far_bar_y0:.1f}..{far_bar_y1:.1f}, near lane Y {near_bar_y0:.1f}..{near_bar_y1:.1f})",
         f"near head X extent         : {near_face_x - blade_plane_off - P['head_x'] :.2f} .. {near_face_x - blade_plane_off + 1.0:.2f}",
         f"near head top above die top: {near_head_top - die_top:.2f} mm  <- tallest tool part inside objective footprint",
