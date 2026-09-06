@@ -88,15 +88,10 @@ def nest():
     else:
         kb = box(-14, 24, -16, 22, table_z, table_z + 20)                     # kinematic base envelope
         kb_top = table_z + 20
-    riser = box(-8, 18, -10, 16, kb_top, -4.5)                                 # riser column
-    insert = box(-1, 11, 0.6, 5.4, -4.5, -1.5)                                # rail insert body (narrow in Y)
-    r1 = box(0, 10, 1.0, 1.9, -1.5, 0.0)
-    r2 = box(0, 10, 4.1, 5.0, -1.5, 0.0)
-    ins = insert.union(r1).union(r2)
-    for x in (1.5, 4.0, 6.5, 9.0):                                            # vacuum ports into each rail
-        for y in (1.45, 4.55):
-            ins = ins.cut(cq.Workplane("XY").center(x, y).circle(0.3).extrude(6).translate((0, 0, -4.6)))
-    riser = riser.cut(cq.Workplane("XZ").center(5, -30).circle(2.0).extrude(-30).translate((0, -12, 0)))  # M5 vacuum port
+    import nest_module as NM                                                   # self-registering nest: rails + stop pads + cage
+    riser = NM.riser(table_z, kb_top)
+    ins = NM.rail_insert()
+    S["_nest_cage"] = NM.cage(); S["_nest_cage_parts"] = NM.cage_parts()
     return kb.union(riser), ins
 
 
@@ -404,6 +399,7 @@ def main():
     static = {}
     static["optical_table"] = table()
     kb, ins = nest(); static["nest_riser_kinematic"] = kb; static["nest_rail_insert_17-4"] = ins
+    static["nest_cage_semitron"] = S["_nest_cage"]
     for name, s in nanomax(-1) + nanomax(+1): static[name] = s
     for name, s in microscope(): static[name] = s
     xax, xmot, (xr1, xr2) = x_axis(); static["x_axis_body_velmex"] = xax; static["x_axis_motor_end"] = xmot
@@ -444,6 +440,10 @@ def main():
         ("gripper mhz2_body @nest", grip_nest["mhz2_body"], "microscope_tube", static["microscope_tube"]),
         ("gripper far_arm @nest", grip_nest["far_arm"], "microscope_column", static["microscope_column"]),
         ("gripper near_arm @nest", grip_nest["near_arm"], "fiber_holder_in", static["fiber_holder_in"]),
+        ("nest_cage (per member)", S["_nest_cage_parts"], "fiber_holder_in", static["fiber_holder_in"]),
+        ("nest_cage (per member)", S["_nest_cage_parts"], "fiber_holder_out", static["fiber_holder_out"]),
+        ("nest_cage (per member)", S["_nest_cage_parts"], "fiber_in", static["fiber_in"]),
+        ("nest_cage (per member)", S["_nest_cage_parts"], "fiber_out", static["fiber_out"]),
         ("gripper far_arm @nest", grip_nest["far_arm"], "fiber_holder_out", static["fiber_holder_out"]),
         ("gripper bracket @nest", grip_nest["bracket"], "fiber_holder_in", static["fiber_holder_in"]),
         ("arm_L @nest", arm_parts, "microscope_tube", static["microscope_tube"]),
@@ -543,7 +543,7 @@ def main():
     # ---- assembly export (nest configuration + ghost of stick configuration) ----
     assy = cq.Assembly(name="test_station")
     col = {
-        "optical_table": (0.86, 0.88, 0.90), "nest_riser_kinematic": (0.60, 0.63, 0.68), "nest_rail_insert_17-4": (0.56, 0.56, 0.56),
+        "optical_table": (0.86, 0.88, 0.90), "nest_riser_kinematic": (0.60, 0.63, 0.68), "nest_rail_insert_17-4": (0.56, 0.56, 0.56), "nest_cage_semitron": (0.16, 0.16, 0.18),
         "nanomax300_in": (0.56, 0.69, 0.82), "nanomax300_out": (0.56, 0.69, 0.82), "fiber_holder_in": (0.36, 0.40, 0.44),
         "fiber_holder_out": (0.36, 0.40, 0.44), "fiber_in": (0.94, 0.82, 0.50), "fiber_out": (0.94, 0.82, 0.50),
         "objective": (0.20, 0.23, 0.27), "microscope_tube": (0.25, 0.28, 0.32), "microscope_arm": (0.77, 0.79, 0.82), "microscope_column": (0.77, 0.79, 0.82),

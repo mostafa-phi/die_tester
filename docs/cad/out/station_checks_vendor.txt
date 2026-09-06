@@ -7,6 +7,11 @@ Y stage: row pitch 7.5 x 14 rows -> travel 97.5 mm (axis 105)
 
 clearances vs boxes (AABB separation, mm; negative = overlap):
   gripper near_arm @nest     vs fiber_holder_in     :    10.2  OK 
+  nest_cage (per member)     vs fiber_holder_in     :    10.0  OK 
+  nest_cage (per member)     vs fiber_holder_out    :    10.0  OK 
+  nest_cage (per member)     vs fiber_in            :     1.9  TIGHT
+  nest_cage (per member)     vs fiber_out           :     1.9  TIGHT
+  nest_cage (per member)     vs die_at_nest         :     0.0  ** OVERLAP **
   gripper far_arm @nest      vs fiber_holder_out    :    10.2  OK 
   gripper bracket @nest      vs fiber_holder_in     :    26.7  OK 
   arm_L @nest                vs nanomax300_in       :    93.0  OK 
@@ -83,7 +88,7 @@ swept volumes nest <-> tray (after the 8 mm lift; per member) vs static objects:
   gripper band vs fiber_in              :     7.5  OK     arm band:    77.4  OK 
   gripper band vs nanomax300_out        :    43.2  OK     arm band:   101.0  OK 
   gripper band vs fiber_holder_out      :    10.2  OK     arm band:    73.5  OK 
-  gripper band vs nest_riser_kinematic  :    12.6  OK     arm band:    82.5  OK 
+  gripper band vs nest_riser_kinematic  :    12.5  OK     arm band:    82.5  OK 
   gripper band vs x_axis_body_velmex    :    42.8  OK     arm band:    28.0  OK 
   gripper band vs x_axis_riser_short    :    46.0  OK     arm band:    78.0  OK 
   gripper band vs microscope_arm        :    42.5  OK     arm band:    27.0  OK 

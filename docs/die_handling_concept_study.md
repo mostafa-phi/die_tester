@@ -1,6 +1,6 @@
 # System Redesign Study — Batch Edge-Coupled Testing of Hundreds of 10 × 6 mm Photonic Dies
 
-**Status:** concept study for review, rev. 2.7 (CAD of the gripper and the full station now in `docs/cad/`)
+**Status:** concept study for review, rev. 2.8 (CAD of the gripper, the self-registering nest and the full station in `docs/cad/`)
 **Scope:** ground-up redesign of the die-tester stage and handling system. The current
 machine is architected around a single manually loaded die; this study treats the whole
 stage system as open for redesign and asks what a machine looks like when the unit of
@@ -124,6 +124,13 @@ ejector pins) and, for transfer, on the **middle of its two non-optical X-end fa
 not by side datums: with a single fixed nest and a calibrated overhead camera, a
 measured X/Y/θ is as good as a mechanical one and carries zero facet risk. This
 supersedes the brief's facet-face datum sketch (§9 of the brief).
+
+*Rev. 2.8 (CAD, `docs/cad/nest_module.py`): X and yaw are now registered mechanically after
+all — not on the facets but on the **non-optical +X end face**, by two hard-stop pads the
+gripper pushes the die against with its own 0.25 N compliant nose (the same end-face band
+the jaws use). Y stays free, read by the camera and absorbed by the fiber stages, and is
+caged to ±0.6 mm by corner guards that stand outside the facet planes only where no fiber
+ever goes. The X-Y-θ correction stage is dropped; the nest sits on the kinematic base.*
 
 One nest, machined and lapped once, characterized exhaustively:
 

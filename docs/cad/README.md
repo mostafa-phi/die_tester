@@ -121,7 +121,7 @@ Renders of the vendor-model assembly: `out/render_station_vendor_{iso,plan,front
 | Element | Position | Why |
 |---|---|---|
 | Optical table plane | Z −86 | NanoMax deck 62.5 + platform 4 + holder 20 puts the fiber axis at die-top height (Z 0.5); all risers follow from this. |
-| Nest | riser X −8…18, Y −10…16 on a KB1X1-class kinematic base; rail insert Y 0.6…5.4 | Narrow at the top so both fiber corridors stay open. |
+| Nest | riser X −8…18, Y −10…16 on a KB1X1 kinematic base; 17-4 rail insert Y 0.6…5.4; Semitron cage frame X −2.5…12.5, Y −2…8 with four corner blocks (+X stop pads, −X guard, Y guards) — see *Nest* below | Narrow at the top so both fiber corridors stay open; the cage never stands where a fiber can go. |
 | NanoMax 300 (input / output) | inner faces 45 mm from the facets: Y −157…−45 and Y 51…163; X −51…61 | Fiber holders reach in from the platforms; clamps at 12 mm from the facets. |
 | Microscope | objective Ø34 centred on the die, front lens at WD 20; Ø40 tube above; arm to a Ø40 column at **X = 80** | Behind the nest, as on the bench. |
 | **X axis** (MN10-0150, 381 mm travel; 262 used) | along X, centre-line **Y = −100**, on an **86 mm riser** (two pedestals) so the body sits at Z 0…55, i.e. *above* the NanoMax envelope and above the tray deck that crosses under it; body X −604…−40, motor to X −668 | Beside the input fiber stage, outside the fiber corridor, and above the stage's protruding actuators. |
@@ -146,7 +146,10 @@ pocket position. Fibers are only ever moved by their own NanoMax stages.
 | 7 | Y stage | brings row *r* to Y = 3 (±48.75 mm) | can pre-position during step 6 |
 | 8 | Z | −8 −3 mm: die onto the pocket ledges (3 mm below nest height) | — |
 | 9 | gripper | open (+1.5 mm per side) | — |
-| 10 | Z | +11 mm; then steps 6–9 in reverse with the next die; at the nest: rails vacuum on, jaws open, Z +8, camera pose, correction, fibers approach | seat detection by rail vacuum |
+| 10 | Z | +11 mm; then steps 6–9 in reverse with the next die, arriving at the nest with the die's +X end face **0.2 mm short of the stop pads** | — |
+| 11 | Z, gripper | Z −8 mm: die onto the rails; jaws open (+1.5 mm per side) | — |
+| 12 | X | **push-to-stop: gripper +1.7 mm** — the open near nose meets the die's −X end face, slides it 0.2 mm onto the two +X pads and overtravels 0.1 mm, so the blade limits the push to 0.25 N; X and yaw are now mechanical | — |
+| 13 | nest, X, Z | rail vacuum on (seat detection); gripper −1.7 mm, Z +8 mm, X out to the park position; camera pose check; fibers approach | vacuum switch reads seated |
 
 Exchange time budget: ~20 s with lead-screw stages at 20 mm/s; the X move dominates.
 
@@ -185,6 +188,29 @@ and the Velmex cleats are relocated 120 mm toward the motor end (they are clamps
 because the low SMC body swept through one of them at the far tray columns. Clearance checks are now
 per arm member and per swept part (`gap_parts`), which removed several false overlaps from the union boxes.
 Renders: `out/render_gripper_vendor_h_{iso,side,front}.png`, `out/render_station_vendor_h_{iso,side}.png`.
+
+## Nest (chip stage): self-registering, `nest_module.py`
+
+The nest fixes the die mechanically in every axis the fibers cannot absorb, without touching a
+facet or the top surface, and cages it so it cannot leave the rails:
+
+| Degree of freedom | Defined by | How well |
+|---|---|---|
+| Z, pitch, roll | two lapped 17-4 rails, 0.9 wide, 1 mm inboard of the facets, vacuum-held | ≤ 5 µm flatness |
+| X and yaw | two **Semitron ESd 480 stop pads** on the +X end face at Y 0.6–1.2 and 4.8–5.4 (4.2 mm base, 0.6 mm from each facet, contact band Z 0.05–0.40 like the noses); the gripper's compliant near nose pushes the die onto them with 0.25 N | X ±5 µm, yaw ±0.03° from a diced end face |
+| Y | **free** — the fiber stages approach along Y and measure the gap every time; left ±0.6 mm by Y-guard legs that sit outside the facet planes only at the die corners (X ≤ 0.5 and ≥ 9.5, where no fiber goes, waveguides start at X 1.5) | ±0.6 mm, read by the camera |
+| −X | guard bar 0.4 mm from the end face (never touched in normal operation) | — |
+
+Parts: `nest_rail_insert_17-4.step` (rails + vacuum plenum, lapped), `nest_cage_semitron.step` (one
+frame with the four L-shaped corner blocks, doweled to the riser), `nest_riser_6061.step`.
+`nest_checks.txt` verifies the cage against the gripper with jaws closed, open at set-down and
+during the push (≥ 0.3 mm everywhere), against the fiber and holder envelopes (≥ 0.5 mm), and that
+only the two stop pads touch the seated die. Renders: `out/render_nest_{iso,top,setdown_iso,cage_iso}.png`.
+
+Consequence: the X-Y-θ correction stage under the nest is no longer needed. The nest sits directly
+on the KB1X1 kinematic base; the camera's job is to read the pose (mostly Y) and hand the fibers
+their start coordinates, and to flag a die that is not seated. A yaw of 0.03° costs nothing in edge
+coupling; a Y offset of 0.6 mm is inside the NanoMax travel.
 
 ## Compatibility results (from `station_checks.txt`)
 

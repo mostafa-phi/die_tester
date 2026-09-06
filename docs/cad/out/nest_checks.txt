@@ -1,0 +1,163 @@
+Nest registration: rails -> Z/pitch/roll; +X pads (Y 0.6-1.2, 4.8-5.4, 4.2 mm base) -> X and yaw;
+Y free within +/-0.6 mm (corner guards). Push-to-stop: set down 0.2 mm short, jaws open,
+gripper +1.7 mm -> near nose seats the die with 0.25 N (blade overtravel 0.1 mm).
+Contact band on the end faces Z 0.05..0.4 (top 0.10 below the die top), pads 0.6 mm from the facets.
+
+cage blocks vs the die (must never be under it; +X pads touch the seated die's end face):
+  X guard -X-Y                       vs die seated                :    0.40  OK 
+  X guard -X-Y                       vs die set down (-0.2 X)     :    0.20  OK 
+  X guard -X-Y                       vs die Y-offset -0.4         :    0.20  OK 
+  Y guard -X-Y                       vs die seated                :    0.60  OK 
+  Y guard -X-Y                       vs die set down (-0.2 X)     :    0.60  OK 
+  Y guard -X-Y                       vs die Y-offset -0.4         :    0.20  OK 
+  X guard -X+Y                       vs die seated                :    0.40  OK 
+  X guard -X+Y                       vs die set down (-0.2 X)     :    0.20  OK 
+  X guard -X+Y                       vs die Y-offset -0.4         :    0.20  OK 
+  Y guard -X+Y                       vs die seated                :    0.60  OK 
+  Y guard -X+Y                       vs die set down (-0.2 X)     :    0.60  OK 
+  Y guard -X+Y                       vs die Y-offset -0.4         :    1.00  OK 
+  stop pad +X-Y                      vs die seated                :    0.00  TOUCH
+  stop pad +X-Y                      vs die set down (-0.2 X)     :    0.20  OK 
+  stop pad +X-Y                      vs die Y-offset -0.4         :    0.20  OK 
+  Y guard +X-Y                       vs die seated                :    0.60  OK 
+  Y guard +X-Y                       vs die set down (-0.2 X)     :    0.60  OK 
+  Y guard +X-Y                       vs die Y-offset -0.4         :    0.20  OK 
+  stop pad +X+Y                      vs die seated                :    0.00  TOUCH
+  stop pad +X+Y                      vs die set down (-0.2 X)     :    0.20  OK 
+  stop pad +X+Y                      vs die Y-offset -0.4         :    0.20  OK 
+  Y guard +X+Y                       vs die seated                :    0.60  OK 
+  Y guard +X+Y                       vs die set down (-0.2 X)     :    0.60  OK 
+  Y guard +X+Y                       vs die Y-offset -0.4         :    1.00  OK 
+cage blocks vs the gripper, jaws CLOSED on the seated die:
+  X guard -X-Y                       vs far_tip (closed)          :   10.33  OK 
+  X guard -X-Y                       vs near_tip (closed)         :    0.30  OK 
+  X guard -X-Y                       vs blade (closed)            :    0.67  OK 
+  X guard -X-Y                       vs near_arm (closed)         :    5.10  OK 
+  X guard -X-Y                       vs far_arm (closed)          :    5.10  OK 
+  Y guard -X-Y                       vs far_tip (closed)          :    9.43  OK 
+  Y guard -X-Y                       vs near_tip (closed)         :    2.10  OK 
+  Y guard -X-Y                       vs blade (closed)            :    2.10  OK 
+  Y guard -X-Y                       vs near_arm (closed)         :    5.10  OK 
+  Y guard -X-Y                       vs far_arm (closed)          :    5.10  OK 
+  X guard -X+Y                       vs far_tip (closed)          :   10.33  OK 
+  X guard -X+Y                       vs near_tip (closed)         :    0.30  OK 
+  X guard -X+Y                       vs blade (closed)            :    0.67  OK 
+  X guard -X+Y                       vs near_arm (closed)         :    5.10  OK 
+  X guard -X+Y                       vs far_arm (closed)          :    5.10  OK 
+  Y guard -X+Y                       vs far_tip (closed)          :    9.43  OK 
+  Y guard -X+Y                       vs near_tip (closed)         :    2.10  OK 
+  Y guard -X+Y                       vs blade (closed)            :    2.10  OK 
+  Y guard -X+Y                       vs near_arm (closed)         :    5.10  OK 
+  Y guard -X+Y                       vs far_arm (closed)          :    5.10  OK 
+  stop pad +X-Y                      vs far_tip (closed)          :    0.30  OK 
+  stop pad +X-Y                      vs near_tip (closed)         :    9.93  OK 
+  stop pad +X-Y                      vs blade (closed)            :   11.67  OK 
+  stop pad +X-Y                      vs near_arm (closed)         :   10.73  OK 
+  stop pad +X-Y                      vs far_arm (closed)          :    5.10  OK 
+  Y guard +X-Y                       vs far_tip (closed)          :    2.10  OK 
+  Y guard +X-Y                       vs near_tip (closed)         :    9.43  OK 
+  Y guard +X-Y                       vs blade (closed)            :   11.17  OK 
+  Y guard +X-Y                       vs near_arm (closed)         :   10.23  OK 
+  Y guard +X-Y                       vs far_arm (closed)          :    5.10  OK 
+  stop pad +X+Y                      vs far_tip (closed)          :    0.30  OK 
+  stop pad +X+Y                      vs near_tip (closed)         :    9.93  OK 
+  stop pad +X+Y                      vs blade (closed)            :   11.67  OK 
+  stop pad +X+Y                      vs near_arm (closed)         :   10.73  OK 
+  stop pad +X+Y                      vs far_arm (closed)          :    5.10  OK 
+  Y guard +X+Y                       vs far_tip (closed)          :    2.10  OK 
+  Y guard +X+Y                       vs near_tip (closed)         :    9.43  OK 
+  Y guard +X+Y                       vs blade (closed)            :   11.17  OK 
+  Y guard +X+Y                       vs near_arm (closed)         :   10.23  OK 
+  Y guard +X+Y                       vs far_arm (closed)          :    5.10  OK 
+cage blocks vs the gripper, jaws OPEN (+/-1.5) at the set-down position:
+  X guard -X-Y                       vs far_tip (open)            :   11.63  OK 
+  X guard -X-Y                       vs near_tip (open)           :    0.63  OK 
+  X guard -X-Y                       vs blade (open)              :    2.37  OK 
+  Y guard -X-Y                       vs far_tip (open)            :   10.73  OK 
+  Y guard -X-Y                       vs near_tip (open)           :    2.10  OK 
+  Y guard -X-Y                       vs blade (open)              :    2.37  OK 
+  X guard -X+Y                       vs far_tip (open)            :   11.63  OK 
+  X guard -X+Y                       vs near_tip (open)           :    0.63  OK 
+  X guard -X+Y                       vs blade (open)              :    2.37  OK 
+  Y guard -X+Y                       vs far_tip (open)            :   10.73  OK 
+  Y guard -X+Y                       vs near_tip (open)           :    2.10  OK 
+  Y guard -X+Y                       vs blade (open)              :    2.37  OK 
+  stop pad +X-Y                      vs far_tip (open)            :    0.63  OK 
+  stop pad +X-Y                      vs near_tip (open)           :   11.63  OK 
+  stop pad +X-Y                      vs blade (open)              :   13.37  OK 
+  Y guard +X-Y                       vs far_tip (open)            :    2.10  OK 
+  Y guard +X-Y                       vs near_tip (open)           :   11.13  OK 
+  Y guard +X-Y                       vs blade (open)              :   12.87  OK 
+  stop pad +X+Y                      vs far_tip (open)            :    0.63  OK 
+  stop pad +X+Y                      vs near_tip (open)           :   11.63  OK 
+  stop pad +X+Y                      vs blade (open)              :   13.37  OK 
+  Y guard +X+Y                       vs far_tip (open)            :    2.10  OK 
+  Y guard +X+Y                       vs near_tip (open)           :   11.13  OK 
+  Y guard +X+Y                       vs blade (open)              :   12.87  OK 
+cage blocks vs the gripper during the push (jaws open, +X indexed):
+  X guard -X-Y                       vs far_tip (push)            :   13.57  OK 
+  X guard -X-Y                       vs near_tip (push)           :    0.30  OK 
+  X guard -X-Y                       vs blade (push)              :    0.44  OK 
+  Y guard -X-Y                       vs far_tip (push)            :   12.67  OK 
+  Y guard -X-Y                       vs near_tip (push)           :    2.10  OK 
+  Y guard -X-Y                       vs blade (push)              :    2.10  OK 
+  X guard -X+Y                       vs far_tip (push)            :   13.57  OK 
+  X guard -X+Y                       vs near_tip (push)           :    0.30  OK 
+  X guard -X+Y                       vs blade (push)              :    0.44  OK 
+  Y guard -X+Y                       vs far_tip (push)            :   12.67  OK 
+  Y guard -X+Y                       vs near_tip (push)           :    2.10  OK 
+  Y guard -X+Y                       vs blade (push)              :    2.10  OK 
+  stop pad +X-Y                      vs far_tip (push)            :    2.57  OK 
+  stop pad +X-Y                      vs near_tip (push)           :    9.70  OK 
+  stop pad +X-Y                      vs blade (push)              :   11.44  OK 
+  Y guard +X-Y                       vs far_tip (push)            :    2.57  OK 
+  Y guard +X-Y                       vs near_tip (push)           :    9.20  OK 
+  Y guard +X-Y                       vs blade (push)              :   10.94  OK 
+  stop pad +X+Y                      vs far_tip (push)            :    2.57  OK 
+  stop pad +X+Y                      vs near_tip (push)           :    9.70  OK 
+  stop pad +X+Y                      vs blade (push)              :   11.44  OK 
+  Y guard +X+Y                       vs far_tip (push)            :    2.57  OK 
+  Y guard +X+Y                       vs near_tip (push)           :    9.20  OK 
+  Y guard +X+Y                       vs blade (push)              :   10.94  OK 
+cage blocks, cage plate and insert vs fiber / holder envelopes:
+  X guard -X-Y                       vs fiber_in                  :    1.40  OK 
+  Y guard -X-Y                       vs fiber_in                  :    0.50  OK 
+  X guard -X+Y                       vs fiber_in                  :    4.80  OK 
+  Y guard -X+Y                       vs fiber_in                  :    6.60  OK 
+  stop pad +X-Y                      vs fiber_in                  :    1.00  OK 
+  Y guard +X-Y                       vs fiber_in                  :    0.50  OK 
+  stop pad +X+Y                      vs fiber_in                  :    4.80  OK 
+  Y guard +X+Y                       vs fiber_in                  :    6.60  OK 
+  cage plate                         vs fiber_in                  :    1.89  OK 
+  rail insert                        vs fiber_in                  :    0.60  OK 
+  X guard -X-Y                       vs fiber_out                 :    4.80  OK 
+  Y guard -X-Y                       vs fiber_out                 :    6.60  OK 
+  X guard -X+Y                       vs fiber_out                 :    1.40  OK 
+  Y guard -X+Y                       vs fiber_out                 :    0.50  OK 
+  stop pad +X-Y                      vs fiber_out                 :    4.80  OK 
+  Y guard +X-Y                       vs fiber_out                 :    6.60  OK 
+  stop pad +X+Y                      vs fiber_out                 :    1.00  OK 
+  Y guard +X+Y                       vs fiber_out                 :    0.50  OK 
+  cage plate                         vs fiber_out                 :    1.89  OK 
+  rail insert                        vs fiber_out                 :    0.60  OK 
+  X guard -X-Y                       vs clamp_in                  :   11.00  OK 
+  Y guard -X-Y                       vs clamp_in                  :   11.00  OK 
+  X guard -X+Y                       vs clamp_in                  :   16.80  OK 
+  Y guard -X+Y                       vs clamp_in                  :   18.60  OK 
+  stop pad +X-Y                      vs clamp_in                  :   11.00  OK 
+  Y guard +X-Y                       vs clamp_in                  :   11.00  OK 
+  stop pad +X+Y                      vs clamp_in                  :   16.80  OK 
+  Y guard +X+Y                       vs clamp_in                  :   18.60  OK 
+  cage plate                         vs clamp_in                  :   10.00  OK 
+  rail insert                        vs clamp_in                  :   12.60  OK 
+  X guard -X-Y                       vs clamp_out                 :   16.80  OK 
+  Y guard -X-Y                       vs clamp_out                 :   18.60  OK 
+  X guard -X+Y                       vs clamp_out                 :   11.00  OK 
+  Y guard -X+Y                       vs clamp_out                 :   11.00  OK 
+  stop pad +X-Y                      vs clamp_out                 :   16.80  OK 
+  Y guard +X-Y                       vs clamp_out                 :   18.60  OK 
+  stop pad +X+Y                      vs clamp_out                 :   11.00  OK 
+  Y guard +X+Y                       vs clamp_out                 :   11.00  OK 
+  cage plate                         vs clamp_out                 :   10.00  OK 
+  rail insert                        vs clamp_out                 :   12.60  OK 
+near nose face at the end of the push: X 0.10 = blade overtravel (die -X end face at X 0.00 on the pads)
