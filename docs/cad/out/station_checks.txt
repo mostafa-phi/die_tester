@@ -1,6 +1,6 @@
 table plane Z = -86.0 (die bottom = 0). Nest die top at 0.5; fiber axis at 0.5 via holder 20.0 above NanoMax deck
 wafer tray: 8 columns x 14 rows = 112 pockets, 130 x 106 mm; columns at die X -150 .. -262 (pitch 16.0)
-X carriage: nest -120 -> farthest column -382  (travel used 262 of 300 mm)
+X carriage: nest -140 -> farthest column -402  (travel used 262 of 300 mm)
 Z carriage: nest arm at Z 70.0 -> tray at Z 67.0 (drop 3.0 mm) + 8 mm approach lift
 Y stage: row pitch 7.5 x 14 rows -> travel 97.5 mm (axis 105)
 
@@ -10,18 +10,26 @@ clearances vs boxes (AABB separation, mm; negative = overlap):
   gripper bracket @nest      vs fiber_holder_in     :    26.7  OK 
   arm_L @nest                vs nanomax300_in       :    89.5  OK 
   arm_L @nest                vs fiber_holder_in     :    65.5  OK 
-  z_axis_body @nest          vs nanomax300_in       :    83.5  OK 
-  x_axis_body                vs nanomax300_in       :     9.0  OK 
-  x_axis_body                vs y_stage_body        :    11.0  OK 
-  z_axis_body @stick         vs y_stage_body        :    98.0  OK 
+  z_axis_body @nest          vs nanomax300_in       :    93.5  OK 
+  x_axis_body                vs nanomax300_in       :    29.0  OK 
+  x_axis_body                vs y_stage_body        :    22.0  OK 
+  x_axis_riser_long          vs y_stage_body        :    33.0  OK 
+  x_axis_riser_short         vs y_stage_body        :    30.0  OK 
+  x_axis_riser_short         vs nanomax300_in       :    39.0  OK 
+  x_axis_riser_long          vs deck @row 0 (Y-48.75):    11.0  OK 
+  x_axis_riser_short         vs deck @row 0 (Y-48.75):     8.0  OK 
+  x_axis_body                vs tray @row 0 (Y-48.75):     2.2  OK 
+  x_axis_body                vs wafer_tray          :     2.2  OK 
+  x_axis_motor_end           vs y_stage_body        :   208.0  OK 
+  z_axis_body @stick         vs y_stage_body        :   118.0  OK 
   arm_L @far column          vs wafer_tray          :    69.2  OK 
   gripper mhz2_body @far col vs wafer_tray          :    24.4  OK 
   gripper far_arm @far col   vs wafer_tray          :     4.7  OK 
   gripper near_arm @far col  vs wafer_tray          :     4.7  OK 
-  x_carriage @nest           vs nanomax300_in       :    73.5  OK 
-  x_carriage @nest           vs fiber_holder_in     :    65.0  OK 
-  z_axis_body @nest          vs fiber_holder_in     :    84.0  OK 
-  x_axis_body                vs fiber_holder_in     :    56.0  OK 
+  x_carriage @nest           vs nanomax300_in       :    83.5  OK 
+  x_carriage @nest           vs fiber_holder_in     :    85.0  OK 
+  z_axis_body @nest          vs fiber_holder_in     :   104.0  OK 
+  x_axis_body                vs fiber_holder_in     :    76.0  OK 
   gripper bracket @nest      vs fiber_holder_out    :    26.7  OK 
   gripper mhz2_body @nest    vs fiber_holder_in     :    20.7  OK 
   gripper mhz2_body @nest    vs fiber_holder_out    :    20.7  OK 
@@ -54,9 +62,9 @@ clearances vs microscope cylinders (radial or vertical, mm):
   arm_L @nest              vs objective (dia 34)        :    10.0  OK 
   arm_L @nest              vs microscope_tube (dia 40)  :     7.0  OK 
   arm_L @nest              vs microscope_column (dia 40):    82.0  OK 
-  z_carriage @nest         vs objective (dia 34)        :    80.9  OK 
-  z_carriage @nest         vs microscope_tube (dia 40)  :    77.9  OK 
-  z_carriage @nest         vs microscope_column (dia 40):   146.3  OK 
+  z_carriage @nest         vs objective (dia 34)        :    98.4  OK 
+  z_carriage @nest         vs microscope_tube (dia 40)  :    95.4  OK 
+  z_carriage @nest         vs microscope_column (dia 40):   165.4  OK 
 
 swept volumes nest <-> stick (after the 8 mm lift) vs static objects:
   gripper band vs nanomax300_in         :    31.0  OK     arm band:    97.5  OK 
@@ -65,7 +73,7 @@ swept volumes nest <-> stick (after the 8 mm lift) vs static objects:
   gripper band vs nanomax300_out        :    31.0  OK     arm band:    97.5  OK 
   gripper band vs fiber_holder_out      :     3.6  OK     arm band:    73.5  OK 
   gripper band vs nest_riser_kinematic  :    12.6  OK     arm band:    82.5  OK 
-  gripper band vs x_axis_body_velmex    :    35.0  OK     arm band:    24.0  OK 
+  gripper band vs x_axis_body_velmex    :    35.0  OK     arm band:    14.0  OK 
   gripper band vs microscope_arm        :    42.5  OK     arm band:    27.0  OK 
   gripper band vs objective (dia 34)    :   -17.0  ** CHECK **    arm band:    17.5  OK 
   gripper band vs microscope_tube (dia 40):   -17.5  ** CHECK **    arm band:     7.0  OK 

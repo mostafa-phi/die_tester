@@ -49,8 +49,8 @@ S = dict(
     axis_w=102.0, axis_h=64.0, car_t=10.0, car_len=102.0,
     x_travel=300.0, x_body_len=380.0, z_body_len=150.0, y_travel=105.0, y_body_len=205.0,
     x_axis_cy=-100.0,              # X axis centre-line in Y (beside the input NanoMax, outside the fiber corridor)
-    x_axis_riser=76.0,             # X axis sits on a riser ABOVE the NanoMax envelope (body top Z -10 .. +54)
-    xc_nest=-120.0,                # X-carriage centre when the gripper is at the nest (carriage end X -69, NanoMax face X -51)
+    x_axis_riser=86.0,             # X axis on a riser ABOVE the NanoMax envelope and above the tray deck that passes under it (body bottom Z 0)
+    xc_nest=-140.0,                # X-carriage centre when the gripper is at the nest (arm reach 140; keeps the real Velmex slider inside its travel)
     arm_sec=25.0,                  # square arm bar
     # wafer tray: one 100 mm wafer = 8 columns x 14 rows = 112 pockets, die returns to its own pocket after test
     tray_cols=8, tray_rows=14, tray_col_pitch=16.0, tray_row_pitch=7.5,
@@ -67,7 +67,7 @@ S["table_z"] = table_z
 # Static structure
 # ----------------------------------------------------------------------------
 def table():
-    return box(-540, 220, -280, 280, table_z - 12, table_z)
+    return box(-720, 220, -280, 280, table_z - 12, table_z)
 
 
 def nest():
@@ -156,20 +156,101 @@ def keepout():
 
 
 # ----------------------------------------------------------------------------
+# Velmex BiSlide MN10 vendor models (file frame: body along +Z from z=0, motor beyond the +Z end plate,
+# slider on the +Y face, width along X; measured from the two STEP files in vendor/)
+# ----------------------------------------------------------------------------
+V = dict(body_x=43.2, body_y0=-27.3, body_y1=27.3, slider_top=37.8, slider_len=116.9, slider_hw=39.3, end_plate=9.5)
+VELMEX_TRAVEL = {"velmex_MN10-0150-21.step": 381.0, "velmex_MN10-0050-21.step": 127.0}
+VX_X0 = -40.0                     # station X of the X-axis body's nest-end face (file z = 0); the body runs toward -X from here
+VY_Y0 = -142.25                   # station Y of the Y-axis body's -Y end face (file z = 0); motor toward +Y
+
+
+def velmex(fname):
+    """Split a BiSlide STEP into fixed solids and the moving slider (+ its switch striker); slider drawn at mid travel."""
+    wp = vendor_step(fname)
+    if wp is None:
+        return None
+    sol = wp.solids().vals()
+    bx = lambda t: t.BoundingBox()
+    slider = [t for t in sol if bx(t).xmin < -35 and bx(t).ymin > 5 and bx(t).ymax < 39]
+    striker = [t for t in sol if bx(t).xmin > 29 and bx(t).ymin > 28 and bx(t).ymax < 33]
+    mov = slider + striker
+    fixed = [t for t in sol if all(t is not m for m in mov)]
+    b = bx(slider[0]); body = max(sol, key=lambda t: t.Volume())
+    return dict(fixed=fixed, mov=mov, slider_c=(b.zmin + b.zmax) / 2, body_len=bx(body).zmax,
+                travel=VELMEX_TRAVEL[fname], zmax=max(bx(t).zmax for t in sol))
+
+
+def place(solids, dz, rot, tr):
+    """Translate solids along the file z by dz, apply rotations [(axis, deg), ...] about the origin, then translate."""
+    c = cq.Workplane().add(cq.Compound.makeCompound([t.translate(cq.Vector(0, 0, dz)) for t in solids]))
+    for axis, ang in rot:
+        c = c.rotate((0, 0, 0), axis, ang)
+    return c.translate(tr)
+
+
+def slider_target(v, zc_file, what):
+    lo, hi = v["body_len"] / 2 - v["travel"] / 2, v["body_len"] / 2 + v["travel"] / 2
+    if not (lo <= zc_file <= hi):
+        print(f"[vendor] WARNING: {what} slider centre {zc_file:.1f} outside travel {lo:.1f}..{hi:.1f} (file frame)")
+    return zc_file - v["slider_c"]
+
+
+ROT_X_AXIS = [((1, 0, 0), 90), ((0, 0, 1), -90)]     # file (x, y, z) -> station (-z, -x, y): body along -X, slider up, switches -Y
+ROT_Z_AXIS = [((0, 0, 1), -90)]                      # file (x, y, z) -> station (y, -x, z): body up, slider face +X (toward the nest)
+ROT_Y_AXIS = [((1, 0, 0), 90), ((0, 0, 1), 180)]     # file (x, y, z) -> station (-x, z, y): body along +Y, slider up
+_VX = {}
+
+
+def _vx():
+    if "x" not in _VX:
+        _VX["x"] = velmex("velmex_MN10-0150-21.step")
+        _VX["z"] = velmex("velmex_MN10-0050-21.step")
+        _VX["y"] = velmex("velmex_MN10-0050-21.step")
+    return _VX
+
+
+# ----------------------------------------------------------------------------
 # Transport
 # ----------------------------------------------------------------------------
 def x_axis():
-    y0, y1 = S["x_axis_cy"] - S["axis_w"] / 2, S["x_axis_cy"] + S["axis_w"] / 2
-    x1 = S["xc_nest"] + 60                              # body ends 60 beyond the nest carriage centre (carriage half-length 51)
-    x0 = x1 - S["x_body_len"]                           # ... and runs back toward the sticks
+    """Returns (body, motor_end, riser). The riser is two pedestals: the Y stage body crosses under the X axis
+    between them (X -260..-140); the 0150's cleats (file z 247..317 -> X -357..-287) sit on the long pedestal."""
+    v = _vx()["x"]
+    cyx = S["x_axis_cy"]
     zb = table_z + S["x_axis_riser"]
+    if v is not None:
+        tr = (VX_X0, cyx, zb - V["body_y0"])                                  # file y = -27.3 (body bottom) -> Z zb
+        bl = v["body_len"]
+        body_sol = [t for t in v["fixed"] if t.BoundingBox().zmin < bl - 1.0]     # body, nest-end plate, screw, switches, cleats
+        motor_sol = [t for t in v["fixed"] if t.BoundingBox().zmin >= bl - 1.0]  # motor-end plate, coupling housing, PK266
+        body = place(body_sol, 0.0, ROT_X_AXIS, tr)
+        motor = place(motor_sol, 0.0, ROT_X_AXIS, tr)
+        ped1 = box(VX_X0 - bl + 10, -285, cyx - 40, cyx + 40, table_z, zb)   # long pedestal, carries the two cleats (X -357..-287)
+        ped2 = box(-120, VX_X0 - 25, cyx - 40, cyx + 40, table_z, zb)          # short pedestal, ends 14 mm short of the NanoMax base (X -51)
+        return body, motor, (ped1, ped2)                                       # gap X -285..-120: Y stage body and tray deck pass through
+    y0, y1 = cyx - S["axis_w"] / 2, cyx + S["axis_w"] / 2
+    x1 = S["xc_nest"] + 60                              # body ends 60 beyond the nest carriage centre (carriage half-length 51)
+    x0 = x1 - S["x_body_len"]                           # ... and runs back toward the tray
     body = box(x0, x1, y0, y1, zb, zb + S["axis_h"])
-    riser = box(x0 + 10, x1 - 10, y0 + 6, y1 - 6, table_z, zb)
-    return body.union(riser), (x0, x1, y0, y1)
+    motor = box(x0 - 60, x0, cyx - 28, cyx + 28, zb + 4, zb + 60)              # NEMA 23 stepper envelope
+    ped1 = box(x0 + 10, -285, y0 + 6, y1 - 6, table_z, zb)
+    ped2 = box(-120, x1 - 10, y0 + 6, y1 - 6, table_z, zb)
+    return body, motor, (ped1, ped2)
 
 
 def z_tower(xc):
-    """X carriage + Z axis body + Z carriage + arm, for X-carriage centre xc. Returns dict of shapes and arm end plate."""
+    """X carriage + Z axis body for X-carriage centre xc."""
+    vx, vz = _vx()["x"], _vx()["z"]
+    if vx is not None:
+        zb = table_z + S["x_axis_riser"]
+        trx = (VX_X0, S["x_axis_cy"], zb - V["body_y0"])
+        xcar = place(vx["mov"], slider_target(vx, VX_X0 - xc, "X"), ROT_X_AXIS, trx)          # station X = VX_X0 - file z
+        zc_top = zb + (V["slider_top"] - V["body_y0"])                                          # X slider top: zb + 65.1
+        trz = (xc, S["x_axis_cy"], zc_top + V["end_plate"])                                     # Z body end plate sits on the X slider
+        zbody = place(vz["fixed"], 0.0, ROT_Z_AXIS, trz)
+        S["_z_tr"] = trz; S["_zc_top"] = zc_top
+        return xcar, zbody
     y0, y1 = S["x_axis_cy"] - S["axis_w"] / 2, S["x_axis_cy"] + S["axis_w"] / 2
     zc0 = table_z + S["x_axis_riser"] + S["axis_h"]
     xcar = box(xc - S["car_len"] / 2, xc + S["car_len"] / 2, y0, y1, zc0, zc0 + S["car_t"])
@@ -181,15 +262,29 @@ def z_tower(xc):
 def z_carriage_and_arm(xc, z_iface_top, gx):
     """Z carriage plate on the +X face of the Z body and the L-arm whose end plate bottom sits at z_iface_top,
     covering the gripper bracket interface at gripper X position gx (die origin X)."""
-    y0, y1 = S["x_axis_cy"] - S["axis_w"] / 2, S["x_axis_cy"] + S["axis_w"] / 2
     a = S["arm_sec"]
-    xf = xc + S["axis_h"] / 2                        # Z body +X face
-    zc = box(xf, xf + 10, y0, y1, z_iface_top - 20, z_iface_top - 20 + S["car_len"])
+    cyx = S["x_axis_cy"]
     # end plate over the bracket interface (bracket top plate X gx-48..gx-16, Y -14..20 in gripper frame)
     ep = box(gx + G.cx - 26, gx + G.cx + 8, cy - 18, cy + 22, z_iface_top, z_iface_top + 8)
     # bar along Y from the X-axis band to the end plate, then bar along X back to the Z carriage face
-    bar_y = box(gx + G.cx - 26, gx + G.cx - 26 + a, S["x_axis_cy"] + 20, cy + 22, z_iface_top + 8, z_iface_top + 8 + a)
-    bar_x = box(xf + 10, gx + G.cx - 26 + a, S["x_axis_cy"] + 20, S["x_axis_cy"] + 20 + a, z_iface_top + 8, z_iface_top + 8 + a)
+    bar_y = box(gx + G.cx - 26, gx + G.cx - 26 + a, cyx + 20, cy + 22, z_iface_top + 8, z_iface_top + 8 + a)
+    vz = _vx()["z"]
+    if vz is not None:
+        gz = z_iface_top - (G.body_z1 + G.P["top_t"])                                # 0 at the nest, tray drop elsewhere
+        zc_file = (vz["body_len"] / 2 - vz["travel"] / 2) + 20.0                       # slider parked 20 mm above its low limit
+        trz = S["_z_tr"]
+        zc = place(vz["mov"], slider_target(vz, zc_file + gz, "Z"), ROT_Z_AXIS, trz)
+        zs0 = trz[2] + zc_file + gz - V["slider_len"] / 2                             # slider Z range (absolute)
+        zs1 = zs0 + V["slider_len"]
+        xf = xc + V["slider_top"]                                                      # Z slider face (+X)
+        plate = box(xf, xf + 10, cyx - V["slider_hw"], cyx + V["slider_hw"], zs0 + 5, zs1 - 5)   # adapter plate on the slider
+        drop = box(xf + 10, xf + 10 + a, cyx + 20, cyx + 20 + a, z_iface_top + 8, zs0 + 40)     # 25 sq bar down to the arm level
+        bar_x = box(xf + 10, gx + G.cx - 26 + a, cyx + 20, cyx + 20 + a, z_iface_top + 8, z_iface_top + 8 + a)
+        return zc, ep.union(bar_y).union(bar_x).union(drop).union(plate)
+    y0, y1 = cyx - S["axis_w"] / 2, cyx + S["axis_w"] / 2
+    xf = xc + S["axis_h"] / 2                        # Z body +X face
+    zc = box(xf, xf + 10, y0, y1, z_iface_top - 20, z_iface_top - 20 + S["car_len"])
+    bar_x = box(xf + 10, gx + G.cx - 26 + a, cyx + 20, cyx + 20 + a, z_iface_top + 8, z_iface_top + 8 + a)
     return zc, ep.union(bar_y).union(bar_x)
 
 
@@ -203,14 +298,21 @@ def y_stage_and_tray(active_col_x, active_row_y):
     tray_len_y = nr * pr + 1.5
     tray_cx = (tray_x0 + tray_x1) / 2
     xw0, xw1 = tray_cx - S["axis_w"] / 2, tray_cx + S["axis_w"] / 2
-    yb0 = -38.0
-    ybody = box(xw0, xw1, yb0, yb0 + S["y_body_len"], table_z, table_z + S["axis_h"])
-    zc0 = table_z + S["axis_h"]
-    # carriage / tray placed so the active row is at active_row_y: active row = middle row here
-    ycar_c = active_row_y
-    ycar = box(xw0, xw1, ycar_c - S["car_len"] / 2, ycar_c + S["car_len"] / 2, zc0, zc0 + S["car_t"])
-    deck = box(tray_x0 - 8, tray_x1 + 8, ycar_c - tray_len_y / 2 - 8, ycar_c + tray_len_y / 2 + 8, zc0 + S["car_t"], zc0 + S["car_t"] + 6)
-    z_top_deck = zc0 + S["car_t"] + 6
+    ycar_c = active_row_y                                            # carriage / tray placed so the active row is at active_row_y
+    vy = _vx()["y"]
+    if vy is not None:
+        tr = (tray_cx, VY_Y0, table_z - V["body_y0"])
+        ybody = place(vy["fixed"], 0.0, ROT_Y_AXIS, tr)
+        ycar = place(vy["mov"], slider_target(vy, ycar_c - VY_Y0, "Y"), ROT_Y_AXIS, tr)       # station Y = VY_Y0 + file z
+        deck_z0 = table_z + (V["slider_top"] - V["body_y0"])                                    # slider top: table + 65.1
+    else:
+        yb0 = -38.0
+        ybody = box(xw0, xw1, yb0, yb0 + S["y_body_len"], table_z, table_z + S["axis_h"])
+        zc0 = table_z + S["axis_h"]
+        ycar = box(xw0, xw1, ycar_c - S["car_len"] / 2, ycar_c + S["car_len"] / 2, zc0, zc0 + S["car_t"])
+        deck_z0 = zc0 + S["car_t"]
+    deck = box(tray_x0 - 8, tray_x1 + 8, ycar_c - tray_len_y / 2 - 8, ycar_c + tray_len_y / 2 + 8, deck_z0, deck_z0 + 6)
+    z_top_deck = deck_z0 + 6
     z_led = z_top_deck + 2.2 + 0.8                                   # ledge top = die bottom in the pocket
     # slab to full wall height, cut all pocket cavities in ONE boolean, add all ledges in ONE boolean
     tray = box(tray_x0, tray_x1, ycar_c - tray_len_y / 2, ycar_c + tray_len_y / 2, z_top_deck, z_led + 0.8)
@@ -277,7 +379,8 @@ def main():
     kb, ins = nest(); static["nest_riser_kinematic"] = kb; static["nest_rail_insert_17-4"] = ins
     for name, s in nanomax(-1) + nanomax(+1): static[name] = s
     for name, s in microscope(): static[name] = s
-    xax, xbb = x_axis(); static["x_axis_body_velmex"] = xax
+    xax, xmot, (xr1, xr2) = x_axis(); static["x_axis_body_velmex"] = xax; static["x_axis_motor_end"] = xmot
+    static["x_axis_riser_long"] = xr1; static["x_axis_riser_short"] = xr2
     static["die_at_nest"] = G.die()
 
     # ---- moving, at NEST ----
@@ -321,6 +424,14 @@ def main():
         ("z_axis_body @nest", zbody, "nanomax300_in", static["nanomax300_in"]),
         ("x_axis_body", xax, "nanomax300_in", static["nanomax300_in"]),
         ("x_axis_body", xax, "y_stage_body", ybody),
+        ("x_axis_riser_long", xr1, "y_stage_body", ybody),
+        ("x_axis_riser_short", xr2, "y_stage_body", ybody),
+        ("x_axis_riser_short", xr2, "nanomax300_in", static["nanomax300_in"]),
+        ("x_axis_riser_long", xr1, "deck @row 0 (Y-48.75)", deck.translate((0, -48.75, 0))),
+        ("x_axis_riser_short", xr2, "deck @row 0 (Y-48.75)", deck.translate((0, -48.75, 0))),
+        ("x_axis_body", xax, "tray @row 0 (Y-48.75)", stick.translate((0, -48.75, 0))),
+        ("x_axis_body", xax, "wafer_tray", stick),
+        ("x_axis_motor_end", xmot, "y_stage_body", ybody),
         ("z_axis_body @stick", zbody2, "y_stage_body", ybody),
         ("arm_L @far column", arm2, "wafer_tray", stick),
         ("gripper mhz2_body @far col", grip_stick["mhz2_body"], "wafer_tray", stick),
@@ -384,7 +495,8 @@ def main():
     rep.append("bar height check in gripper_checks.txt (tallest part 9.0 mm above die top vs WD).")
     suffix = "_vendor" if USE_VENDOR else ""
     if USE_VENDOR:
-        rep.insert(0, "VENDOR MODELS: Thorlabs MAX313D/M (22803-E0W) x2, KB1X1 (2374-E0W); envelopes elsewhere. AABBs of the stages include their micrometers.")
+        rep.insert(0, "VENDOR MODELS: Thorlabs MAX313D/M (22803-E0W) x2, KB1X1 (2374-E0W); Velmex MN10-0150-xxx-21 (X) and MN10-0050-xxx-21 (Z, Y) "
+                      "with PK266 motors; envelopes for the SMC gripper and the microscope. AABBs include micrometers, motors and switches.")
     txt = "\n".join(rep); print(txt)
     with open(os.path.join(OUT, f"station_checks{suffix}.txt"), "w") as f: f.write(txt + "\n")
 
@@ -395,7 +507,7 @@ def main():
         "nanomax300_in": (0.56, 0.69, 0.82), "nanomax300_out": (0.56, 0.69, 0.82), "fiber_holder_in": (0.36, 0.40, 0.44),
         "fiber_holder_out": (0.36, 0.40, 0.44), "fiber_in": (0.94, 0.82, 0.50), "fiber_out": (0.94, 0.82, 0.50),
         "objective": (0.20, 0.23, 0.27), "microscope_tube": (0.25, 0.28, 0.32), "microscope_arm": (0.77, 0.79, 0.82), "microscope_column": (0.77, 0.79, 0.82),
-        "x_axis_body_velmex": (0.56, 0.69, 0.82), "die_at_nest": (0.81, 0.89, 0.97),
+        "x_axis_body_velmex": (0.56, 0.69, 0.82), "x_axis_motor_end": (0.45, 0.48, 0.52), "x_axis_riser_long": (0.60, 0.63, 0.68), "x_axis_riser_short": (0.60, 0.63, 0.68), "die_at_nest": (0.81, 0.89, 0.97),
         "x_carriage": (0.18, 0.31, 0.44), "z_axis_body_velmex": (0.56, 0.69, 0.82), "z_carriage": (0.18, 0.31, 0.44), "arm_L_25sq": (0.18, 0.31, 0.44),
         "y_stage_body": (0.56, 0.69, 0.82), "y_carriage": (0.18, 0.31, 0.44), "tray_deck": (0.60, 0.63, 0.68), "wafer_tray": (0.85, 0.81, 0.68),
     }

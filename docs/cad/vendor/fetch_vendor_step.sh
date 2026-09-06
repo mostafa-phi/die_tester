@@ -17,8 +17,11 @@ curl -sSL -A "$UA" -o thorlabs_KB1X1.step \
 
 # --- Velmex BiSlide: the site sits behind a browser captcha, download by hand ----------------------
 #   https://www.velmex.com/Technical/technical_cad_drawings.html   (Technical library, .stp per model)
-#   e.g. https://velmex.com/document/mn10-0100-xxx-11-lr-stp  (MN10 motorized, 10" travel, left/right)
-#   save as: velmex_MN10_x_axis.step, velmex_MN10_z_axis.step, velmex_MN10_y_axis.step
+#   X axis : "MN10-0150-xxx-21 2Cleats PK266.stp"  https://velmex.com/document/mn10-0150-xxx-21-2cleats-pk266-stp
+#            -> save as velmex_MN10-0150-21.step   (15 in / 381 mm travel, 2 cleats, PK266 motor)
+#   Z and Y: "MN10-0050-xxx-21 PK266.stp"          (same folder)
+#            -> save as velmex_MN10-0050-21.step   (5 in / 127 mm travel, PK266 motor)
+#   Order as MN10-0150-M02-21 and 2x MN10-0050-M02-21 (M02 = 2 mm/rev metric lead screw).
 
 # --- SMC MHZ2-6D-M9N: CAD needs a (free) SMC account since March 2026 -------------------------------
 #   https://www.smcworld.com/cadlib/en/   or   https://www.smc.eu/en-gb/products/engineering-tools/3d-product-libraries
