@@ -130,7 +130,7 @@ all — not on the facets but on the **non-optical +X end face**, by two hard-st
 gripper pushes the die against with its own 0.25 N compliant nose (the same end-face band
 the jaws use). Y stays free, read by the camera and absorbed by the fiber stages, and is
 caged to ±0.6 mm by corner guards that stand outside the facet planes only where no fiber
-ever goes. The X-Y-θ correction stage is dropped; the nest sits on the kinematic base.*
+ever goes. The X-Y-θ correction stage is dropped; the nest sits on the kinematic base. Because the fiber tips protrude only ~5 mm from their holders, the nest is a 10 mm wide neck near the die and widens only below the holders' underside. The two rails in the sketch below are superseded by a lapped **copper vacuum chuck pad** (75 % of the backside on metal, six vacuum holes) on a copper neck that lands on a 15 × 15 mm TEC inside the riser, which is the hot-side heat sink — the die can be temperature-controlled at the nest.*
 
 One nest, machined and lapped once, characterized exhaustively:
 

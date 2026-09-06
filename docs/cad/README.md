@@ -229,29 +229,6 @@ because the low SMC body swept through one of them at the far tray columns. Clea
 per arm member and per swept part (`gap_parts`), which removed several false overlaps from the union boxes.
 Renders: `out/render_gripper_vendor_h_{iso,side,front}.png`, `out/render_station_vendor_h_{iso,side}.png`.
 
-## Nest (chip stage): self-registering, `nest_module.py`
-
-The nest fixes the die mechanically in every axis the fibers cannot absorb, without touching a
-facet or the top surface, and cages it so it cannot leave the rails:
-
-| Degree of freedom | Defined by | How well |
-|---|---|---|
-| Z, pitch, roll | two lapped 17-4 rails, 0.9 wide, 1 mm inboard of the facets, vacuum-held | ≤ 5 µm flatness |
-| X and yaw | two **Semitron ESd 480 stop pads** on the +X end face at Y 0.6–1.2 and 4.8–5.4 (4.2 mm base, 0.6 mm from each facet, contact band Z 0.05–0.40 like the noses); the gripper's compliant near nose pushes the die onto them with 0.25 N | X ±5 µm, yaw ±0.03° from a diced end face |
-| Y | **free** — the fiber stages approach along Y and measure the gap every time; left ±0.6 mm by Y-guard legs that sit outside the facet planes only at the die corners (X ≤ 0.5 and ≥ 9.5, where no fiber goes, waveguides start at X 1.5) | ±0.6 mm, read by the camera |
-| −X | guard bar 0.4 mm from the end face (never touched in normal operation) | — |
-
-Parts: `nest_rail_insert_17-4.step` (rails + vacuum plenum, lapped), `nest_cage_semitron.step` (one
-frame with the four L-shaped corner blocks, doweled to the riser), `nest_riser_6061.step`.
-`nest_checks.txt` verifies the cage against the gripper with jaws closed, open at set-down and
-during the push (≥ 0.3 mm everywhere), against the fiber and holder envelopes (≥ 0.5 mm), and that
-only the two stop pads touch the seated die. Renders: `out/render_nest_{iso,top,setdown_iso,cage_iso}.png`.
-
-Consequence: the X-Y-θ correction stage under the nest is no longer needed. The nest sits directly
-on the KB1X1 kinematic base; the camera's job is to read the pose (mostly Y) and hand the fibers
-their start coordinates, and to flag a die that is not seated. A yaw of 0.03° costs nothing in edge
-coupling; a Y offset of 0.6 mm is inside the NanoMax travel.
-
 ## Compatibility results (from `station_checks.txt`)
 
 - **Microscope:** finger bars 12.0 mm below the objective front lens (WD 20); near head
