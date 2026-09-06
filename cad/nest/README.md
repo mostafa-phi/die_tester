@@ -44,21 +44,26 @@ plates** (`common.NANOMAX_RISER`) and the table plane is at Z −111; the fiber 
 | Level (bottom up) | Part | Z (table = −111.0) |
 |---|---|---|
 | kinematic base | Thorlabs KB1X1 (2374-E0W), 25.4 sq × 12.7 | −111.0 … −98.3 |
-| adapter | `STEP/nest_adapter_kb_rpg.step`, 6061, 5 mm: KB1X1 platform pattern → 4 × M3 tapped on the rotary's 32 × 32 (its bolts come down through its body) | −98.3 … −93.3 |
-| rotary | **MISUMI RMPG40W-N** motorized worm-gear rotary, horizontal table: body 40 × 55 × 35 tall with the axis 20 mm from the short end, 39 sq table with 8 × M2 on a 10 mm grid and a Ø8 bore; 28 mm 5-phase stepper on the DS102's second axis; motor toward −X, long end toward −Y. **Vendor STEP placed** (`cad/vendor/misumi_RMPG40W-N.step`) | −93.3 … −58.3 |
-| adapter | `STEP/nest_adapter_rpg_kxc.step`, 6061, 3 mm: rotary table (M2 at ±10) → KXC04015 base (4 × M3 tapped on 32 mm) | −58.3 … −55.3 |
-| X stage | **Suruga KXC04015-C** (crossed-roller, 40 × 40 table, 30 tall, 15 mm travel, ball screw Ø6 × 1 mm lead, 2 µm full / 1 µm half step, ±0.2 µm repeatability, 0.31 kg, 5-phase stepper on the DS102): motor section 59 mm toward −X, its 28 mm motor box 4 mm above the table top. **Vendor STEP placed** (`cad/vendor/suruga_KXC04015-C.step`): it confirms the table's 8 × M3 on a 16 mm grid with a Ø4 centre pin and the base's 4 × Ø3.5 on 32 × 32; the cable loop reaches Y +31 behind the motor, the base solid runs 11 mm further toward the motor than the catalog outline | −55.3 … −25.3 |
-| riser | `STEP/nest_riser_6061.step`: 38 × 38 wide body (M3 counterbored on the stage's 32 mm grid, TEC pocket, wire channel) to Z −12, then the 10 mm neck to the cage plate | −25.3 … −4.5 |
+| adapter | `STEP/nest_adapter_kb_kxc.step`, 6061, 3 mm: KB1X1 platform pattern → 4 × M3 tapped on the X stage's 32 × 32 base holes | −98.3 … −95.3 |
+| X stage | **Suruga KXC04015-C** (crossed-roller, 40 × 40 table, 30 tall, 15 mm travel, ball screw Ø6 × 1 mm lead, 2 µm full / 1 µm half step, ±0.2 µm repeatability, 0.31 kg, 5-phase stepper on the DS102): motor section 59 mm toward −X, its 28 mm motor box 4 mm above the table top. **Vendor STEP placed** (`cad/vendor/suruga_KXC04015-C.step`): it confirms the table's 8 × M3 on a 16 mm grid with a Ø4 centre pin and the base's 4 × Ø3.5 on 32 × 32; the cable loop reaches Y +31 behind the motor, the base solid runs 11 mm further toward the motor than the catalog outline | −95.3 … −65.3 |
+| spacer | `STEP/nest_spacer_kxc_rot.step`, 6061, 8 mm on the X-stage table: 4 × Ø3.4 for the rotary's M3 bolts into the table's M3 grid, Ø4 dowel at the centre (table pin hole → rotary bore) so the rotation axis sits on the die centre. Needed because the rotary's worm housing starts 2.6 mm above its base and its cable lead-out dips 2.1 mm below it, while the X stage's motor box stands 4 mm above the table top | −65.3 … −57.3 |
+| rotary | **MISUMI RMPG40W-N** motorized worm-gear rotary, horizontal table, **on the X stage**: body 40 × 55 × 35 tall with the axis through the die centre, 20 mm from the short end; 39 sq table with 8 × M2 on a 10 mm grid and a Ø8 bore; 28 mm 5-phase stepper on the DS102's second axis; motor toward −X, long end toward −Y; rides ±7.5 mm with the X stage (worm housing 6.6 mm and cable 1.9 mm above the X-stage motor box at the −7.5 end). **Vendor STEP placed** (`cad/vendor/misumi_RMPG40W-N.step`) | −57.3 … −22.3 |
+| riser | `STEP/nest_riser_6061.step`: 38 × 38 wide body (4 × M2 counterbored at ±10 into the rotary table, TEC pocket, wire channel) to Z −12, then the 10 mm neck to the cage plate | −22.3 … −4.5 |
 
-**Why the rotary sits under the X stage.** The yaw the fibers see is the sum of the stop-pad
-registration (per die, ~0.03°) and two static errors: the nest datum vs the fiber-stage axes and the
-X-stage travel vs those axes. With the rotary under the whole stack one rotation aligns both. Being
-motorized (worm gear, stepper on the DS102 axis the current centre stage's θ uses today), it is set
-with a gauge die and can also trim yaw per die from the camera or a two-device fit, which is what
-open-loop device stepping across 8 mm needs (0.02°). Per-device realignment alone tolerates 0.1°.
+**Why the rotary sits on top of the X stage.** Yaw is measured by driving the X stage from the
+fiducial at one end of the die to the fiducial at the other end under the fixed microscope and reading
+the lateral offset. To first order that offset is the die length times the angle between the fiducial
+line and the **stage travel direction**; the travel's own angle to the bench cancels because the same
+travel carries both fiducials. The rotary must therefore turn the die relative to the travel, which it
+can only do above the X stage: below it, die and travel would turn together and the offset would not
+change. Device stepping then shifts the next waveguide laterally by pitch × (die-vs-travel yaw) only, so
+once the procedure has nulled it the fibers see no drift; the travel's residual angle to the fiber axes
+(a mounting error under a degree) costs only the negligible angular coupling loss. The rotary is
+motorized (worm gear, on the DS102 axis the current centre stage's θ uses), so the trim runs per die.
 Dicing squareness between the end face and the facet is the floor no stage can remove. The rotary's
 straight cable in the vendor file reaches 179 mm out along −X, which would run into the Y-stage riser;
-it is routed down after a 40 mm lead-out (only that lead-out is modelled).
+it is routed down after a 40 mm lead-out (only that lead-out is modelled) and flexes ±7.5 mm with the
+stage.
 
 **Travel used.** ±4 mm of the ±7.5 available brings any waveguide at die X 1 … 9 under a fiber fixed
 at station X 5. `checks.txt` sweeps the stage from −7.5 to +7.5 and reports the worst clearance of every
@@ -68,8 +73,8 @@ the fiber envelope), the neck and cage plate keep 3.0 mm to the holders at any o
 5.5 mm to the motor box at −7.5. Both motors point −X because +X is the microscope column and ±Y are the
 fiber stages (the station checks confirm 87 mm and more to the column, 10 mm to the input NanoMax base).
 
-**Thermal note.** The riser's wide body is 13.3 mm thick on the stage table, so the KXC04015 table
-becomes part of the TEC's hot-side path. Fine below ~2 W; above that put a copper spreader with a
+**Thermal note.** The riser's wide body is 10.3 mm thick on the rotary table, so the rotary and the
+X stage become part of the TEC's hot-side path. Fine below ~2 W; above that put a copper spreader with a
 thermal break under the riser or take the heat off with a water block rather than into the stage.
 
 ## Fiber access
@@ -98,7 +103,7 @@ riser); silicone hose to the M5 fitting.
 | `STEP/nest_chuck_copper.step` (+STL) | C101 copper, Ni plate | CNC + lap | pad island, vacuum holes, plenum, neck, stub tube, thermistor bore |
 | `STEP/nest_cage_semitron.step` (+STL) | Semitron ESd 480 | CNC | one piece: plate with the copper window, 4 corner blocks (stop pads, X guard, Y guards); 2 × M2 + 2 × Ø1.5 dowels to the riser |
 | `STEP/nest_riser_6061.step` | 6061 | CNC | T-riser: neck, 38 × 38 wide body with the TEC pocket, wire channel, vacuum-stub and thermistor clearances, 4 × M3 counterbored to the KXC04015 table |
-| `STEP/nest_adapter_kb_rpg.step`, `STEP/nest_adapter_rpg_kxc.step` | 6061 | CNC / waterjet | 5 mm and 3 mm adapter plates between the KB1X1, the RMPG40W-N and the KXC04015 (both stage bolt patterns confirmed in the vendor STEP; the KB1X1 platform pattern still to confirm) |
+| `STEP/nest_adapter_kb_kxc.step`, `STEP/nest_spacer_kxc_rot.step` | 6061 | CNC / waterjet | 3 mm adapter plate between the KB1X1 and the KXC04015-C base (the stage's pattern confirmed in the vendor STEP; the KB1X1 platform pattern still to confirm) and the 8 mm spacer with the centre dowel between the X-stage table and the rotary |
 | — | Suruga KXC04015-C X stage, MISUMI RMPG40W-N rotary, TEC 15 × 15 × 2.5, thermistor, KB1X1 (Thorlabs 2374-E0W) | buy | both stages run on the existing DS102 controller #3 (today's centre-stage X and θ axes) |
 
 Assemblies: `STEP/nest_module_assembly.step` (die seated, jaws closed, fiber/holder envelopes, full
@@ -110,6 +115,6 @@ non-OK lines: the two stop pads TOUCH the seated die (by design).
 ## Open items (measure on the bench)
 
 - Real fiber-holder envelope (width, height below/above the fiber axis, front-face-to-tip): `common.FIBER`.
-- RMPG40W-N resolution and repeatability from the MISUMI datasheet (not in the STEP); the KB1X1 platform bolt pattern for the lower adapter.
+- RMPG40W-N resolution and repeatability from the MISUMI datasheet (not in the STEP); the KB1X1 platform bolt pattern for the adapter plate.
 - TEC part number, heat load and whether the riser needs a water block.
 - Die backside finish (vacuum seal on a lapped pad needs it flat and clean).

@@ -1,7 +1,7 @@
 VENDOR MODELS placed: misumi_RMPG40W-N.step, smc_MHZ2-6D.step, suruga_KXC04015-C.step, thorlabs_KB1X1.step, thorlabs_MAX313D_M.step, velmex_MN10-0050-21.step, velmex_MN10-0150-21.step; envelopes for everything else (the microscope always). AABBs include micrometers, motors, cables and switches.
 table plane Z = -111.0 (die bottom = 0). Nest die top at 0.5; fiber axis at 0.5 via holder 20.0 above NanoMax deck
 NanoMax and Y stage on 25 mm risers; arm crossing height over the X axis 82.0
-die stage stack: KB1X1 top -98.3 / RMPG40W-N -93.3..-58.3 / KXC04015-C -55.3..-25.3 (table top) / riser to the cage plate at -4.5; X stage travel +/-7.5, stepping +/-4; exchange at stage HOME only (fence)
+die stage stack: KB1X1 top -98.3 / KXC04015-C -95.3..-65.3 / spacer / RMPG40W-N -57.3..-22.3 / riser to the cage plate at -4.5; X stage travel +/-7.5, stepping +/-4; exchange at stage HOME only (fence)
 wafer tray: 8 columns x 14 rows = 112 pockets, 132 x 106 mm; columns at die X -150 .. -262 (pitch 16.0)
 X carriage: nest -140 -> farthest column -402  (travel used 262 of 300 mm)
 Z carriage: nest arm at Z 70.0 -> tray at Z 58.1 (drop 11.9 mm) + 8 mm approach lift
@@ -12,15 +12,15 @@ clearances vs boxes (AABB separation, mm; negative = overlap):
   nest_cage (per member)     vs fiber_holder_in     :     3.0  OK 
   nest_riser (neck/wide)     vs fiber_holder_in (per member):     3.0  OK 
   nest_riser (neck/wide)     vs fiber_holder_out (per member):     3.0  OK 
-  die stage stack (per member) vs fiber_holder_in (per member):    17.3  OK 
-  die stage stack (per member) vs fiber_holder_out (per member):    17.3  OK 
-  die stage stack (per member) vs nanomax300_in       :     9.5  OK 
+  die stage stack (per member) vs fiber_holder_in (per member):    39.1  OK 
+  die stage stack (per member) vs fiber_holder_out (per member):    39.1  OK 
+  die stage stack (per member) vs nanomax300_in       :    27.5  OK 
   die stage stack (per member) vs nanomax300_out      :    20.2  OK 
-  die stage stack (per member) vs x_axis_riser_short  :    25.0  OK 
-  die stage stack (per member) vs y_stage_body        :    62.8  OK 
-  die stage stack (per member) vs y_stage_riser       :    62.8  OK 
-  die stage stack (per member) vs gripper @nest (per member):    24.1  OK 
-  nest moving @-7.5 (per member) vs nanomax300_in       :    27.5  OK 
+  die stage stack (per member) vs x_axis_riser_short  :    43.0  OK 
+  die stage stack (per member) vs y_stage_body        :    83.8  OK 
+  die stage stack (per member) vs y_stage_riser       :    83.8  OK 
+  die stage stack (per member) vs gripper @nest (per member):    61.4  OK 
+  nest moving @-7.5 (per member) vs nanomax300_in       :     9.5  OK 
   nest moving @+7.5 (per member) vs nanomax300_out      :    28.0  OK 
   nest moving @-7.5 (per member) vs fiber_holder_in (per member):     3.0  OK 
   nest moving @+7.5 (per member) vs fiber_holder_out (per member):     3.0  OK 
@@ -113,8 +113,8 @@ swept volumes nest <-> tray (after the 8 mm lift; per member) vs static objects:
   gripper band vs nanomax300_out        :    43.2  OK     arm band:   101.0  OK 
   gripper band vs fiber_holder_out      :     6.5  OK     arm band:    73.5  OK 
   gripper band vs nest_riser_6061       :    12.5  OK     arm band:    82.5  OK 
-  gripper band vs nest_kxc04015_motor   :    29.4  OK     arm band:    99.3  OK 
-  gripper band vs nest_rmpg40w_motor    :    71.0  OK     arm band:   140.9  OK 
+  gripper band vs nest_kxc04015_motor   :    69.4  OK     arm band:   139.3  OK 
+  gripper band vs nest_rmpg40w_motor    :    35.0  OK     arm band:   104.9  OK 
   gripper band vs x_axis_body_velmex    :    42.8  OK     arm band:    28.0  OK 
   gripper band vs x_axis_riser_short    :    46.0  OK     arm band:    78.0  OK 
   gripper band vs microscope_arm        :    42.5  OK     arm band:    27.0  OK 

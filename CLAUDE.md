@@ -32,6 +32,8 @@ disagree with each other.
   licensed downloads; see `cad/vendor/README.md`) whenever the file is present; there is no separate
   envelope build. Envelopes are fallbacks, never the record where a vendor file exists. What we learned from vendor files (SMC finger gap, Velmex slider height,
   NanoMax micrometer protrusion) is written into the model comments, not just the chat.
+- **Handling sequences.** How the jaws pick and place (heights, forces, interlocks, the friction-only
+  decision, nose crown) is `docs/pick_and_place_design.md`; the gripper, tray and nest models quote it.
 - **Honesty of checks.** Clearance checks are per member (`gap_any`, `gap_parts`), never on the
   union bounding box of a compound part. Every non-OK line in a `checks*.txt` is either fixed or
   explained in the component README as intended (e.g. stop pads touching the seated die, the gripper
@@ -99,5 +101,5 @@ Therefore:
 
 Real fiber-holder envelope, microscope working distance and tube diameter, TEC part number and
 heat load, die backside finish, Velmex carriage bolt patterns, the KB1X1 platform bolt pattern for
-the lower adapter plate, RMPG40W-N resolution and repeatability. Until measured they stay as the
+the adapter plate under the X stage, RMPG40W-N resolution and repeatability. Until measured they stay as the
 named parameters above with their assumed values stated in the component READMEs.

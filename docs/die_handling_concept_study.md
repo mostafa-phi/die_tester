@@ -39,9 +39,9 @@ per component (`cad/gripper`, `cad/nest`, `cad/tray`, `cad/station`, shared `cad
 with a single build script that keeps them synchronized, and brings §3 and the interactive
 model up to the chuck nest. Rev. 2.10 puts the nest on a **die stage**: the devices span ~8 mm
 along the die and the NanoMax fiber stages travel only 4 mm, so a Suruga KXC04015-C X stage under
-the nest steps the die from device to device (as the current tester's centre stage does), over a
-MISUMI RMPG40W-N motorized rotary that aligns the nest datum and the stage travel to the fiber
-axes; the gripper meets the nest at stage home only. The stack needs 100 mm under the die, so the
+the nest steps the die from device to device (as the current tester's centre stage does), with a
+MISUMI RMPG40W-N motorized rotary on top of it that nulls the yaw measured fiducial-to-fiducial
+under the microscope; the gripper meets the nest at stage home only. The stack needs 100 mm under the die, so the
 fiber stages sit on 25 mm risers.
 
 Coordinate convention follows the brief: **X** = 10 mm die dimension, **Y** = 6 mm die
@@ -203,11 +203,13 @@ One nest, machined and lapped once, characterized exhaustively (chuck-and-cage, 
 - **Die stage (rev. 2.10):** the nest sits on a Suruga KXC04015-C X stage (15 mm travel,
   1 µm half step, on the existing DS102) that steps the die ±4 mm so every device comes under
   the fibers, which then realign per device; one X move keeps both fibers registered to each
-  other, exactly as the current tester works. Under it a MISUMI RMPG40W-N motorized worm-gear
-  rotary (on the DS102 axis the current centre stage's θ uses) aligns the stop-pad datum and the
-  stage travel to the fiber-stage axes, set with a gauge die and trimmable per die. Per-device
-  realignment needs only ~0.1° of yaw; open-loop stepping needs ~0.02°, which the motorized trim
-  makes possible. The gripper meets the nest at the stage's home position only, enforced by the
+  other, exactly as the current tester works. On top of it a MISUMI RMPG40W-N motorized worm-gear
+  rotary (on the DS102 axis the current centre stage's θ uses) turns the die relative to the
+  travel: after loading, the X stage brings the fiducial at one die end and then the other under
+  the microscope, the camera reads the lateral offset, and the rotary nulls it. That offset is the
+  die's yaw relative to the travel (the travel's own angle cancels), which is why the rotary has to
+  sit above the X stage, not below it. Per-device realignment needs only ~0.1° of yaw; open-loop
+  stepping needs ~0.02°, which the motorized trim makes possible. The gripper meets the nest at the stage's home position only, enforced by the
   fence. The stack needs 100 mm under the die, so both fiber stages and the Y stage sit on 25 mm
   riser plates. Stack and clearances: [`cad/nest`](../cad/nest/README.md).
 - **Exchange sequence per die:** die stage to home → fibers retract (interlocked) → jaws

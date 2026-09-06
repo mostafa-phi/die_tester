@@ -2,8 +2,10 @@
 
 `model.py` (CadQuery) → `STEP/`, `STL/`, `renders/`, `checks.txt`. Rebuild with `python cad/build.py`
 (see `cad/README.md`); `python cad/gripper/model.py [--horizontal]` alone is for iteration only.
-Frame, die and contact rules: `cad/common`. Downstream users: `cad/nest` (checks against the jaws),
-`cad/tray` (pocket vs open jaws), `cad/station` (placement, arm interface `IFACE`).
+Frame, die and contact rules: `cad/common`. How the jaws are used (friction grip, sequences, forces,
+interlocks): [`docs/pick_and_place_design.md`](../../docs/pick_and_place_design.md). Downstream users:
+`cad/nest` (checks against the jaws), `cad/tray` (pocket vs open jaws), `cad/station` (placement, arm
+interface `IFACE`).
 
 Open `STEP/gripper_module_assembly.step` in Fusion / SolidWorks / Onshape to review; send the per-part
 STEP files to the shop. The assembly includes a dimensionally faithful stand-in for the SMC MHZ2-6D

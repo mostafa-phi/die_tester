@@ -128,7 +128,7 @@
         <span class="sw" style="background:#3a9d5d"></span><span>End faces, middle 3 mm. Gripper noses only.</span>
         <span class="sw" style="background:#8f8f8f"></span><span>Backside. Nest chuck pad, pocket ledges, ejector pins.</span>
         <span class="sw" style="background:#b87333"></span><span>Nest: lapped copper vacuum chuck (9 × 5 mm pad, TEC below); two +X stop pads register X and yaw by push-to-stop; corner guards cage Y to ±0.6 mm.</span>
-        <span class="sw" style="background:#44474d"></span><span>Die stage under the nest: Suruga KXC04015-C X stage (15 mm travel) steps the die from device to device under the fixed fibers; MISUMI RMPG40W-N motorized rotary below it sets yaw. The stack needs 100 mm, so the fiber stages sit on 25 mm risers. The gripper meets the nest at stage home only.</span>
+        <span class="sw" style="background:#44474d"></span><span>Die stage under the nest: Suruga KXC04015-C X stage (15 mm travel) steps the die from device to device under the fixed fibers; MISUMI RMPG40W-N motorized rotary on top of it nulls the yaw measured fiducial-to-fiducial under the microscope. The stack needs 100 mm, so the fiber stages sit on 25 mm risers. The gripper meets the nest at stage home only.</span>
         <span class="sw" style="background:#3d3d3d"></span><span>Noses: 0.35 mm tall, top 0.10 mm below the die surface; the two 3 × 3 mm bars and tip blocks are the only tool parts under the objective.</span>
       </div>
       <div class="hint">Geometry follows the CAD package (<code>cad/station</code>, <code>cad/gripper</code>, <code>cad/nest</code>, <code>cad/tray</code>; envelope build) and the concept study rev. 2.9. Still to measure on the bench: fiber-axis height above the NanoMax platform, objective working distance and tube diameter.</div>
@@ -450,27 +450,27 @@
       // cage plate), Semitron cage plate with four corner blocks (+X stop pads, -X guard, Y guards), copper chuck (block, neck to the
       // TEC, 9 x 5 lapped pad island at Z -1.5..0), TEC 15 x 15 under the neck
       g.add(cb(-540, 220, -280, 280, tz - 12, tz, mat(0xd6dae0)));
-      // die stage stack (cad/nest levels()): KB1X1 12.7, adapter 5, MISUMI RMPG40W-N motorized rotary 35 (body 40 x 55, axis 20 from the
-      // short end, motor toward -X, long end toward -Y), adapter 3, KXC04015-C 30 (table top Z -25.3, motor section 59 toward -X,
-      // motor box 4 mm above the table top), riser 38 sq wide body on the table
+      // die stage stack (cad/nest levels()): KB1X1 12.7, adapter 3, KXC04015-C 30 (table top Z -65.3, motor section 59 toward -X, motor
+      // box 4 mm above the table top), MISUMI RMPG40W-N motorized rotary 35 ON the X-stage table (body 40 x 55, axis through the die,
+      // motor toward -X, long end toward -Y; rides with the stage) on an 8 mm spacer, riser 38 sq wide body on the rotary table (top Z -22.3)
       const mDark = mat(0x33363c), mAl = mat(COL.stage);
       g.add(cb(-7.7, 17.7, -9.7, 15.7, tz, tz + 12.7, mat(0x6f7378)));                     // KB1X1 kinematic base
-      g.add(cb(-15, 25, -32, 23, tz + 12.7, tz + 17.7, mAl));                              // adapter KB1X1 -> RMPG40W-N (5 mm)
-      const rz = tz + 17.7;                                                                // rotary base face (Z -93.3)
-      g.add(cb(-15, 25, -32, 23, rz, rz + 28.5, mDark));                                   // RMPG40W-N body
-      g.add(cb(-14.5, 24.5, -16.5, 22.5, rz + 28.5, rz + 35, mat(0x44474d)));              // rotary table 39 sq
-      g.add(cb(-37, -15, -35, -7, rz + 2.5, rz + 30.5, mDark));                            // worm housing toward -X
-      g.add(cb(-54.5, -37, -35, -7, rz + 2.5, rz + 30.5, mat(0x4d5058)));                  // 28 sq stepper
-      const rc = cyl(7, 40, mDark); rc.rotation.z = Math.PI / 2; rc.position.set(-75, rz + 5, -15.5); g.add(rc);   // cable lead-out (routed down after this)
-      g.add(cb(-15, 25, -17, 23, rz + 35, rz + 38, mAl));                                  // adapter RMPG40W-N -> KXC04015 base (3 mm)
-      const kz = rz + 38;                                                                  // KXC04015-C bottom (Z -55.3)
+      g.add(cb(-15, 25, -17, 23, tz + 12.7, tz + 15.7, mAl));                              // adapter KB1X1 -> KXC04015-C base (3 mm)
+      const kz = tz + 15.7;                                                                // KXC04015-C bottom (Z -95.3)
       g.add(cb(-15, 28.5, -17, 23, kz, kz + 21, mDark));                                   // base 40 x 43.5 x 21
       this.kxcTable = new THREE.Group(); g.add(this.kxcTable);
-      this.kxcTable.add(cb(-15, 25, -17, 23, kz + 21, kz + 30, mat(0x44474d)));            // table 40 sq, top at Z -21.3 (moves +/-7.5 in X)
+      this.kxcTable.add(cb(-15, 25, -17, 23, kz + 21, kz + 30, mat(0x44474d)));            // table 40 sq, top at Z -65.3 (moves +/-7.5 in X)
       g.add(cb(-27, -15, -11, 17, kz, kz + 15, mDark));                                    // coupling housing (the table passes over it)
       g.add(cb(-74, -27, -11, 17, kz + 4, kz + 34, mat(0x4d5058)));                        // 5-phase stepper box, 4 mm above the table top
       const knob = cyl(6, 4, mDark); knob.rotation.z = Math.PI / 2; knob.position.set(-76, kz + 22, 3); g.add(knob);
-      this.kxcTable.add(cb(-14, 24, -16, 22, kz + 30, -12, mAl));                          // riser wide body / heat sink on the stage table
+      this.kxcTable.add(cb(-15, 25, -17, 23, kz + 30, kz + 38, mAl));                       // 8 mm spacer with the centre dowel
+      const rz = kz + 38;                                                                  // rotary base face (Z -57.3)
+      this.kxcTable.add(cb(-15, 25, -32, 23, rz, rz + 28.5, mDark));                       // RMPG40W-N body
+      this.kxcTable.add(cb(-14.5, 24.5, -16.5, 22.5, rz + 28.5, rz + 35, mat(0x44474d)));  // rotary table 39 sq
+      this.kxcTable.add(cb(-37, -15, -35, -7, rz + 2.5, rz + 30.5, mDark));                // worm housing toward -X
+      this.kxcTable.add(cb(-54.5, -37, -35, -7, rz + 2.5, rz + 30.5, mat(0x4d5058)));      // 28 sq stepper
+      const rc = cyl(7, 40, mDark); rc.rotation.z = Math.PI / 2; rc.position.set(-75, rz + 5, -15.5); this.kxcTable.add(rc);   // cable lead-out
+      this.kxcTable.add(cb(-14, 24, -16, 22, rz + 35, -12, mAl));                          // riser wide body / heat sink on the rotary table
       this.kxcTable.add(cb(-8, 18, -2, 8, -12, -4.5, mAl));                              // riser neck between the fiber holders
       g.add(cb(-2.5, 12.5, -4.5, 10.5, -14.5, -12, mat(0xdadde2)));                      // TEC 15 x 15 x 2.5 (cold face at Z -12)
       g.add(cb(-2.5, 12.5, -2, 8, -4.5, -1.5, mat(COL.tip)));                             // cage plate (Semitron ESd 480)
@@ -566,7 +566,7 @@
       this.die2 = makeDie(); g.add(this.die2);
       // labels
       addLabel('nest · copper vacuum chuck · +X stop pads · TEC below', () => new THREE.Vector3(5, -5, -12));
-      addLabel('die stage · Suruga KXC04015-C (X ±7.5) on MISUMI RMPG40W-N rotary · KB1X1', () => new THREE.Vector3(-30, tz + 50, -20));
+      addLabel('die stage · MISUMI RMPG40W-N rotary on Suruga KXC04015-C (X ±7.5) · KB1X1', () => new THREE.Vector3(-30, tz + 50, -20));
       addLabel('fiber', () => new THREE.Vector3(5, 2.4, -9));
       addLabel('fiber', () => new THREE.Vector3(5, 2.4, 15));
       addLabel('NanoMax 300 (input) on 25 mm riser', () => new THREE.Vector3(5, tz + ST.riser + 66, -ST.gapY - 56));

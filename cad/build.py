@@ -67,7 +67,8 @@ RENDERS = [
 STALE = ["station/checks_vendor.txt", "station/checks_vendor_h.txt", "station/renders/station_vendor_iso.png",
          "station/renders/station_vendor_plan.png", "station/renders/station_vendor_front.png", "station/renders/station_vendor_side.png",
          "station/renders/station_vendor_h_iso.png", "station/renders/station_vendor_h_side.png", "station/STEP/station_assembly_vendor.step",
-         "station/STEP/station_assembly_vendor_h.step", "nest/STEP/nest_module_assembly_vendor.step"]
+         "station/STEP/station_assembly_vendor_h.step", "nest/STEP/nest_module_assembly_vendor.step",
+         "nest/STEP/nest_adapter_kb_rpg.step", "nest/STEP/nest_adapter_rpg_kxc.step"]
 
 
 def sha(path):

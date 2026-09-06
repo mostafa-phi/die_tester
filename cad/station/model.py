@@ -108,7 +108,7 @@ def nest():
     nx0, nx1, ny0, ny1 = NM.N["neck"]; wx0, wx1, wy0, wy1 = NM.N["wide"]
     S["_nest_riser_parts"] = [box(nx0, nx1, ny0, ny1, NM.N["neck_bottom"], NM.N["cage"][4]),      # neck (cage width in Y)
                               box(wx0, wx1, wy0, wy1, z["stage_top"], NM.N["wide_top"])]          # wide body on the stage table
-    S["_nest_stack_parts"] = list(stk.values()) + [kb]                                            # everything under the riser
+    S["_nest_stack_parts"] = [v for n, v in stk.items() if not n.startswith("rmpg40w") and n != "nest_spacer_kxc_rot"] + [kb]   # fixed part (rotary + spacer move)
     S["_nest_moving"] = NM.moving_members(0.0)                                                    # what the X stage carries (dict)
     for fn_ in ("suruga_KXC04015-C.step", "misumi_RMPG40W-N.step"):
         if os.path.exists(C.vendor_path(fn_)):
@@ -420,8 +420,8 @@ def main():
     rep.append(f"table plane Z = {table_z:.1f} (die bottom = 0). Nest die top at {die_top}; fiber axis at {die_top} via holder {S['holder_axis_above_deck']} above NanoMax deck")
     zl = S["_nest_levels"]
     rep.append(f"NanoMax and Y stage on {S['nanomax_riser']:.0f} mm risers; arm crossing height over the X axis {S['arm_cross_z']:.1f}")
-    rep.append(f"die stage stack: KB1X1 top {zl['kb_top']:.1f} / RMPG40W-N {zl['ad1_top']:.1f}..{zl['rpg_top']:.1f} / KXC04015-C {zl['kxc_bottom']:.1f}..{zl['stage_top']:.1f} "
-               f"(table top) / riser to the cage plate at {NM.N['cage'][4]:.1f}; X stage travel +/-{NM.N['kxc']['travel'] / 2:.1f}, stepping +/-{NM.N['stage_step_used']:.0f}; "
+    rep.append(f"die stage stack: KB1X1 top {zl['kb_top']:.1f} / KXC04015-C {zl['kxc_bottom']:.1f}..{zl['kxc_top']:.1f} / spacer / RMPG40W-N {zl['rot_bottom']:.1f}..{zl['rot_top']:.1f} "
+               f"/ riser to the cage plate at {NM.N['cage'][4]:.1f}; X stage travel +/-{NM.N['kxc']['travel'] / 2:.1f}, stepping +/-{NM.N['stage_step_used']:.0f}; "
                f"exchange at stage HOME only (fence)")
     rep.append(f"wafer tray: {S['tray_cols']} columns x {S['tray_rows']} rows = {S['tray_cols']*S['tray_rows']} pockets, "
                f"{tray_ext[1]-tray_ext[0]:.0f} x {tray_ext[2]:.0f} mm; columns at die X {S['tray_col0_x']:.0f} .. {far_col_x:.0f} (pitch {S['tray_col_pitch']})")
@@ -565,7 +565,7 @@ def main():
     assy = cq.Assembly(name="test_station")
     col = {
         "optical_table": (0.86, 0.88, 0.90), "nest_kb1x1": (0.45, 0.48, 0.52), "nest_riser_6061": (0.60, 0.63, 0.68), "nest_chuck_copper": (0.72, 0.45, 0.20), "nest_tec": (0.85, 0.85, 0.88), "nest_cage_semitron": (0.16, 0.16, 0.18),
-        "nest_adapter_kb_rpg": (0.60, 0.63, 0.68), "nest_adapter_rpg_kxc": (0.60, 0.63, 0.68), "nest_rmpg40w_body": (0.20, 0.20, 0.22), "nest_rmpg40w_table": (0.25, 0.25, 0.27),
+        "nest_adapter_kb_kxc": (0.60, 0.63, 0.68), "nest_spacer_kxc_rot": (0.60, 0.63, 0.68), "nest_rmpg40w_body": (0.20, 0.20, 0.22), "nest_rmpg40w_table": (0.25, 0.25, 0.27),
         "nest_rmpg40w_worm": (0.20, 0.20, 0.22), "nest_rmpg40w_motor": (0.30, 0.30, 0.32), "nest_rmpg40w_cable": (0.30, 0.30, 0.32), "nest_rmpg40w_bolts": (0.45, 0.48, 0.52),
         "nanomax_riser_in": (0.60, 0.63, 0.68), "nanomax_riser_out": (0.60, 0.63, 0.68), "y_stage_riser": (0.60, 0.63, 0.68),
         "nest_kxc04015_base": (0.20, 0.20, 0.22), "nest_kxc04015_table": (0.25, 0.25, 0.27), "nest_kxc04015_coupling": (0.20, 0.20, 0.22), "nest_kxc04015_motor": (0.30, 0.30, 0.32), "nest_kxc04015_knob": (0.20, 0.20, 0.22),
