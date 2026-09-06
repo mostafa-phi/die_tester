@@ -1,6 +1,6 @@
 # System Redesign Study — Batch Edge-Coupled Testing of Hundreds of 10 × 6 mm Photonic Dies
 
-**Status:** concept study for review, rev. 2.8 (CAD of the gripper, the self-registering nest and the full station in `docs/cad/`)
+**Status:** concept study for review, rev. 2.9 (CAD of the gripper, the self-registering nest, the wafer tray and the full station in [`cad/`](../cad/README.md))
 **Scope:** ground-up redesign of the die-tester stage and handling system. The current
 machine is architected around a single manually loaded die; this study treats the whole
 stage system as open for redesign and asks what a machine looks like when the unit of
@@ -29,10 +29,15 @@ clearance (`docs/images/fig1…fig4`). Rev. 2.5 replaces the SCARA with a bench-
 the objective, a SCARA's vertical quill lands where the objective barrel is, and the
 articulated desktop arm first proposed for prototyping approaches from above and behind.
 Rev. 2.6 sizes the storage carrier as one **wafer tray** per 4″ wafer (8 × 14 pockets; the die
-returns to its own pocket) and moves the design into CAD (`docs/cad/`). Rev. 2.7 aligns the
+returns to its own pocket) and moves the design into CAD (`cad/`). Rev. 2.7 aligns the
 storage-carrier text with the tray, and records that the gripper and the complete station
 (nest, NanoMax fiber stages, microscope, Cartesian axes, tray) are modelled and
-clearance-checked there; the interactive model follows the same layout.
+clearance-checked there; the interactive model follows the same layout. Rev. 2.8 replaces
+the rail nest with the self-registering, temperature-controlled **chuck-and-cage nest**
+(§3) and drops the X-Y-θ correction stage. Rev. 2.9 restructures the CAD into one folder
+per component (`cad/gripper`, `cad/nest`, `cad/tray`, `cad/station`, shared `cad/common`)
+with a single build script that keeps them synchronized, and brings §3 and the interactive
+model up to the chuck nest.
 
 Coordinate convention follows the brief: **X** = 10 mm die dimension, **Y** = 6 mm die
 dimension (optical propagation; fibers approach along ±Y), **Z** = vertical, **θ** =
@@ -98,7 +103,8 @@ split, plus the optical engines:
 - **Transfer** places the selected die into the test nest and returns it after test.
   It needs only ~±0.3 mm, ±1° placement accuracy — vision registration at the nest closes
   the rest. This is deliberately a cheap, robust motion system, not a precision stage.
-- **Precision presentation** is one fixed nest (§3) on a small fine-correction stage.
+- **Precision presentation** is one fixed nest (§3) that registers X and yaw mechanically
+  (push-to-stop) and leaves Y to vision and the fiber stages.
   No long-travel precision axis exists anywhere in the machine: the die never travels
   far while registered, and nothing precise ever moves far.
 - **Optical engines**: the two fiber aligners (each XYZ + fine alignment) and machine
@@ -125,63 +131,74 @@ not by side datums: with a single fixed nest and a calibrated overhead camera, a
 measured X/Y/θ is as good as a mechanical one and carries zero facet risk. This
 supersedes the brief's facet-face datum sketch (§9 of the brief).
 
-*Rev. 2.8 (CAD, `docs/cad/nest_module.py`): X and yaw are now registered mechanically after
-all — not on the facets but on the **non-optical +X end face**, by two hard-stop pads the
-gripper pushes the die against with its own 0.25 N compliant nose (the same end-face band
-the jaws use). Y stays free, read by the camera and absorbed by the fiber stages, and is
-caged to ±0.6 mm by corner guards that stand outside the facet planes only where no fiber
-ever goes. The X-Y-θ correction stage is dropped; the nest sits on the kinematic base. Because the fiber tips protrude only ~5 mm from their holders, the nest is a 10 mm wide neck near the die and widens only below the holders' underside. The two rails in the sketch below are superseded by a lapped **copper vacuum chuck pad** (75 % of the backside on metal, six vacuum holes) on a copper neck that lands on a 15 × 15 mm TEC inside the riser, which is the hot-side heat sink — the die can be temperature-controlled at the nest.*
+*Rev. 2.8/2.9 (CAD of record: [`cad/nest`](../cad/nest/README.md)): X and yaw are now registered
+mechanically after all — not on the facets but on the **non-optical +X end face**, by two
+hard-stop pads the gripper pushes the die against with its own 0.25 N compliant nose (the
+same end-face band the jaws use). Y stays free, read by the camera and absorbed by the fiber
+stages, and is caged to ±0.6 mm by corner guards that stand outside the facet planes only
+where no fiber ever goes. The X-Y-θ correction stage is dropped; the nest sits on the
+kinematic base. The two vacuum rails of rev. 2.2–2.7 are superseded by a lapped **copper
+vacuum chuck pad** with a TEC under it. The rails still appear in Fig. 4 and in the older
+figures; the geometry of record is the CAD.*
 
-One nest, machined and lapped once, characterized exhaustively:
+One nest, machined and lapped once, characterized exhaustively (chuck-and-cage, rev. 2.9):
 
 ```
- Top view (die transparent)                        Side view (looking along X)
+ Top view (die transparent)                                Side view (looking along X)
 
-        ┌──────────────────────────────┐            fiber →              ← fiber
-   Y=6  │ ═══════ vacuum rail ═══════  │ ← rail       ┃  die 0.3–0.7 mm    ┃
-        │                              │   ~1 mm     ┌┸────────────────────┸┐
-        │   ····· open gap ·········· │ ← open      │         DIE          │
-        │   (kept for tongue fallback) │   gap       └─┬──┐   (gap)    ┌──┬─┘
-        │                              │   ~2.5 mm     │▓▓│           │▓▓│ rails
-   Y=0  │ ═══════ vacuum rail ═══════  │ ← rail        │▓▓│           │▓▓│
-        └──────────────────────────────┘             ──┴──┴───────────┴──┴── deck
-        X=0                          X=10           recess ~1 mm inboard of each facet
+   Y=8   ┌────────────────────────────────┐ cage plate    fiber →                  ← fiber
+         │ ▪ Y guard            Y guard ▪ │ (Semitron)      ┃    die 0.5 thick        ┃
+   Y=6 ──│───────────── facet ────────────│──        holder ┸┌──────────────────────┐┸ holder
+         │▪┃   ┌────────────────────┐   ┃▪│ ← stop pad  Y −5 │  DIE                 │ Y +11
+         │ ┃   │  · · ·  chuck pad  │   ┃ │   (Y 4.8–5.4) ───┴─┬──────────────────┬─┴───  cage plate
+         │X┃   │  9 × 5 mm, lapped  │   ┃ │                    │ copper pad 9 × 5 │       Z −1.5
+         │ ┃   │  · · ·  6 vac holes│   ┃ │ ← stop pad         │   plenum, holes  │
+   Y=0 ──│▪┃───│──────── facet ─────│───┃▪│── (Y 0.6–1.2)      │  copper neck     │  10 mm wide
+         │ ▪ Y guard            Y guard ▪ │                    │  (riser neck)    │  down to Z −12
+   Y=−2  └────────────────────────────────┘                 ═══╧══════════════════╧═══ TEC 15 × 15
+         X=−0.4  X=0             X=10  X=10.6              wide riser / heat sink below the holders
+         X guard                   +X stop pads
 ```
 
-- **Support and hold-down (Z, pitch, roll — mechanical):** two lapped **vacuum rails**
-  along X on the backside, each ~10 mm long × ~0.75–1 mm wide, set **~1 mm inboard of
-  each facet plane** (final recess from the measured fiber envelope, §8), standing
-  ~1.5 mm proud of the nest deck. The rails define the die plane to microns, which is
-  exactly the set of degrees of freedom vision measures poorly. The rail top is 0.5 mm
-  below the waveguide plane and never in the fiber's horizontal path; the deck beyond
-  the rails drops away so the ±Y corridors stay open for the fiber clamps. Vacuum level
-  per rail doubles as **presence/seat sensing**.
-![Fig. 4 — jaw clearance at the nest and in a stick pocket](images/fig4_nest_stick_jaw_clearance.svg)
+- **Support and hold-down (Z, pitch, roll — mechanical):** a lapped (≤ 3 µm) **copper
+  chuck pad** 9 × 5 mm, 0.5 mm inboard of every die edge, so 75 % of the backside rests on
+  metal; six Ø0.5 vacuum holes into a plenum in the copper block. The pad defines the die
+  plane to microns — exactly the degrees of freedom vision measures poorly. The pad top is
+  0.5 mm below the waveguide plane; the cage plate around it is 1.5 mm lower still and
+  never in a fiber's path. Vacuum level doubles as **presence/seat sensing**.
+- **Thermal:** the chuck is the top of a Ni-plated C101 copper block whose neck passes
+  through the cage plate and the riser (0.3 mm air gap) to a **15 × 15 × 2.5 mm TEC** at
+  Z −12; the aluminium T-riser is the hot-side sink. A thermistor bore enters from +X. The
+  die can be temperature-controlled at the nest without any part touching its top or facets.
+- **Fiber access:** the fiber tips protrude only ~5 mm from their holders (25 mm wide,
+  Z −8…+4 around the fiber axis), so the holder bodies come to Y −5 and Y +11. The nest is a
+  **10 mm wide neck** (Y −2…8) from the cage plate down to Z −12, below the holders'
+  underside, and widens only there. Nothing stands where a fiber can go (X 1…9 in front of
+  either facet).
+![Fig. 4 — jaw clearance at the nest and in a stick pocket (rev. 2.4 sketch: rails; the nest of record is the chuck above)](images/fig4_nest_stick_jaw_clearance.svg)
 
 - **Jaw clearance at the die ends (Fig. 4):** the transfer tool grips the die by its
-  two non-optical X-end faces (§6a), so the nest leaves **≥ 1.6 mm of free space beyond
-  each end face, from the deck up past the die**: the rails end flush with the die
-  ends, the deck sits ≥ 0.4 mm below the jaw bottoms, and nothing else occupies the ±X
-  ends. The ~2.5 mm gap between the rails is kept open as well; it costs nothing and
-  preserves the backside-tongue fallback (§6a).
-- **In-plane registration (X, Y, θ — by vision):** no side datums, no preload finger.
-  After placement, the overhead camera measures facet-edge position and a fiducial (the
-  existing OpenCV template/edge methods, which already resolve the die at the µm level
-  in `ChipAlignmentController`), and the **X-Y-θ correction stage under the nest** moves
-  the die to nominal before the fibers approach. Required range is only the tool's
-  placement scatter — ±0.3 mm, ±1° — with sub-µm / sub-millidegree resolution (compact
-  stepper or piezo-motor flexure stage). It also absorbs slow thermal drift. Nothing
-  sample-side moves during a measurement.
-- **Optional mechanical X/θ (not baseline):** if a hard in-plane reference is later
-  wanted, two pins plus a retracting flexure finger acting on the **diced X-end faces**
-  (non-optical, no waveguides) can be added without changing the rails; note that the
-  gripper jaws already define X and θ mechanically while the die is held, so the
-  residual vision correction is mostly Y. The facet faces are never a datum surface in
-  any variant.
+  two non-optical X-end faces (§6a), so the nest leaves the ends free except for the
+  0.6 mm stop pads and the 0.4 mm-gap X guard, all below Z 0.40; the jaw noses descend
+  outside them (checked closed / open / during the push in `cad/nest/checks.txt`).
+- **In-plane registration — X and yaw mechanical, Y by vision:** two **Semitron ESd 480
+  stop pads** on the +X end face (Y 0.6–1.2 and 4.8–5.4, 0.6 mm in from the facets, contact
+  band Z 0.05–0.40, yaw from a 4.2 mm base ≈ 0.03°). The gripper sets the die down 0.2 mm
+  short of the pads, opens, and indexes +1.7 mm: its open compliant nose slides the die onto
+  the pads and overtravels 0.1 mm, so the flexure limits the push to **0.25 N**
+  (**push-to-stop**). Milling cannot make a sharp inside corner and the die's corners are
+  not trusted either, so the die registers on two pads and a plane, never in a corner: the
+  pads sit 0.6 mm from the facets with a 0.2 mm relief to the guards. Y is free, read by the
+  overhead camera (the existing OpenCV template/edge methods in `ChipAlignmentController`)
+  and absorbed by the fiber stages' own Y travel; four **corner guards** 0.6 mm outside the
+  facet planes at the die corners only (X ≤ 0.5 and X ≥ 9.5) and an X guard 0.4 mm behind
+  the −X end face cage the die so it cannot leave the pad, and touch nothing in normal
+  operation. The facet faces are never a datum surface.
 - **Exchange sequence per die:** fibers retract (interlocked) → jaws descend beside the
-  outgoing die's end faces, close, rail vacuum off, lift → carry to bin stick → return
-  with the incoming die → lower onto the rails, rail vacuum on, jaws open and rise →
-  camera measures pose → correction stage zeroes X/Y/θ → fibers approach.
+  outgoing die's end faces, close, chuck vacuum off, lift → carry to its tray pocket →
+  return with the incoming die → lower onto the chuck 0.2 mm short of the pads, jaws
+  open, push-to-stop, chuck vacuum on, jaws retract and rise → camera confirms X against
+  the pads and reads Y → fibers approach.
 - **No structure above the die top surface** in the central 8 mm of X, no structure at
   waveguide height anywhere in the ±Y fiber approach cones, and a software/hardware
   interlocked fiber-retract corridor before any nest actuation (carries over R1/R5/R6
@@ -225,8 +242,8 @@ scatter of a few tenths of a mm in Y is closed by vision registration at the nes
 and θ are already defined by the jaw faces.
 
 **Sequence per die:** fibers retract → gripper removes die *i* from the nest → returns
-it to its bin stick → picks die *i+1* → places it on the nest rails → rail vacuum on,
-jaws open → overhead camera measures X/Y/θ → correction stage zeroes the pose → fibers
+it to its tray pocket → picks die *i+1* → sets it on the nest chuck → jaws open, push-to-stop
+onto the +X pads, chuck vacuum on → overhead camera confirms X and reads Y → fibers
 approach along the pre-computed trajectory → first light as verification → measure. In
 the screening regime a second gripper pre-stages die *i+1* so the swap itself is ~5 s.
 
@@ -336,7 +353,7 @@ Ratings: ● strong / ◐ adequate / ○ weak.
 
 - **Base:** granite or polymer-granite machine base; thermal enclosure; ionized-air ESD
   environment; light curtain / interlocked doors around the robot volume.
-- **Optical site:** the §3 nest on its small X-Y-θ correction stage, fixed near the
+- **Optical site:** the §3 chuck-and-cage nest on its kinematic base, fixed near the
   center of the base. Overhead verify camera (die pose, existing OpenCV template/edge
   methods carry over); optional side cameras on the fiber aligners for gap/facet view.
 - **Fiber aligners (redesigned, both sides):** stacked coarse XYZ (the DS102-class
@@ -440,18 +457,18 @@ and bins them into sticks. Geometry in Figs. 2–4:
   from tape and needs a channel under every resting position. The rail gap is kept open
   so the fallback remains possible.
 
-**Storage carrier: wafer trays with jaw slots (Fig. 4 shows one pocket row; rev. 2.6 — one 100 mm wafer ≈ 112 dies = one tray of 8 × 14 pockets, 128 × 106 mm; the die returns to its own pocket after test and the map carries the result).** Standard waffle packs have closed
+**Storage carrier: wafer trays with jaw slots (Fig. 4 shows one pocket row; rev. 2.6 — one 100 mm wafer ≈ 112 dies = one tray of 8 × 14 pockets, 132 × 106 mm; the die returns to its own pocket after test and the map carries the result).** Standard waffle packs have closed
 pocket floors and pocket walls hard against the die ends, so they are replaced by a
 machined (PEEK/Delrin) or SLA-printed **wafer tray** whose pockets have: two backside
 **ledges** under the die's facet-edge strips, a 12.0 × 6.8 mm cavity that retains the die
 by its corners to ±1.0 mm in X (inside the jaws' ±1.9 mm capture) and ±0.4 mm in Y,
-3.6 mm **nose slots** in both end walls (floor 0.85 mm below the nose bottoms), lead-in
+3.6 mm **nose slots** in both end walls (a through channel along each column at the 16 mm pitch; floor 0.85 mm below the nose bottoms), lead-in
 chamfers, and a lid for transport. Pockets sit 8 columns × 14 rows (16 mm pitch along
-die X, 7.5 mm along Y), so one tray is ≈ 130 × 106 mm and holds one 4″ wafer; trays carry
+die X, 7.5 mm along Y), so one tray is ≈ 132 × 106 mm and holds one 4″ wafer; trays carry
 a DataMatrix ID and pocket (row, column) mirrors the wafer map. *Rev. 2.7: the tray
 supersedes the 14-pocket "stick" used in the figures and in the text below — read
 "stick" as "tray" wherever it appears; the geometry of record is
-`docs/cad/station_assembly.py`.* Trays are filled from the diced wafer on tape at the
+[`cad/tray`](../cad/tray/README.md).* Trays are filled from the diced wafer on tape at the
 **tape-to-tray sorting station** (§6b), which uses the same gripper — the one bare-die
 handling step outside the tester.
 
@@ -606,7 +623,7 @@ one lights-out day.
 | Per-waveguide automation software (first light, raster/Z-scan, full-chip stepping, transfer-function capture) | **Retained** — becomes the measurement engine inside the campaign state machine. |
 | Fiber coarse XYZ stepper stacks (DS102) | **Retained as components** of the new fiber aligners, augmented with piezo fine stages. |
 | Camera + OpenCV pose/verify methods | **Retained**, re-pointed at the fixed nest. |
-| Center sample stage (X + θ, single-die chuck) | **Not retained** as the sample platform. Its X axis has no role once transfer is robotic; a compact X-Y-θ correction stage under the nest replaces the θ function with shorter range and higher stiffness. |
+| Center sample stage (X + θ, single-die chuck) | **Not retained** as the sample platform. Its X axis has no role once transfer is robotic; X and θ are registered mechanically at the nest (push-to-stop, §3), Y is absorbed by the fiber stages. |
 | Manual die placement / tweezer workflow | **Removed from the tester.** The one remaining manual touch per die is loading storage sticks at a bench, gripping the non-optical end faces. |
 | Open-frame bench layout | **Replaced** by an enclosed, interlocked, ESD-managed cell (required once a robot moves near fibers). |
 

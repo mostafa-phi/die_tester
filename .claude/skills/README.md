@@ -7,7 +7,7 @@ skill's `LICENSE`). Update by re-copying `skills/<name>` from a newer checkout a
 
 | Skill | Use in this project |
 |---|---|
-| `cad` | build123d/cadgen model scripts → STEP, inspection (`cadgen step inspect`), snapshots; the target toolchain for the nest, gripper and station models |
+| `cad` | build123d/cadgen model scripts → STEP, inspection (`cadgen step inspect`), snapshots (`cadgen step snapshot`, used by `cad/build.py` for the renders); the models in `cad/` are CadQuery and are built by `cad/build.py` |
 | `cad-viewer` | local browser viewer for STEP/STL/DXF (`cadgen viewer`); only reachable when Claude Code runs on the same machine as the browser |
 | `step-parts` | fetch vendor STEP for purchasable parts (SMC MHZ2 gripper, Thorlabs, screws, dowels) instead of placeholder boxes |
 | `dxf` | 2D profiles for laser/waterjet parts (bracket blanks, flexure blades) |

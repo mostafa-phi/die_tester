@@ -126,10 +126,11 @@
         <span class="sw" style="background:#e05a3a"></span><span>Optical facets, waveguide ends. Never touched.</span>
         <span class="sw" style="background:#9fc4ea"></span><span>Top surface, exposed ridge waveguides. Never touched.</span>
         <span class="sw" style="background:#3a9d5d"></span><span>End faces, middle 3 mm. Gripper noses only.</span>
-        <span class="sw" style="background:#8f8f8f"></span><span>Backside. Nest rails, pocket ledges, ejector pins.</span>
+        <span class="sw" style="background:#8f8f8f"></span><span>Backside. Nest chuck pad, pocket ledges, ejector pins.</span>
+        <span class="sw" style="background:#b87333"></span><span>Nest: lapped copper vacuum chuck (9 × 5 mm pad, TEC below); two +X stop pads register X and yaw by push-to-stop; corner guards cage Y to ±0.6 mm.</span>
         <span class="sw" style="background:#3d3d3d"></span><span>Noses: 0.35 mm tall, top 0.10 mm below the die surface; the two 3 × 3 mm bars and tip blocks are the only tool parts under the objective.</span>
       </div>
-      <div class="hint">Geometry follows the CAD station assembly (<code>docs/cad/station_assembly.py</code>, gripper <code>gripper_module.py</code>) and the concept study rev. 2.6. Still to measure on the bench: fiber-axis height above the NanoMax platform, objective working distance and tube diameter.</div>
+      <div class="hint">Geometry follows the CAD package (<code>cad/station</code>, <code>cad/gripper</code>, <code>cad/nest</code>, <code>cad/tray</code>; envelope build) and the concept study rev. 2.9. Still to measure on the bench: fiber-axis height above the NanoMax platform, objective working distance and tube diameter.</div>
     </div>
   </aside>
 
@@ -239,7 +240,7 @@
   function span(x0, x1, y0, y1, z0, z1, m) {
     const b = box(x1 - x0, y1 - y0, z1 - z0, m); b.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); return b;
   }
-  // box in CAD coordinates [X0,X1]×[Y0,Y1]×[Z0,Z1] (same argument order as docs/cad/*.py)
+  // box in CAD coordinates [X0,X1]×[Y0,Y1]×[Z0,Z1] (same argument order as cad/common.box)
   function cb(X0, X1, Y0, Y1, Z0, Z1, m) { return span(X0, X1, Z0, Z1, Y0, Y1, m); }
   function cyl(r, h, m, seg = 40) { return new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, seg), m); }
   // vertical cylinder in CAD coordinates: axis at (X, Y), from Z0 to Z1
@@ -260,7 +261,7 @@
     return g;
   }
 
-  // Gripper module exactly as in docs/cad/gripper_module.py (CAD frame, die origin, closed on a 10.000 die):
+  // Gripper module exactly as in cad/gripper/model.py (CAD frame, die origin, closed on a 10.000 die):
   // SMC MHZ2-6D body X -40..-20 / Y -2..8 / Z 25.2..64; fingers 4 x 4 x 14.2 (Y 1..5) ending at Z 11;
   // NEAR arm: root plate on the near finger's -X face, 3 x 3 bar in the Y -1.8..1.2 lane at Z 5.5..8.5,
   //   raised head Z 6.5..9.5 holding a 0.127 mm flexure blade whose lower end carries the near tip block (nose face X 0.065);
@@ -404,12 +405,12 @@
   }
 
   // =====================================================================
-  // Scene 1: test station exchange (mirrors docs/cad/station_assembly.py)
+  // Scene 1: test station exchange (mirrors cad/station/model.py, envelope build)
   // =====================================================================
   const ST = {
-    tableZ: -86, gapY: 45, nanoW: 112, nanoH: 62.5, platH: 4, protr: 12,
-    xAxisCy: -100, axisW: 102, axisH: 64, carT: 10, carLen: 102, xRiser: 76, xcNest: -120,
-    xBody: [-440, -60], zBodyLen: 150, yBody: [-38, 167],
+    tableZ: -86, gapY: 45, nanoW: 112, nanoH: 62.5, platH: 4, protr: 5,
+    xAxisCy: -100, axisW: 102, axisH: 64, carT: 10, carLen: 102, xRiser: 86, xcNest: -140,
+    xBody: [-460, -80], zBodyLen: 150, yBody: [-38, 167],
     cols: 8, rows: 14, colPitch: 16, rowPitch: 7.5, col0X: -150,
     gxPark: -60,                         // gripper die-origin X while a die is measured (far tip at X -44, outside the nest and keep-out)
     home: { c: 2, r: 5 }, next: { c: 3, r: 6 }   // pocket of the die under test, and of the next die
@@ -424,33 +425,44 @@
       { key: 'retract', label: 'Fiber safety retract', min: 0.2, max: 5, step: 0.1, value: 1.0, unit: 'mm', dec: 1 },
       { key: 'swing', label: 'Objective swings away during exchange (motorized pivot on the column)', type: 'bool', value: false }
     ],
-    names: ['Measuring', 'Fibers retract', 'Gripper enters along X', 'Z down beside the end faces', 'Jaws close', 'Rail vacuum off, lift',
+    names: ['Measuring', 'Fibers retract', 'Gripper enters along X', 'Z down beside the end faces', 'Jaws close', 'Chuck vacuum off, lift',
       'Carry to its own pocket', 'Set onto the pocket ledges', 'Release and rise', 'Move to the next die', 'Pick the next die', 'Return to the nest and seat', 'Release, retreat, fibers approach'],
     descs: [
-      'Fibers coupled at both facets from the two NanoMax 300 stages at ±Y; die held by rail vacuum on the nest. The gripper waits at Z +8 mm, 60 mm out along X, clear of the objective footprint. Microscope column behind the nest at X +80.',
+      'Fibers coupled at both facets from the two NanoMax 300 stages at ±Y; die held by vacuum on the copper chuck pad, seated against the two +X stop pads. The gripper waits at Z +8 mm, 60 mm out along X, clear of the objective footprint. Microscope column behind the nest at X +80.',
       'Both NanoMax Y axes back the fibers off by the safety retract. Small, because the tool comes in along X, never through the fiber corridor.',
-      'X carriage −180 → −120: the two finger bars slide in 13.5 mm above the die, under the objective. Actuator body, bracket and arm stay outside the Ø40 tube.',
+      'X carriage −200 → −140: the two finger bars slide in 13.5 mm above the die, under the objective. Actuator body, bracket and arm stay outside the Ø40 tube.',
       'Z −8 mm: the open noses (1.9 mm outside each end face) descend beside the middle 3 mm of the end faces. Near head top 11 mm under the front lens.',
       'Jaws close to the finger-on-finger stop; the 0.127 mm blade preloads 0.32 N on the die. X and θ are now defined by the nose faces.',
-      'Rail vacuum off (switch reads atmosphere); Z +8 mm lifts the die. Nothing has touched the top surface or the facets.',
+      'Chuck vacuum off (switch reads atmosphere); Z +8 mm lifts the die off the pad and out of the cage. Nothing has touched the top surface or the facets.',
       'X carriage runs 150 + 16·c mm along the die\'s long axis to column c of the wafer tray. Every die returns to the pocket it came from; the map holds the result.',
       'Z −11 mm: die onto the ledges under its facet-edge strips, 3 mm below nest height. The open noses drop into the 3.6 mm slots in the end walls.',
       'Jaws open 1.5 mm per side; the pocket retains the die to ±1.0 mm in X by its corners and ±0.4 mm in Y. Z +11 mm.',
       'X selects the next column, the Y stage under the tray brings the next row to the die line (±48.75 mm). Both moves run together.',
       'Z −11 mm, jaws close on the end faces, Z +11 mm. The pocket\'s ±1 mm X play is inside the noses\' ±1.9 mm capture, so no vision is needed here.',
-      'X back to the nest, Z −8 mm onto the rails, rail vacuum on (seat detection). Coarse placement is enough: the camera above measures X/Y/θ afterwards.',
-      'Jaws open, Z +8 mm, X out to the park position; only then do the fibers approach again. Camera pose, correction stage and first-light follow.'
+      'X back to the nest, Z −8 mm onto the chuck pad 0.2 mm short of the stop pads. Jaws open; the gripper indexes +1.7 mm so its compliant nose pushes the die onto the two +X pads with 0.25 N (push-to-stop): X and yaw are now mechanical. Chuck vacuum on (seat detection).',
+      'Gripper backs off, Z +8 mm, X out to the park position; only then do the fibers approach again. The camera confirms X against the pads and reads Y; first light follows.'
     ],
     build() {
       const g = root;
       const tz = ST.tableZ;
-      // optical table and nest (kinematic base, riser, narrow rail insert, two rails 1 mm inboard of the facets)
+      // optical table and nest (cad/nest): KB1X1 base, T-riser (wide body below the fiber holders, 10 mm neck Y -2..8 up to the
+      // cage plate), Semitron cage plate with four corner blocks (+X stop pads, -X guard, Y guards), copper chuck (block, neck to the
+      // TEC, 9 x 5 lapped pad island at Z -1.5..0), TEC 15 x 15 under the neck
       g.add(cb(-540, 220, -280, 280, tz - 12, tz, mat(0xd6dae0)));
       g.add(cb(-14, 24, -16, 22, tz, tz + 20, mat(COL.stage)));
-      g.add(cb(-8, 18, -10, 16, tz + 20, -4.5, mat(COL.stage)));
-      g.add(cb(-1, 11, 0.6, 5.4, -4.5, -1.5, mat(COL.deck)));
-      g.add(cb(0, 10, 1.0, 1.9, -1.5, 0, mat(COL.rail)));
-      g.add(cb(0, 10, 4.1, 5.0, -1.5, 0, mat(COL.rail)));
+      g.add(cb(-8, 18, -10, 16, tz + 20, -12, mat(COL.stage)));                           // riser wide body / heat sink
+      g.add(cb(-8, 18, -2, 8, -12, -4.5, mat(COL.stage)));                                // riser neck between the fiber holders
+      g.add(cb(-2.5, 12.5, -4.5, 10.5, -14.5, -12, mat(0xdadde2)));                      // TEC 15 x 15 x 2.5 (cold face at Z -12)
+      g.add(cb(-2.5, 12.5, -2, 8, -4.5, -1.5, mat(COL.tip)));                             // cage plate (Semitron ESd 480)
+      const mCu = mat(0xb87333, { roughness: 0.35 });
+      g.add(cb(-1.5, 11.5, 0.6, 5.4, -12, -1.5, mCu));                                    // copper block + neck to the TEC
+      g.add(cb(0.5, 9.5, 0.5, 5.5, -1.5, 0, mCu));                                        // lapped chuck pad, 0.5 inboard of every die edge
+      [[1.5, 2.0], [4.5, 5.0]].forEach(([y0, y1]) => [2, 5, 8].forEach((x) => g.add(cb(x - 0.25, x + 0.25, y0 - 0.25, y1 - 0.25, -0.01, 0.01, mat(0x3a2a1a)))));  // vacuum holes
+      const mBlk = mat(COL.tip);
+      g.add(cb(10.0, 10.6, -1.0, 1.2, -1.5, 0.4, mBlk)); g.add(cb(10.0, 10.6, 4.8, 7.0, -1.5, 0.4, mBlk));   // +X stop pads (contact faces at X 10.000, Y 0.6-1.2 / 4.8-5.4)
+      g.add(cb(-1.0, -0.4, -1.0, 1.2, -1.5, 0.4, mBlk)); g.add(cb(-1.0, -0.4, 4.8, 7.0, -1.5, 0.4, mBlk));   // -X guard, 0.4 mm behind the end face
+      g.add(cb(9.5, 10.6, -1.0, -0.6, -1.5, 0.4, mBlk)); g.add(cb(9.5, 10.6, 6.6, 7.0, -1.5, 0.4, mBlk));    // Y guards, 0.6 mm outside the facets, die corners only
+      g.add(cb(-1.0, 0.5, -1.0, -0.6, -1.5, 0.4, mBlk)); g.add(cb(-1.0, 0.5, 6.6, 7.0, -1.5, 0.4, mBlk));
       // NanoMax 300 stages (112 x 112 x 62.5, inner faces 45 mm from the facets) with fiber holders reaching in
       this.fibers = [];
       [-1, 1].forEach((s) => {
@@ -460,14 +472,15 @@
         const mv = new THREE.Group();                                      // platform + holder + fiber (moves with the stage's Y axis)
         mv.add(cb(-41, 51, y0 + 6, y1 - 6, tz + ST.nanoH, tz + ST.nanoH + ST.platH, mat(COL.gantry)));
         const pt = tz + ST.nanoH + ST.platH;
+        // holder envelope (cad/common FIBER): tip 5 mm beyond the holder front, body 25 wide, Z -8..+4, 20 long
         if (s < 0) {
           mv.add(cb(-4, 14, y1 - 14, y1 - 6, pt, 4.5, mat(COL.clamp)));
-          mv.add(cb(1, 9, y1 - 8, -ST.protr, -1, 2, mat(COL.arm)));
-          mv.add(cb(1, 9, -ST.protr - 8, -ST.protr, -1.5, 2.5, mat(COL.clamp)));
+          mv.add(cb(1, 9, y1 - 8, -ST.protr - 20 + 1, -1, 2, mat(COL.arm)));
+          mv.add(cb(-7.5, 17.5, -ST.protr - 20, -ST.protr, -8, 4, mat(COL.clamp)));
         } else {
           mv.add(cb(-4, 14, y0 + 6, y0 + 14, pt, 4.5, mat(COL.clamp)));
-          mv.add(cb(1, 9, 6 + ST.protr, y0 + 8, -1, 2, mat(COL.arm)));
-          mv.add(cb(1, 9, 6 + ST.protr, 6 + ST.protr + 8, -1.5, 2.5, mat(COL.clamp)));
+          mv.add(cb(1, 9, 6 + ST.protr + 20 - 1, y0 + 8, -1, 2, mat(COL.arm)));
+          mv.add(cb(-7.5, 17.5, 6 + ST.protr, 6 + ST.protr + 20, -8, 4, mat(COL.clamp)));
         }
         const fib = cyl(0.0625, ST.protr, mat(COL.fiber, { roughness: 0.3 }), 12); fib.rotation.x = Math.PI / 2;
         fib.position.set(5, 0.5, s < 0 ? -ST.protr / 2 : 6 + ST.protr / 2); mv.add(fib);
@@ -485,7 +498,7 @@
       this.keep = cyl(17, 1, mat(COL.keepout, { transparent: true, opacity: 0.14, depthWrite: false })); g.add(this.keep);
       this.keepRing = new THREE.Mesh(new THREE.RingGeometry(16.6, 17, 64), new THREE.MeshBasicMaterial({ color: COL.keepout, side: THREE.DoubleSide }));
       this.keepRing.rotation.x = -Math.PI / 2; this.keepRing.position.set(5, 0.52, 3); g.add(this.keepRing);
-      // X axis (300 mm travel) on a 76 mm riser: body Z -10..54, centre-line Y -100, beside the input NanoMax
+      // X axis (Velmex MN10-0150, 381 mm travel) on an 86 mm riser: body Z 0..64 (envelope), centre-line Y -100, beside the input NanoMax
       const ay0 = ST.xAxisCy - ST.axisW / 2, ay1 = ST.xAxisCy + ST.axisW / 2, zb = tz + ST.xRiser;
       g.add(cb(ST.xBody[0], ST.xBody[1], ay0, ay1, zb, zb + ST.axisH, mat(COL.axisFixed)));
       g.add(cb(ST.xBody[0] + 10, ST.xBody[1] - 10, ay0 + 6, ay1 - 6, tz, zb, mat(COL.stage)));
@@ -530,13 +543,13 @@
       this.die = makeDie(); g.add(this.die);
       this.die2 = makeDie(); g.add(this.die2);
       // labels
-      addLabel('nest · rail vacuum · X-Y-θ correction below', () => new THREE.Vector3(5, -5, -12));
+      addLabel('nest · copper vacuum chuck · +X stop pads · TEC below', () => new THREE.Vector3(5, -5, -12));
       addLabel('fiber', () => new THREE.Vector3(5, 2.4, -9));
       addLabel('fiber', () => new THREE.Vector3(5, 2.4, 15));
       addLabel('NanoMax 300 (input)', () => new THREE.Vector3(5, tz + 66, -ST.gapY - 56));
       addLabel('NanoMax 300 (output)', () => new THREE.Vector3(5, tz + 66, 6 + ST.gapY + 56));
       addLabel('microscope column X +80', () => new THREE.Vector3(80, 200, 3));
-      addLabel('X axis · 300 mm · on 76 mm riser', () => new THREE.Vector3(-300, zb + ST.axisH + 2, ST.xAxisCy));
+      addLabel('X axis · 381 mm · on 86 mm riser', () => new THREE.Vector3(-300, zb + ST.axisH + 2, ST.xAxisCy));
       addLabel('Z axis', () => this.xCar.localToWorld(new THREE.Vector3(0, zc0 + ST.carT + ST.zBodyLen + 2, ST.xAxisCy)));
       addLabel('25 sq L-arm', () => this.zCar.localToWorld(new THREE.Vector3(gxr - 44, 105, -30)));
       addLabel('gripper module (SMC MHZ2-6D)', () => this.gr.localToWorld(new THREE.Vector3(-30, 72, 3)));
@@ -613,7 +626,7 @@
         ['X axis to input NanoMax (X)', '9 mm, above its actuators', 'good'],
         ['X carriage to NanoMax at the nest', '73 mm', 'good'],
         ['Fiber tip to facet during exchange', (0.02 + retract).toFixed(2) + ' mm', retract < 0.5 && t > 1.5 && t < 12.8 ? 'bad' : ''],
-        ['X travel used (farthest column)', '262 of 300 mm', 'good'],
+        ['X travel used (farthest column)', '262 of 381 mm', 'good'],
         ['Y travel used (14 rows)', '97.5 of 105 mm', 'good'],
         ['Pocket play vs nose capture', '±1.0 vs ±1.9 mm', 'good'],
         ['Die travel direction', 'along X, never across fibers', 'good']

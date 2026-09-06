@@ -1,0 +1,71 @@
+Wafer tray 8 x 14 = 112 pockets, 132 x 106 mm, column pitch 16.0 (X), row pitch 7.5 (Y); walls 3.8 tall.
+Pocket cavity 12.0 x 6.8: die retained to +/-1.0 mm in X (jaw capture +/-1.9) and +/-0.4 mm in Y; nose slots 3.6 wide (contact band 1.5..4.5), through between pockets and 2.8 into the rims; ledges 1.0 wide x 0.8 tall under the facet-edge strips.
+Die on the ledges at Z 3.0 above the deck; wall top 0.3 mm above the die top.
+
+pocket members vs the die on its ledges (only the ledges touch; positive = clear):
+  -X wall (-Y of slot)   vs die               :    1.00  OK 
+  -X wall (+Y of slot)   vs die               :    1.00  OK 
+  +X wall (-Y of slot)   vs die               :    1.00  OK 
+  +X wall (+Y of slot)   vs die               :    1.00  OK 
+  -X rim (slot end)      vs die               :    3.80  OK 
+  +X rim (slot end)      vs die               :    3.80  OK 
+  -Y side wall           vs die               :    0.40  OK 
+  +Y side wall           vs die               :    0.40  OK 
+  floor                  vs die               :    0.80  OK 
+  -Y ledge               vs die               :    0.00  TIGHT
+  +Y ledge               vs die               :    0.00  TIGHT
+pocket members vs the open gripper at the set-down height (jaws +/-1.5):
+  -X wall (-Y of slot)   vs near_tip (open)   :    0.30  TIGHT
+  -X wall (+Y of slot)   vs near_tip (open)   :    0.30  TIGHT
+  +X wall (-Y of slot)   vs near_tip (open)   :   12.43  OK 
+  +X wall (+Y of slot)   vs near_tip (open)   :   12.43  OK 
+  -X rim (slot end)      vs near_tip (open)   :    0.37  OK 
+  +X rim (slot end)      vs near_tip (open)   :   15.23  OK 
+  -Y side wall           vs near_tip (open)   :    1.90  OK 
+  +Y side wall           vs near_tip (open)   :    1.90  OK 
+  floor                  vs near_tip (open)   :    0.85  OK 
+  -Y ledge               vs near_tip (open)   :    1.43  OK 
+  +Y ledge               vs near_tip (open)   :    1.43  OK 
+  -X wall (-Y of slot)   vs far_tip (open)    :   12.43  OK 
+  -X wall (+Y of slot)   vs far_tip (open)    :   12.43  OK 
+  +X wall (-Y of slot)   vs far_tip (open)    :    0.30  TIGHT
+  +X wall (+Y of slot)   vs far_tip (open)    :    0.30  TIGHT
+  -X rim (slot end)      vs far_tip (open)    :   15.23  OK 
+  +X rim (slot end)      vs far_tip (open)    :    0.37  OK 
+  -Y side wall           vs far_tip (open)    :    1.90  OK 
+  +Y side wall           vs far_tip (open)    :    1.90  OK 
+  floor                  vs far_tip (open)    :    0.85  OK 
+  -Y ledge               vs far_tip (open)    :    1.43  OK 
+  +Y ledge               vs far_tip (open)    :    1.43  OK 
+  -X wall (-Y of slot)   vs blade (open)      :    0.30  TIGHT
+  -X wall (+Y of slot)   vs blade (open)      :    0.30  TIGHT
+  +X wall (-Y of slot)   vs blade (open)      :   14.17  OK 
+  +X wall (+Y of slot)   vs blade (open)      :   14.17  OK 
+  -X rim (slot end)      vs blade (open)      :    0.50  OK 
+  +X rim (slot end)      vs blade (open)      :   16.97  OK 
+  -Y side wall           vs blade (open)      :    2.17  OK 
+  +Y side wall           vs blade (open)      :    2.17  OK 
+  floor                  vs blade (open)      :    1.30  OK 
+  -Y ledge               vs blade (open)      :    3.17  OK 
+  +Y ledge               vs blade (open)      :    3.17  OK 
+  -X wall (-Y of slot)   vs near_arm (open)   :    4.70  OK 
+  -X wall (+Y of slot)   vs near_arm (open)   :    4.70  OK 
+  +X wall (-Y of slot)   vs near_arm (open)   :   13.23  OK 
+  +X wall (+Y of slot)   vs near_arm (open)   :   13.23  OK 
+  -X rim (slot end)      vs near_arm (open)   :    4.70  OK 
+  +X rim (slot end)      vs near_arm (open)   :   16.04  OK 
+  -Y side wall           vs near_arm (open)   :    4.70  OK 
+  +Y side wall           vs near_arm (open)   :    4.70  OK 
+  -Y ledge               vs near_arm (open)   :    5.50  OK 
+  +Y ledge               vs near_arm (open)   :    5.50  OK 
+  -X wall (-Y of slot)   vs far_arm (open)    :    4.70  OK 
+  -X wall (+Y of slot)   vs far_arm (open)    :    4.70  OK 
+  +X wall (-Y of slot)   vs far_arm (open)    :    4.70  OK 
+  +X wall (+Y of slot)   vs far_arm (open)    :    4.70  OK 
+  -X rim (slot end)      vs far_arm (open)    :    4.70  OK 
+  +X rim (slot end)      vs far_arm (open)    :    4.70  OK 
+  -Y side wall           vs far_arm (open)    :    4.70  OK 
+  +Y side wall           vs far_arm (open)    :    4.70  OK 
+  -Y ledge               vs far_arm (open)    :    5.50  OK 
+  +Y ledge               vs far_arm (open)    :    5.50  OK 
+bars vs the wall tops: the arm bars run 5 mm above the die bottom, walls end 0.8 above it.

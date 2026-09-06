@@ -19,7 +19,7 @@ if ! "$PY" -c "import trimesh, rtree, scipy, networkx, lxml" 2>/dev/null; then
 fi
 
 # cadgen pulls in cadquery-ocp-novtk + a proxy package that shadows the full OCP build CadQuery needs
-# (docs/cad/*.py are CadQuery). Keep the full build in front.
+# (cad/*/model.py are CadQuery). Keep the full build in front.
 if ! "$PY" -c "import cadquery" 2>/dev/null; then
   "$PY" -m pip uninstall -y -q cadquery-ocp-proxy cadquery-ocp-novtk 2>/dev/null || true
   "$PY" -m pip install --quiet --force-reinstall --no-deps "cadquery-ocp==7.9.3.1.1" 2>&1 | grep -v "WARNING: Running pip" || true
@@ -58,4 +58,11 @@ EOF
 fi
 
 command -v cadgen >/dev/null 2>&1 && echo "[cad-skills] $(cadgen --version 2>/dev/null) ready" || echo "[cad-skills] cadgen not on PATH (use: $PY -m cadgen.cli)"
+
+# --- CAD folder synchronization check (see CLAUDE.md) ------------------------------------
+# Every component folder under cad/ must match the last `python cad/build.py` run. A failing check
+# means a model or cad/common changed without a full rebuild: run the build and commit the result.
+if [ -f "$HERE/../cad/build.py" ]; then
+  "$PY" "$HERE/../cad/build.py" --check || true
+fi
 exit 0

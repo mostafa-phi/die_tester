@@ -17,7 +17,7 @@ answer.
 
 The whole architecture (concept study §3, §6a) rests on one unproven claim: *a bare
 photonic die can be gripped repeatedly by the middle of its non‑optical end faces and
-placed on backside rails, within ±0.3 mm / ±1°, with zero top‑surface or facet damage.*
+set down on a backside chuck and pushed onto two end‑face stop pads, within ±0.3 mm / ±1°, with zero top‑surface or facet damage.*
 If that is true, the rest is procurement and integration. If it is false, the design
 redirects to the backside tongue and everything downstream changes. So:
 
@@ -51,9 +51,9 @@ Prices are indicative US list prices; lead times are typical for in‑stock item
 | **Production transfer axes (Month 2)** | Longer versions of the same Cartesian (X 300, Y 300, Z 60 mm), same software | SCARA only with an offset gripper bar (vertical quill lands where the objective barrel is) | ~$10–14 k | 3–6 weeks |
 | **Gripper actuator** | SMC MHZ2‑6D pneumatic parallel gripper (4 mm total stroke) + precision regulator (SMC IR1000) + 5/2 valve (SY3120) + D‑M9 position sensors | Electric: Schunk EGP 25 or Zimmer GEP2010 (no air needed) | ~$300 pneumatic / ~$1.5–2 k electric | in stock / 2–4 weeks |
 | **Jaw fingers** | Custom aluminum fingers with PEEK or Vespel SP‑1 inserts; stepped nose per Fig. 3; **one finger on a flexure or pivot with a 0.3 N spring stop** so grip force is set by the spring, not by air pressure | Bare PEEK fingers (no compliance) for the very first trial | ~$300–600 | 5–7 days (Protolabs/Xometry) or in‑house |
-| **Nest** | 17‑4 PH or hard‑anodized 6061 block: two rails 0.9 × 1.5 × 10 mm, 1 mm inboard of facets, lapped tops, vacuum ports, deck ≥ 0.4 mm below jaw bottoms, kinematic feet | Two‑piece (base + rail insert) if lapping is easier | ~$400–800 | 1 week |
+| **Nest** (chip stage) | Three parts (`cad/nest`): Ni‑plated **copper vacuum chuck** with a lapped 9 × 5 mm pad, 6 vacuum holes and a neck to a 15 × 15 mm TEC; **Semitron ESd 480 cage** with two +X stop pads (X and yaw by push‑to‑stop), an X guard and four corner Y guards; **6061 T‑riser** / heat sink with a 10 mm neck between the fiber holders, on a KB1X1 base | Cage without the TEC (blank copper block) for the first contact trials | ~$600–1,000 + TEC | 1 week |
 | **Vacuum** | Lab house vacuum or KNF N86 micro pump; SMC ZSE30A digital vacuum switch (seat sensing); 3/2 valve | — | ~$400 | in stock |
-| **Wafer trays** (replace the sticks) | SLA print (Formlabs Rigid 10K or Protolabs Accura): 8 × 14 = 112 pockets (one 4″ wafer), cavity 12.0 × 6.8 mm with corner retention, 3.6 mm nose slots, ledges, lid; see `docs/cad/README.md` | Machined PEEK later | ~$120–250 per tray | 2–4 days |
+| **Wafer trays** (replace the sticks) | SLA print (Formlabs Rigid 10K or Protolabs Accura): 8 × 14 = 112 pockets (one 4″ wafer), cavity 12.0 × 6.8 mm with corner retention, 3.6 mm nose slots, ledges, lid; see `cad/tray/README.md` | Machined PEEK later | ~$120–250 per tray | 2–4 days |
 | **I/O** | Stage‑controller digital I/O (Zaber X‑MCC / Thorlabs KDC101 triggers) or the existing NI USB‑6363 lines with a 24 V isolator module | Arduino | ~$80 | — |
 | **Vision** | Existing overhead microscope camera + `ChipAlignmentController` template/edge methods for pose at the nest; a USB microscope for the bench rig | — | ~$100 | in stock |
 | **Test dies** | (a) 50 diced silicon blanks 10 × 6 × 0.5 mm for cycling; (b) 20 diced LN blanks for contact realism; (c) 10–20 **scrap real TFLN dies** for damage tests | — | ~$300–800 (dicing service) | 1 week |
@@ -75,10 +75,10 @@ days.
 - **Day 1 (M+S):** order the linear stages, gripper, regulator/valves, vacuum switch, dicing of
   blank dies, ionizer. Ask the dicing vendor: tape type (UV‑release?), post‑dicing
   street width, film‑frame size, die thickness distribution.
-- **Day 1–3 (M):** review and release the gripper CAD package (`docs/cad/`, parametric
-  CadQuery model, STEP/STL per part, assembly with the MHZ2‑6D stand‑in); the nest and the
-  wafer tray are already in `docs/cad/station_assembly.py`. Send arms, tip blocks, bracket
-  and nest to machining; print the trays in‑house or send out.
+- **Day 1–3 (M):** review and release the CAD package (`cad/`: one folder per component —
+  gripper, nest, tray, station — parametric CadQuery models, STEP/STL per part, clearance
+  checks; `python cad/build.py` regenerates everything). Send arms, tip blocks, bracket,
+  chuck, cage and riser to machining; print the trays in‑house or send out.
 - **Day 2–5 (M):** measure on the tester: objective working distance and barrel
   diameter, fiber‑holder envelope, safe retract distance, chuck mounting interface.
   Enter them into the 3‑D model's sliders; confirm the gripper bridge clears the
