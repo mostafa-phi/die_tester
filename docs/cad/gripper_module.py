@@ -47,7 +47,8 @@ P = dict(
     # MHZ2-6D (SMC catalog "Dimensions MHZ2-6", basic type)
     act_body_x=20.0, act_body_y=10.0, act_body_z=38.8,
     act_fing_x=4.0, act_fing_y=4.0, act_fing_len=14.2,
-    act_closed_outer=8.0, act_open_outer=12.0,     # stroke 2 mm per finger
+    act_closed_outer=16.0, act_open_outer=20.0,    # finger OUTER faces: SMC's "8 closed / 12 open" is the gap between the
+                                                   # finger inner faces (fingers 4 thick at +/-4..8 closed, +/-6..10 open; from the vendor STEP)
     act_m2_from_tip=(2.5, 7.5),                      # attachment threads, on finger outer face
     act_m3_from_front=13.3, act_m3_pitch=12.0,       # body through-holes along Y
     act_port_from_rear=(5.5, 22.5), act_port_offset=1.6,
@@ -79,8 +80,10 @@ near_face_x = die_cy * 0 + (P["die_len"] - gap_closed) / 2.0     # +0.065
 far_face_x = P["die_len"] - (P["die_len"] - gap_closed) / 2.0    # 9.935
 
 # finger positions (closed): inner faces touch at body centre
-near_fing_x0, near_fing_x1 = cx - P["act_fing_x"], cx              # -30..-26
-far_fing_x0, far_fing_x1 = cx, cx + P["act_fing_x"]                # -26..-22
+near_fing_x0 = cx - P["act_closed_outer"] / 2                      # -38 (closed)
+near_fing_x1 = near_fing_x0 + P["act_fing_x"]                       # -34
+far_fing_x1 = cx + P["act_closed_outer"] / 2                        # -22
+far_fing_x0 = far_fing_x1 - P["act_fing_x"]                         # -26
 fing_y0, fing_y1 = die_cy - P["act_fing_y"] / 2, die_cy + P["act_fing_y"] / 2   # 1..5
 
 # bar Y lanes: near bar low-Y, far bar high-Y, contact blocks centred on die middle
@@ -125,6 +128,30 @@ def actuator(open_mm=0.0):
         near = near.cut(cq.Workplane("YZ").center(die_cy, tip_z + z).circle(1.0).extrude(6).translate((near_fing_x0 - open_mm - 1, 0, 0)))
         far = far.cut(cq.Workplane("YZ").center(die_cy, tip_z + z).circle(1.0).extrude(6).translate((far_fing_x1 + open_mm - 5, 0, 0)))
     return body, near, far
+
+
+def actuator_vendor(open_mm=0.0, path=None):
+    """SMC MHZ2-6D from the vendor STEP (docs/cad/vendor/smc_MHZ2-6D.step), in the gripper frame with the
+    fingers pointing down and set to closed + open_mm. File frame: body 10 (x) x 20 (y) x 38.8 (z -30..8.8),
+    fingers +z to 23, drawn OPEN (uprights at y 6..10 / -10..-6). Returns (body, near_finger, far_finger) or None."""
+    import os
+    path = path or os.path.join(os.path.dirname(os.path.abspath(__file__)), "vendor", "smc_MHZ2-6D.step")
+    if not os.path.exists(path):
+        return None
+    wp = cq.importers.importStep(path)
+    sol = sorted(wp.solids().vals(), key=lambda t: -t.Volume())
+    body, f_a, f_b = sol[0], sol[1], sol[2]
+    if f_a.BoundingBox().ymin > 0:
+        f_pos, f_neg = f_a, f_b
+    else:
+        f_pos, f_neg = f_b, f_a
+    shift = 2.0 - open_mm                                              # open -> closed is 2 mm inward per finger
+    f_pos = f_pos.translate(cq.Vector(0, -shift, 0)); f_neg = f_neg.translate(cq.Vector(0, shift, 0))
+
+    def to_frame(t):                                                   # file (x, y, z) -> gripper (y, x, -z), then place
+        w = cq.Workplane().add(t).rotate((0, 0, 0), (1, 0, 0), 180).rotate((0, 0, 0), (0, 0, 1), 90)
+        return w.translate((cx, die_cy, body_z0 + 8.8))                # file z = 8.8 (body top) -> Z body_z0
+    return to_frame(body), to_frame(f_neg), to_frame(f_pos)            # file -y finger -> -X (near), +y -> +X (far)
 
 
 # ----------------------------------------------------------------------------

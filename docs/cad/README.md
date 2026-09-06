@@ -31,7 +31,7 @@ nest rails and a translucent 20 mm objective keep-out cylinder.
 
 | # | File | Material | Qty | Make / buy | Notes |
 |---|---|---|---|---|---|
-| 1 | — | SMC **MHZ2‑6D‑M9N** | 1 | buy | ø6 parallel gripper, 2 × D‑M9N switches. Fingers 4 × 4 mm, 2 × M2 on each outer face at 2.5 / 7.5 from the tip. Body mounts by 2 × M3 through-threads along Y. |
+| 1 | `vendor/smc_MHZ2-6D.step` | SMC **MHZ2‑6D‑M9N** | 1 | buy | ø6 parallel gripper, 2 × D‑M9N switches. Fingers 4 × 4 mm at ±4…8 mm from the centre when closed (8 mm gap; 12 mm open), 2 × M2 on each finger at 2.5 / 7.5 from the tip. Body mounts by 2 × M3 through-threads along Y. |
 | 2 | `far_arm_6061.step` | 6061‑T6, hard anodize | 1 | CNC (Protolabs/Xometry) | Rigid arm. Root plate on the far finger's +X face (2 × M2 SHCS, counterbored), transition block, 3 × 3 bar in the Y 4.8–7.8 lane, head with M2 tapped hole for the tip block. |
 | 3 | `near_arm_6061.step` | 6061‑T6, hard anodize | 1 | CNC | Compliant arm. Root plate on the near finger's −X face, bar in the Y −1.8–1.2 lane, raised head (top 9.0 above die) with a 0.18 × 3.1 × 3 mm blade slot and an M2 clamp screw. |
 | 4 | `far_tip_block_semitron.step` | **Semitron ESd 480** | 1 (+2 spare) | CNC | 3 wide × 2 thick × 8.5 tall. Nose band 0.35 tall protrudes 0.6 toward the die at Z 0.05–0.40. M2 clearance + countersink from the die side. Ø0.6 through hole at Z 0.25 for a thru-beam fiber sensor. |
@@ -106,7 +106,7 @@ writes `out/station_assembly_vendor.step` (106 MB) plus `out/station_checks_vend
 | Velmex BiSlide **MN10-0150-M02-21** (X) | `MN10-0150-xxx-21 2Cleats PK266.stp` → `vendor/velmex_MN10-0150-21.step` | velmex.com Technical library (browser captcha, downloaded by hand) | **placed**: body 86.4 × 54.6 mm, slider top 65.1 above the body bottom, 117 mm slider, PK266 motor adds 64 mm beyond the far (−X) end; body's nest end at X −40 (23 mm above the NanoMax base plate), riser 86 mm as **two pedestals** with a gap X −285…−120 where the Y stage and the tray deck pass under the axis (11 / 8 mm clearance at the extreme row) |
 | Velmex BiSlide **MN10-0050-M02-21** (Z) | `MN10-0050-xxx-21 PK266.stp` → `vendor/velmex_MN10-0050-21.step` | same | **placed** vertically on the X slider, motor up (tower top Z ≈ 450); slider parked 20 mm above its low limit, adapter plate + 25 mm drop bar to the arm level |
 | Velmex BiSlide **MN10-0050-M02-21** (Y) | same file | same | **placed** under the tray, body Y −152…+168, motor toward +Y; slider top is 65.1 above the table so the tray ledges sit 11.9 mm below nest height (the Z drop grows from 3 to 11.9 mm) |
-| SMC MHZ2-6D-M9N | series MHZ2 | smcworld.com CAD library (free account required since March 2026) | catalogue-dimensioned envelope |
+| SMC MHZ2-6D-M9N | `MHZ2-6D.STEP` (SolidWorks 2022 export from SMC's library) → `vendor/smc_MHZ2-6D.step` | smcworld.com CAD library, downloaded with an SMC account | **placed** (fingers set from the drawn open position to closed). Correction it forced: SMC's "8 closed / 12 open" is the gap *between* the finger faces, so the fingers sit at X ±4…±8 (closed), not touching at the centre; the arm root plates moved 4 mm outward on each side (`act_closed_outer` = 16, `act_open_outer` = 20 in `gripper_module.py`). Far root now 7 mm from the objective barrel. Renders: `out/render_gripper_vendor_{iso,front}.png` |
 | Microscope objective / tube / column | — | your microscope's vendor | envelope; measure WD and tube diameter |
 
 Renders of the vendor-model assembly: `out/render_station_vendor_{iso,plan,front,side}.png`

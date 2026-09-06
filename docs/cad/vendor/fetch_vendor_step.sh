@@ -25,6 +25,6 @@ curl -sSL -A "$UA" -o thorlabs_KB1X1.step \
 
 # --- SMC MHZ2-6D-M9N: CAD needs a (free) SMC account since March 2026 -------------------------------
 #   https://www.smcworld.com/cadlib/en/   or   https://www.smc.eu/en-gb/products/engineering-tools/3d-product-libraries
-#   save as: smc_MHZ2-6D.step   (station_assembly.py keeps the catalogue-dimensioned envelope until then)
+#   save as: smc_MHZ2-6D.step   (downloaded by the user, Sept 2026; SolidWorks 2022 export, fingers drawn open)
 
 ls -la *.step 2>/dev/null || true

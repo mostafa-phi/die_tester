@@ -39,27 +39,27 @@ clearances vs microscope cylinders (radial or vertical, mm):
   far_arm bars @nest       vs objective (dia 34)        :    12.0  OK 
   far_arm bars @nest       vs microscope_tube (dia 40)  :    52.0  OK 
   far_arm bars @nest       vs microscope_column (dia 40):    44.1  OK 
-  far_arm root @nest       vs objective (dia 34)        :    11.0  OK 
+  far_arm root @nest       vs objective (dia 34)        :     7.0  OK 
   far_arm root @nest       vs microscope_tube (dia 40)  :    39.5  OK 
-  far_arm root @nest       vs microscope_column (dia 40):    83.0  OK 
+  far_arm root @nest       vs microscope_column (dia 40):    79.0  OK 
   near_arm bars @nest      vs objective (dia 34)        :    12.0  OK 
   near_arm bars @nest      vs microscope_tube (dia 40)  :    52.0  OK 
   near_arm bars @nest      vs microscope_column (dia 40):    60.7  OK 
   near_arm head @nest      vs objective (dia 34)        :    11.0  OK 
   near_arm head @nest      vs microscope_tube (dia 40)  :    51.0  OK 
   near_arm head @nest      vs microscope_column (dia 40):    60.7  OK 
-  near_arm root @nest      vs objective (dia 34)        :    22.0  OK 
+  near_arm root @nest      vs objective (dia 34)        :    26.0  OK 
   near_arm root @nest      vs microscope_tube (dia 40)  :    39.5  OK 
-  near_arm root @nest      vs microscope_column (dia 40):    94.0  OK 
+  near_arm root @nest      vs microscope_column (dia 40):    98.0  OK 
   far_tip @nest            vs objective (dia 34)        :    11.9  OK 
   far_tip @nest            vs microscope_tube (dia 40)  :    52.0  OK 
   far_tip @nest            vs microscope_column (dia 40):    48.1  OK 
   bracket @nest            vs objective (dia 34)        :    10.0  OK 
   bracket @nest            vs microscope_tube (dia 40)  :     7.0  OK 
   bracket @nest            vs microscope_column (dia 40):    82.0  OK 
-  mhz2_body @nest          vs objective (dia 34)        :     8.0  OK 
-  mhz2_body @nest          vs microscope_tube (dia 40)  :     5.0  OK 
-  mhz2_body @nest          vs microscope_column (dia 40):    80.0  OK 
+  mhz2_body @nest          vs objective (dia 34)        :     7.9  OK 
+  mhz2_body @nest          vs microscope_tube (dia 40)  :     4.9  OK 
+  mhz2_body @nest          vs microscope_column (dia 40):    79.9  OK 
   arm_L @nest              vs objective (dia 34)        :    10.0  OK 
   arm_L @nest              vs microscope_tube (dia 40)  :     7.0  OK 
   arm_L @nest              vs microscope_column (dia 40):    82.0  OK 

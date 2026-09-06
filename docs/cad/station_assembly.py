@@ -342,7 +342,8 @@ def gripper_at(gx, gz, open_mm=0.0):
         "far_arm": G.far_arm(), "near_arm": G.near_arm(), "far_tip": G.far_tip_block(),
         "near_tip": G.near_tip_block(), "blade": G.blade(), "bracket": G.bracket(),
     }
-    body, fn, ff = G.actuator(open_mm)
+    vend = G.actuator_vendor(open_mm) if USE_VENDOR else None
+    body, fn, ff = vend if vend is not None else G.actuator(open_mm)
     parts.update({"mhz2_body": body, "mhz2_fing_near": fn, "mhz2_fing_far": ff})
     return {k: v.translate((gx, 0, gz)) for k, v in parts.items()}
 
