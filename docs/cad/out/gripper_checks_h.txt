@@ -8,5 +8,5 @@ near head X extent         : -5.73 .. -0.73
 near head top above die top: 9.00 mm  <- tallest tool part inside objective footprint
 actuator body X extent     : -40.0 .. -20.0 (objective barrel -12..22, tube -15..25)
 bracket/interface X extent : -54.0 .. -22.0  (pattern centre X -38.0, Y 3.0)
-module height above die top: 69.5 mm (to interface plate top)  [layout: vertical]
-body Y extent              : -2.0 .. 8.0  (fiber clamps at Y <= -12 and >= 18)
+module height above die top: 25.5 mm (to interface plate top)  [layout: horizontal]
+body Y extent              : -44.5 .. -5.7 at Z 10..20  (input fiber holder below Z 4.5)

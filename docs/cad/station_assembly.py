@@ -52,6 +52,10 @@ S = dict(
     x_axis_riser=86.0,             # X axis on a riser ABOVE the NanoMax envelope and above the tray deck that passes under it (body bottom Z 0)
     xc_nest=-140.0,                # X-carriage centre when the gripper is at the nest (arm reach 140; keeps the real Velmex slider inside its travel)
     arm_sec=25.0,                  # square arm bar
+    arm_cross_z=82.0,              # underside of the arm bars where they cross the X-axis band: X slider top 65.1
+                                   # + 11.9 far-column drop + 5 mm margin. A lower bracket gets a vertical drop bar.
+    cleat_shift=120.0,             # Velmex cleats are clamps, free along the body: moved 120 mm toward the motor end
+                                   # (file z 247..317 -> 367..437) so the horizontal gripper body clears them at the far columns
     # wafer tray: one 100 mm wafer = 8 columns x 14 rows = 112 pockets, die returns to its own pocket after test
     tray_cols=8, tray_rows=14, tray_col_pitch=16.0, tray_row_pitch=7.5,
     tray_col0_x=-150.0,            # die X of the first (nearest) column; last column at -150 - 7*16 = -262
@@ -222,10 +226,21 @@ def x_axis():
     if v is not None:
         tr = (VX_X0, cyx, zb - V["body_y0"])                                  # file y = -27.3 (body bottom) -> Z zb
         bl = v["body_len"]
-        body_sol = [t for t in v["fixed"] if t.BoundingBox().zmin < bl - 1.0]     # body, nest-end plate, screw, switches, cleats
-        motor_sol = [t for t in v["fixed"] if t.BoundingBox().zmin >= bl - 1.0]  # motor-end plate, coupling housing, PK266
+        def _fix(t):                                                            # relocate the two cleats along the body
+            b = t.BoundingBox()
+            if max(abs(b.xmin), abs(b.xmax)) > 50 and b.ymax < -15:
+                return t.translate(cq.Vector(0, 0, S["cleat_shift"]))
+            return t
+        v = dict(v, fixed=[_fix(t) for t in v["fixed"]])
+        is_cleat = lambda t: max(abs(t.BoundingBox().xmin), abs(t.BoundingBox().xmax)) > 50 and t.BoundingBox().ymax < -15
+        # motor end = everything living in the last 60 mm of the body and beyond: coupling housing (z 508..564, 68 mm tall),
+        # motor-end plate and the PK266 (z 552..628). The arm never reaches that X range, so it is checked separately.
+        body_sol = [t for t in v["fixed"] if t.BoundingBox().zmin < bl - 60.0 and not is_cleat(t)]   # body, nest-end plate, screw, switches
+        motor_sol = [t for t in v["fixed"] if t.BoundingBox().zmin >= bl - 60.0]
+        cleat_sol = [t for t in v["fixed"] if is_cleat(t)]
         body = place(body_sol, 0.0, ROT_X_AXIS, tr)
         motor = place(motor_sol, 0.0, ROT_X_AXIS, tr)
+        S["_x_cleats"] = place(cleat_sol, 0.0, ROT_X_AXIS, tr)
         ped1 = box(VX_X0 - bl + 10, -285, cyx - 40, cyx + 40, table_z, zb)   # long pedestal, carries the two cleats (X -357..-287)
         ped2 = box(-120, VX_X0 - 25, cyx - 40, cyx + 40, table_z, zb)          # short pedestal, ends 14 mm short of the NanoMax base (X -51)
         return body, motor, (ped1, ped2)                                       # gap X -285..-120: Y stage body and tray deck pass through
@@ -264,13 +279,19 @@ def z_carriage_and_arm(xc, z_iface_top, gx):
     covering the gripper bracket interface at gripper X position gx (die origin X)."""
     a = S["arm_sec"]
     cyx = S["x_axis_cy"]
-    # end plate over the bracket interface (bracket top plate X gx-48..gx-16, Y -14..20 in gripper frame)
-    ep = box(gx + G.cx - 26, gx + G.cx + 8, cy - 18, cy + 22, z_iface_top, z_iface_top + 8)
+    # end plate over the bracket interface (footprint from gripper_module.IFACE, in the gripper frame)
+    ix0, ix1, iy0, iy1 = G.IFACE                     # bracket top-plate footprint (gripper frame), per layout
+    ep = box(gx + ix0, gx + ix1, iy0, iy1, z_iface_top, z_iface_top + 8)
+    # the bars cross the X-axis band no lower than arm_cross_z (+ the gripper's Z offset); a vertical drop bar
+    # joins them to the end plate when the interface is lower (horizontal gripper layout)
+    gz = z_iface_top - (G.body_z1 + G.P["top_t"])                                    # 0 at the nest, tray drop elsewhere
+    za = max(z_iface_top + 8, S["arm_cross_z"] + gz)
+    if za > z_iface_top + 8:
+        ep = ep.union(box(gx + ix0, gx + ix0 + a, iy1 - a, iy1, z_iface_top + 8 - 0.01, za + a))
     # bar along Y from the X-axis band to the end plate, then bar along X back to the Z carriage face
-    bar_y = box(gx + G.cx - 26, gx + G.cx - 26 + a, cyx + 20, cy + 22, z_iface_top + 8, z_iface_top + 8 + a)
+    bar_y = box(gx + ix0, gx + ix0 + a, cyx + 20, iy1, za, za + a)
     vz = _vx()["z"]
     if vz is not None:
-        gz = z_iface_top - (G.body_z1 + G.P["top_t"])                                # 0 at the nest, tray drop elsewhere
         zc_file = (vz["body_len"] / 2 - vz["travel"] / 2) + 20.0                       # slider parked 20 mm above its low limit
         trz = S["_z_tr"]
         zc = place(vz["mov"], slider_target(vz, zc_file + gz, "Z"), ROT_Z_AXIS, trz)
@@ -278,14 +299,14 @@ def z_carriage_and_arm(xc, z_iface_top, gx):
         zs1 = zs0 + V["slider_len"]
         xf = xc + V["slider_top"]                                                      # Z slider face (+X)
         plate = box(xf, xf + 10, cyx - V["slider_hw"], cyx + V["slider_hw"], zs0 + 5, zs1 - 5)   # adapter plate on the slider
-        drop = box(xf + 10, xf + 10 + a, cyx + 20, cyx + 20 + a, z_iface_top + 8, zs0 + 40)     # 25 sq bar down to the arm level
-        bar_x = box(xf + 10, gx + G.cx - 26 + a, cyx + 20, cyx + 20 + a, z_iface_top + 8, z_iface_top + 8 + a)
-        return zc, ep.union(bar_y).union(bar_x).union(drop).union(plate)
+        drop = box(xf + 10, xf + 10 + a, cyx + 20, cyx + 20 + a, za, zs0 + 40)                 # 25 sq bar down to the arm level
+        bar_x = box(xf + 10, gx + ix0 + a, cyx + 20, cyx + 20 + a, za, za + a)
+        return zc, ep.union(bar_y).union(bar_x).union(drop).union(plate), [ep, bar_y, bar_x, drop, plate]
     y0, y1 = cyx - S["axis_w"] / 2, cyx + S["axis_w"] / 2
     xf = xc + S["axis_h"] / 2                        # Z body +X face
-    zc = box(xf, xf + 10, y0, y1, z_iface_top - 20, z_iface_top - 20 + S["car_len"])
-    bar_x = box(xf + 10, gx + G.cx - 26 + a, cyx + 20, cyx + 20 + a, z_iface_top + 8, z_iface_top + 8 + a)
-    return zc, ep.union(bar_y).union(bar_x)
+    zc = box(xf, xf + 10, y0, y1, za - 28, za - 28 + S["car_len"])
+    bar_x = box(xf + 10, gx + ix0 + a, cyx + 20, cyx + 20 + a, za, za + a)
+    return zc, ep.union(bar_y).union(bar_x), [ep, bar_y, bar_x]
 
 
 def y_stage_and_tray(active_col_x, active_row_y):
@@ -356,6 +377,11 @@ def bb(shape):
     return (b.xmin, b.xmax, b.ymin, b.ymax, b.zmin, b.zmax)
 
 
+def gap_parts(parts, b):
+    """Separation of a union of shapes (list) from AABB b = min over the members' AABB gaps (no union-box conservatism)."""
+    return min(gap(bb(pp), b) for pp in parts)
+
+
 def gap(a, b):
     """Separation between two AABBs: >0 = clear by that much (max over axes), <=0 = overlap in all axes."""
     dx = max(a[0] - b[1], b[0] - a[1])
@@ -382,13 +408,14 @@ def main():
     for name, s in microscope(): static[name] = s
     xax, xmot, (xr1, xr2) = x_axis(); static["x_axis_body_velmex"] = xax; static["x_axis_motor_end"] = xmot
     static["x_axis_riser_long"] = xr1; static["x_axis_riser_short"] = xr2
+    if "_x_cleats" in S: static["x_axis_cleats"] = S["_x_cleats"]
     static["die_at_nest"] = G.die()
 
     # ---- moving, at NEST ----
     xc = S["xc_nest"]
     xcar, zbody = z_tower(xc)
     z_iface_top = G.body_z1 + G.P["top_t"]            # bracket top plate top (Z 70)
-    zc, arm = z_carriage_and_arm(xc, z_iface_top, 0.0)
+    zc, arm, arm_parts = z_carriage_and_arm(xc, z_iface_top, 0.0)
     ybody, ycar, deck, stick, z_led, tray_ext = y_stage_and_tray(S["tray_col0_x"], cy)
     moving_nest = {"x_carriage": xcar, "z_axis_body_velmex": zbody, "z_carriage": zc, "arm_L_25sq": arm}
     grip_nest = gripper_at(0.0, 0.0)
@@ -399,7 +426,7 @@ def main():
     xc2 = xc + far_col_x
     gz2 = z_led                                        # die bottom on the tray ledges
     xcar2, zbody2 = z_tower(xc2)
-    zc2, arm2 = z_carriage_and_arm(xc2, z_iface_top + gz2, far_col_x)
+    zc2, arm2, arm2_parts = z_carriage_and_arm(xc2, z_iface_top + gz2, far_col_x)
     grip_stick = gripper_at(far_col_x, gz2, open_mm=1.5)
 
     # ---- checks ----
@@ -419,9 +446,9 @@ def main():
         ("gripper near_arm @nest", grip_nest["near_arm"], "fiber_holder_in", static["fiber_holder_in"]),
         ("gripper far_arm @nest", grip_nest["far_arm"], "fiber_holder_out", static["fiber_holder_out"]),
         ("gripper bracket @nest", grip_nest["bracket"], "fiber_holder_in", static["fiber_holder_in"]),
-        ("arm_L @nest", arm, "microscope_tube", static["microscope_tube"]),
-        ("arm_L @nest", arm, "nanomax300_in", static["nanomax300_in"]),
-        ("arm_L @nest", arm, "fiber_holder_in", static["fiber_holder_in"]),
+        ("arm_L @nest", arm_parts, "microscope_tube", static["microscope_tube"]),
+        ("arm_L @nest", arm_parts, "nanomax300_in", static["nanomax300_in"]),
+        ("arm_L @nest", arm_parts, "fiber_holder_in", static["fiber_holder_in"]),
         ("z_axis_body @nest", zbody, "nanomax300_in", static["nanomax300_in"]),
         ("x_axis_body", xax, "nanomax300_in", static["nanomax300_in"]),
         ("x_axis_body", xax, "y_stage_body", ybody),
@@ -434,7 +461,14 @@ def main():
         ("x_axis_body", xax, "wafer_tray", stick),
         ("x_axis_motor_end", xmot, "y_stage_body", ybody),
         ("z_axis_body @stick", zbody2, "y_stage_body", ybody),
-        ("arm_L @far column", arm2, "wafer_tray", stick),
+        ("arm_L @far column", arm2_parts, "wafer_tray", stick),
+        ("arm_L @far column", arm2_parts, "x_carriage @far col", xcar2),
+        ("arm_L @far column", arm2_parts, "x_axis_body", xax),
+        ("arm_L @far column", arm2_parts, "x_axis_motor_end", xmot),
+        ("gripper mhz2_body @far col", grip_stick["mhz2_body"], "x_axis_body", xax),
+        ("gripper bracket @far col", grip_stick["bracket"], "x_axis_body", xax),
+        ("arm_L @nest", arm_parts, "x_carriage @nest", xcar),
+        ("arm_L @nest", arm_parts, "x_axis_body", xax),
         ("gripper mhz2_body @far col", grip_stick["mhz2_body"], "wafer_tray", stick),
         ("gripper far_arm @far col", grip_stick["far_arm"], "wafer_tray", stick),
         ("gripper near_arm @far col", grip_stick["near_arm"], "wafer_tray", stick),
@@ -450,10 +484,14 @@ def main():
     ]
     rep.append("")
     rep.append("clearances vs boxes (AABB separation, mm; negative = overlap):")
+    if "x_axis_cleats" in static:
+        pairs += [("gripper mhz2_body @far col", grip_stick["mhz2_body"], "x_axis_cleats", static["x_axis_cleats"]),
+                  ("gripper mhz2_body @nest", grip_nest["mhz2_body"], "x_axis_cleats", static["x_axis_cleats"]),
+                  ("arm_L @far column", arm2_parts, "x_axis_cleats", static["x_axis_cleats"])]
     for an, a, bn, b in pairs:
         if bn in ("objective", "microscope_tube", "microscope_column"):
             continue
-        gp = gap(bb(a), bb(b))
+        gp = gap_parts(a, bb(b)) if isinstance(a, list) else gap(bb(a), bb(b))
         flag = "  OK " if gp > 2 else ("  TIGHT" if gp > 0 else "  ** OVERLAP **")
         rep.append(f"  {an:26s} vs {bn:20s}: {gp:7.1f}{flag}")
     rep.append("")
@@ -478,23 +516,24 @@ def main():
             rep.append(f"  {pn:24s} vs {cn:26s}: {gp:7.1f}{flag}")
     # swept volumes between nest and stick, after the 8 mm approach lift: (a) gripper module band, (b) arm band
     lift = 8.0
-    gm = [bb(v) for v in grip_nest.values()]
-    g_sweep = (S["stick_x"] + min(b[0] for b in gm), max(b[1] for b in gm), min(b[2] for b in gm), max(b[3] for b in gm),
-               min(b[4] for b in gm) + lift, max(b[5] for b in gm) + lift)
-    ab = bb(arm)
-    a_sweep = (S["stick_x"] + ab[0], ab[1], ab[2], ab[3], ab[4] + lift, ab[5] + lift)
+    def sweep(b):                                                     # AABB swept from the nest to the farthest column, lifted
+        return (S["stick_x"] + b[0], b[1], b[2], b[3], b[4] + lift, b[5] + lift)
+    g_sweeps = [sweep(bb(v)) for v in grip_nest.values()]              # per part (no union-box conservatism)
+    a_sweeps = [sweep(bb(pp)) for pp in arm_parts]
     rep.append("")
-    rep.append("swept volumes nest <-> stick (after the 8 mm lift) vs static objects:")
-    for n in ("nanomax300_in", "fiber_holder_in", "fiber_in", "nanomax300_out", "fiber_holder_out", "nest_riser_kinematic", "x_axis_body_velmex", "microscope_arm"):
-        g1 = gap(g_sweep, bb(static[n])); g2 = gap(a_sweep, bb(static[n]))
+    rep.append("swept volumes nest <-> tray (after the 8 mm lift; per member) vs static objects:")
+    statics = ["nanomax300_in", "fiber_holder_in", "fiber_in", "nanomax300_out", "fiber_holder_out", "nest_riser_kinematic",
+               "x_axis_body_velmex", "x_axis_riser_short", "microscope_arm"] + (["x_axis_cleats"] if "x_axis_cleats" in static else [])
+    for n in statics:
+        g1 = min(gap(g, bb(static[n])) for g in g_sweeps); g2 = min(gap(g, bb(static[n])) for g in a_sweeps)
         rep.append(f"  gripper band vs {n:22s}: {g1:7.1f}{'  OK ' if g1 > 2 else '  ** CHECK **'}    arm band: {g2:7.1f}{'  OK ' if g2 > 2 else '  ** CHECK **'}")
     for cn, (axy, r, z0, z1) in cyls.items():
-        g1 = gap_cyl(g_sweep, axy, r, z0, z1); g2 = gap_cyl(a_sweep, axy, r, z0, z1)
+        g1 = min(gap_cyl(g, axy, r, z0, z1) for g in g_sweeps); g2 = min(gap_cyl(g, axy, r, z0, z1) for g in a_sweeps)
         rep.append(f"  gripper band vs {cn:22s}: {g1:7.1f}{'  OK ' if g1 > 2 else '  ** CHECK **'}    arm band: {g2:7.1f}{'  OK ' if g2 > 2 else '  ** CHECK **'}")
     rep.append("")
     rep.append("the gripper band sweep necessarily passes under the objective (that is the exchange); its clearance there is the")
     rep.append("bar height check in gripper_checks.txt (tallest part 9.0 mm above die top vs WD).")
-    suffix = "_vendor" if USE_VENDOR else ""
+    suffix = ("_vendor" if USE_VENDOR else "") + G.SFX
     if USE_VENDOR:
         rep.insert(0, "VENDOR MODELS: Thorlabs MAX313D/M (22803-E0W) x2, KB1X1 (2374-E0W); Velmex MN10-0150-xxx-21 (X) and MN10-0050-xxx-21 (Z, Y) "
                       "with PK266 motors; envelopes for the SMC gripper and the microscope. AABBs include micrometers, motors and switches.")
@@ -508,7 +547,7 @@ def main():
         "nanomax300_in": (0.56, 0.69, 0.82), "nanomax300_out": (0.56, 0.69, 0.82), "fiber_holder_in": (0.36, 0.40, 0.44),
         "fiber_holder_out": (0.36, 0.40, 0.44), "fiber_in": (0.94, 0.82, 0.50), "fiber_out": (0.94, 0.82, 0.50),
         "objective": (0.20, 0.23, 0.27), "microscope_tube": (0.25, 0.28, 0.32), "microscope_arm": (0.77, 0.79, 0.82), "microscope_column": (0.77, 0.79, 0.82),
-        "x_axis_body_velmex": (0.56, 0.69, 0.82), "x_axis_motor_end": (0.45, 0.48, 0.52), "x_axis_riser_long": (0.60, 0.63, 0.68), "x_axis_riser_short": (0.60, 0.63, 0.68), "die_at_nest": (0.81, 0.89, 0.97),
+        "x_axis_body_velmex": (0.56, 0.69, 0.82), "x_axis_motor_end": (0.45, 0.48, 0.52), "x_axis_riser_long": (0.60, 0.63, 0.68), "x_axis_riser_short": (0.60, 0.63, 0.68), "x_axis_cleats": (0.45, 0.48, 0.52), "die_at_nest": (0.81, 0.89, 0.97),
         "x_carriage": (0.18, 0.31, 0.44), "z_axis_body_velmex": (0.56, 0.69, 0.82), "z_carriage": (0.18, 0.31, 0.44), "arm_L_25sq": (0.18, 0.31, 0.44),
         "y_stage_body": (0.56, 0.69, 0.82), "y_carriage": (0.18, 0.31, 0.44), "tray_deck": (0.60, 0.63, 0.68), "wafer_tray": (0.85, 0.81, 0.68),
     }

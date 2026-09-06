@@ -18,11 +18,17 @@ from __future__ import annotations
 
 import math
 import os
+import sys
 import cadquery as cq
 from cadquery import exporters
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out")
 os.makedirs(OUT, exist_ok=True)
+# Actuator layout: "vertical" (body standing above the die, fingers down; 70 mm bracket-top-to-die) or
+# "horizontal" (body lying along Y beside the die line at Z 10..20, fingers pointing +Y toward the bars,
+# arms hanging from the finger faces; 26 mm bracket-top-to-die).  Select with --horizontal.
+LAYOUT = "horizontal" if "--horizontal" in sys.argv else "vertical"
+SFX = "_h" if LAYOUT == "horizontal" else ""
 
 # ----------------------------------------------------------------------------
 # Parameters (mm, N)
@@ -74,6 +80,18 @@ body_z1 = body_z0 + P["act_body_z"]
 cx = P["body_cx"]
 die_cy = P["die_wid"] / 2.0                  # 3.0
 
+# horizontal layout geometry (gripper frame): body 20 (X) x 38.8 (Y) x 10 (Z), ports on the -X face,
+# fingers 4 x 4 protruding +Y from the body's front face, root plates on the finger outer X faces
+H = dict(body_z0=10.0, body_z1=20.0, body_y1=-5.7, fing_z0=13.0, fing_z1=17.0, root_y0=-1.0, root_y1=8.0)
+H["body_y0"] = H["body_y1"] - P["act_body_z"]          # -44.5
+H["tip_y"] = H["body_y1"] + P["act_fing_len"]          # 8.5
+H["m3_y"] = H["body_y1"] - P["act_m3_from_front"]      # -19.0  (M3 through-holes are vertical in this layout)
+H["fing_cz"] = (H["fing_z0"] + H["fing_z1"]) / 2       # 15.0
+if LAYOUT == "horizontal":
+    body_z0, body_z1 = H["body_z0"], H["body_z1"]
+# carrier interface footprint (X0, X1, Y0, Y1) of the bracket top plate, used by the station's arm end plate
+IFACE = (cx - 16, cx + 12, -34.0, -4.0) if LAYOUT == "horizontal" else (cx - 26, cx + 8, die_cy - 18, die_cy + 22)
+
 # nominal nose faces when fingers are fully closed (hard stop): gap = die_len - preload
 gap_closed = P["die_len"] - P["grip_preload"]
 near_face_x = die_cy * 0 + (P["die_len"] - gap_closed) / 2.0     # +0.065
@@ -101,6 +119,18 @@ def box(x0, x1, y0, y1, z0, z1):
             .translate((x0, y0, z0)))
 
 
+def cyl_z(x, y, z0, z1, r):
+    return cq.Workplane("XY").center(x, y).circle(r).extrude(z1 - z0).translate((0, 0, z0))
+
+
+def cyl_x(y, z, x0, x1, r):
+    return cq.Workplane("XY").circle(r).extrude(x1 - x0).rotate((0, 0, 0), (0, 1, 0), 90).translate((x0, y, z))
+
+
+def cyl_y(x, z, y0, y1, r):
+    return cq.Workplane("XY").circle(r).extrude(y1 - y0).rotate((0, 0, 0), (1, 0, 0), -90).translate((x, y0, z))
+
+
 def flexure_k():
     E, b, t, L = P["E_steel"], P["blade_w"] * 1e-3, P["blade_t"] * 1e-3, P["blade_free"] * 1e-3
     return E * b * t ** 3 / (4 * L ** 3)  # N/m, cantilever end load
@@ -110,6 +140,19 @@ def flexure_k():
 # Bought part stand-in: MHZ2-6D body + fingers (closed position)
 # ----------------------------------------------------------------------------
 def actuator(open_mm=0.0):
+    if LAYOUT == "horizontal":
+        body = box(cx - P["act_body_x"] / 2, cx + P["act_body_x"] / 2, H["body_y0"], H["body_y1"], H["body_z0"], H["body_z1"])
+        for dx in (-P["act_m3_pitch"] / 2, P["act_m3_pitch"] / 2):                 # M3 through, vertical
+            body = body.cut(cyl_z(cx + dx, H["m3_y"], H["body_z0"] - 1, H["body_z1"] + 1, 1.3))
+        for yr in P["act_port_from_rear"]:                                         # ports on the -X face
+            body = body.cut(cyl_x(H["body_y0"] + yr, H["fing_cz"] + P["act_port_offset"], cx - 10.01, cx - 7, 1.25))
+        body = body.cut(cyl_y(cx, H["fing_cz"], H["body_y0"] - 0.01, H["body_y0"] + 1.5, 3.5))   # pilot recess, rear face
+        near = box(near_fing_x0 - open_mm, near_fing_x1 - open_mm, H["body_y1"], H["tip_y"], H["fing_z0"], H["fing_z1"])
+        far = box(far_fing_x0 + open_mm, far_fing_x1 + open_mm, H["body_y1"], H["tip_y"], H["fing_z0"], H["fing_z1"])
+        for d in P["act_m2_from_tip"]:                                             # M2 attachment holes along X
+            near = near.cut(cyl_x(H["tip_y"] - d, H["fing_cz"], near_fing_x0 - open_mm - 1, near_fing_x1 - open_mm + 1, 1.0))
+            far = far.cut(cyl_x(H["tip_y"] - d, H["fing_cz"], far_fing_x0 + open_mm - 1, far_fing_x1 + open_mm + 1, 1.0))
+        return body, near, far
     body = box(cx - P["act_body_x"] / 2, cx + P["act_body_x"] / 2,
                die_cy - P["act_body_y"] / 2, die_cy + P["act_body_y"] / 2, body_z0, body_z1)
     # M3 through-holes along Y (body mounting), 12 apart, 13.3 from the finger face
@@ -148,8 +191,12 @@ def actuator_vendor(open_mm=0.0, path=None):
     shift = 2.0 - open_mm                                              # open -> closed is 2 mm inward per finger
     f_pos = f_pos.translate(cq.Vector(0, -shift, 0)); f_neg = f_neg.translate(cq.Vector(0, shift, 0))
 
-    def to_frame(t):                                                   # file (x, y, z) -> gripper (y, x, -z), then place
-        w = cq.Workplane().add(t).rotate((0, 0, 0), (1, 0, 0), 180).rotate((0, 0, 0), (0, 0, 1), 90)
+    def to_frame(t):
+        if LAYOUT == "horizontal":                                     # file (x, y, z) -> gripper (y, z, x): ports (-y) face -X
+            w = (cq.Workplane().add(t).rotate((0, 0, 0), (0, 1, 0), 90).rotate((0, 0, 0), (0, 0, 1), -90)
+                 .rotate((0, 0, 0), (1, 0, 0), 180))
+            return w.translate((cx, H["body_y1"] - 8.8, H["fing_cz"]))  # file z = 8.8 (front face) -> Y body_y1
+        w = cq.Workplane().add(t).rotate((0, 0, 0), (1, 0, 0), 180).rotate((0, 0, 0), (0, 0, 1), 90)   # (y, x, -z)
         return w.translate((cx, die_cy, body_z0 + 8.8))                # file z = 8.8 (body top) -> Z body_z0
     return to_frame(body), to_frame(f_neg), to_frame(f_pos)            # file -y finger -> -X (near), +y -> +X (far)
 
@@ -161,14 +208,22 @@ def actuator_vendor(open_mm=0.0, path=None):
 def far_arm():
     rt = P["root_t"]
     root_x0, root_x1 = far_fing_x1, far_fing_x1 + rt                 # -22..-19
-    root = box(root_x0, root_x1, fing_y0, fing_y1, tip_z - 1.0, tip_z + 10.0)
-    # M2 clearance holes (2.2) with counterbore for the screw heads (3.8 x 2 deep)
-    for z in P["act_m2_from_tip"]:
-        root = root.cut(cq.Workplane("YZ").center(die_cy, tip_z + z).circle(1.1).extrude(rt + 2).translate((root_x0 - 1, 0, 0)))
-        root = root.cut(cq.Workplane("YZ").center(die_cy, tip_z + z).circle(1.9).extrude(2.0).translate((root_x1 - 2.0, 0, 0)))
-    # transition block under the root plate (full width from finger Y to the far lane), then the drop in the lane
-    trans = box(root_x0, root_x1, fing_y0, far_bar_y1, bar_z1 + 0.5, tip_z - 1.0)
-    drop = box(root_x0, root_x1, far_bar_y0, far_bar_y1, bar_z0, bar_z1 + 0.5).union(trans)
+    if LAYOUT == "horizontal":
+        # root plate on the finger's +X face (finger runs along Y at Z 13..17); drop straight down in the far lane
+        root = box(root_x0, root_x1, H["root_y0"], H["root_y1"], H["fing_z0"] - 1.0, H["fing_z1"] + 1.0)
+        for d in P["act_m2_from_tip"]:
+            root = root.cut(cyl_x(H["tip_y"] - d, H["fing_cz"], root_x0 - 1, root_x1 + 1, 1.1))
+            root = root.cut(cyl_x(H["tip_y"] - d, H["fing_cz"], root_x1 - 2.0, root_x1 + 0.01, 1.9))
+        drop = box(root_x0, root_x1, far_bar_y0, far_bar_y1, bar_z0, H["fing_z0"] - 1.0 + 0.01)
+    else:
+        root = box(root_x0, root_x1, fing_y0, fing_y1, tip_z - 1.0, tip_z + 10.0)
+        # M2 clearance holes (2.2) with counterbore for the screw heads (3.8 x 2 deep)
+        for z in P["act_m2_from_tip"]:
+            root = root.cut(cq.Workplane("YZ").center(die_cy, tip_z + z).circle(1.1).extrude(rt + 2).translate((root_x0 - 1, 0, 0)))
+            root = root.cut(cq.Workplane("YZ").center(die_cy, tip_z + z).circle(1.9).extrude(2.0).translate((root_x1 - 2.0, 0, 0)))
+        # transition block under the root plate (full width from finger Y to the far lane), then the drop in the lane
+        trans = box(root_x0, root_x1, fing_y0, far_bar_y1, bar_z1 + 0.5, tip_z - 1.0)
+        drop = box(root_x0, root_x1, far_bar_y0, far_bar_y1, bar_z0, bar_z1 + 0.5).union(trans)
     # bar to the head
     head_x0 = far_face_x + 2.0                                        # tip block is 2.0 thick: 9.935..11.935
     head_x1 = head_x0 + P["head_x"]                                   # 11.935..15.935
@@ -186,13 +241,20 @@ def far_arm():
 # ----------------------------------------------------------------------------
 def near_arm():
     rt = P["root_t"]
-    root_x0, root_x1 = near_fing_x0 - rt, near_fing_x0               # -33..-30
-    root = box(root_x0, root_x1, fing_y0, fing_y1, tip_z - 1.0, tip_z + 10.0)
-    for z in P["act_m2_from_tip"]:
-        root = root.cut(cq.Workplane("YZ").center(die_cy, tip_z + z).circle(1.1).extrude(rt + 2).translate((root_x0 - 1, 0, 0)))
-        root = root.cut(cq.Workplane("YZ").center(die_cy, tip_z + z).circle(1.9).extrude(2.0).translate((root_x0, 0, 0)))
-    trans = box(root_x0, root_x1, near_bar_y0, fing_y1, bar_z1 + 0.5, tip_z - 1.0)
-    drop = box(root_x0, root_x1, near_bar_y0, near_bar_y1, bar_z0, bar_z1 + 0.5).union(trans)
+    root_x0, root_x1 = near_fing_x0 - rt, near_fing_x0               # -41..-38
+    if LAYOUT == "horizontal":
+        root = box(root_x0, root_x1, H["root_y0"], H["root_y1"], H["fing_z0"] - 1.0, H["fing_z1"] + 1.0)
+        for d in P["act_m2_from_tip"]:
+            root = root.cut(cyl_x(H["tip_y"] - d, H["fing_cz"], root_x0 - 1, root_x1 + 1, 1.1))
+            root = root.cut(cyl_x(H["tip_y"] - d, H["fing_cz"], root_x0 - 0.01, root_x0 + 2.0, 1.9))
+        drop = box(root_x0, root_x1, near_bar_y0, near_bar_y1, bar_z0, H["fing_z0"] - 1.0 + 0.01)
+    else:
+        root = box(root_x0, root_x1, fing_y0, fing_y1, tip_z - 1.0, tip_z + 10.0)
+        for z in P["act_m2_from_tip"]:
+            root = root.cut(cq.Workplane("YZ").center(die_cy, tip_z + z).circle(1.1).extrude(rt + 2).translate((root_x0 - 1, 0, 0)))
+            root = root.cut(cq.Workplane("YZ").center(die_cy, tip_z + z).circle(1.9).extrude(2.0).translate((root_x0, 0, 0)))
+        trans = box(root_x0, root_x1, near_bar_y0, fing_y1, bar_z1 + 0.5, tip_z - 1.0)
+        drop = box(root_x0, root_x1, near_bar_y0, near_bar_y1, bar_z0, bar_z1 + 0.5).union(trans)
     # bar runs under the far finger tip toward the die; head straddles the blade plane
     blade_plane = near_face_x - blade_plane_off                        # -1.735
     head_x1 = blade_plane + 1.0                                        # 1 mm wall on the +X side of the slot
@@ -270,6 +332,20 @@ def blade():
 # ----------------------------------------------------------------------------
 def bracket():
     bt, tt = P["bracket_t"], P["top_t"]
+    if LAYOUT == "horizontal":
+        # flat plate on top of the body: 2 x M3 down through the body's vertical through-threads,
+        # 25 x 25 M4 interface + 2 dowels centred at (cx-2, m3_y); stays at X <= cx+12 = -18 (objective barrel edge -12)
+        x0, x1, y0, y1 = IFACE
+        tp = box(x0, x1, y0, y1, body_z1, body_z1 + tt)
+        for dx in (-P["act_m3_pitch"] / 2, P["act_m3_pitch"] / 2):
+            tp = tp.cut(cyl_z(cx + dx, H["m3_y"], body_z1 - 0.5, body_z1 + tt + 0.5, 1.7))
+        pitch = P["iface_pitch"]; pcx, pcy = cx - 2, H["m3_y"]
+        for dx in (-pitch / 2, pitch / 2):
+            for dy in (-pitch / 2, pitch / 2):
+                tp = tp.cut(cyl_z(pcx + dx, pcy + dy, body_z1 - 0.5, body_z1 + tt + 0.5, 2.25))
+        for dx in (-pitch / 2, pitch / 2):
+            tp = tp.cut(cyl_z(pcx + dx, pcy, body_z1 - 0.5, body_z1 + tt + 0.5, 1.5))
+        return tp
     y_face = die_cy - P["act_body_y"] / 2           # -2.0 (body -Y face)
     vp = box(cx - 14, cx + 8, y_face - bt, y_face, body_z0 + 6, body_z1 + tt)          # stays at X <= cx+8 = -22
     zh = body_z0 + P["act_m3_from_front"]
@@ -309,12 +385,12 @@ def keepout(wd=20.0):
 # ----------------------------------------------------------------------------
 def main():
     parts = {
-        "far_arm_6061": far_arm(),
-        "near_arm_6061": near_arm(),
+        f"far_arm_6061{SFX}": far_arm(),
+        f"near_arm_6061{SFX}": near_arm(),
         "far_tip_block_semitron": far_tip_block(),
         "near_tip_block_semitron": near_tip_block(),
         "flexure_blade_0p127_steel": blade(),
-        "bracket_6061": bracket(),
+        f"bracket_6061{SFX}": bracket(),
     }
     body, fn, ff = actuator(0.0)
     ctx = {"mhz2_6d_body": body, "mhz2_6d_finger_near": fn, "mhz2_6d_finger_far": ff,
@@ -340,11 +416,13 @@ def main():
         f"near head top above die top: {near_head_top - die_top:.2f} mm  <- tallest tool part inside objective footprint",
         f"actuator body X extent     : {cx - P['act_body_x']/2:.1f} .. {cx + P['act_body_x']/2:.1f} (objective barrel -12..22, tube -15..25)",
         f"bracket/interface X extent : {cx - 24:.1f} .. {cx + 8:.1f}  (pattern centre X {cx - 8:.1f}, Y {die_cy:.1f})",
-        f"module height above die top: {body_z1 + P['top_t'] - die_top:.1f} mm (to interface plate top)",
-        f"body Y extent              : {die_cy - P['act_body_y']/2:.1f} .. {die_cy + P['act_body_y']/2:.1f}  (fiber clamps at Y <= -12 and >= 18)",
+        f"module height above die top: {body_z1 + P['top_t'] - die_top:.1f} mm (to interface plate top)  [layout: {LAYOUT}]",
+        (f"body Y extent              : {H['body_y0']:.1f} .. {H['body_y1']:.1f} at Z {H['body_z0']:.0f}..{H['body_z1']:.0f}  (input fiber holder below Z 4.5)"
+         if LAYOUT == "horizontal" else
+         f"body Y extent              : {die_cy - P['act_body_y']/2:.1f} .. {die_cy + P['act_body_y']/2:.1f}  (fiber clamps at Y <= -12 and >= 18)"),
     ]
     print("\n".join(report))
-    with open(os.path.join(OUT, "gripper_checks.txt"), "w") as f:
+    with open(os.path.join(OUT, f"gripper_checks{SFX}.txt"), "w") as f:
         f.write("\n".join(report) + "\n")
 
     # ---- exports ----
@@ -353,9 +431,9 @@ def main():
         exporters.export(shape, os.path.join(OUT, f"{name}.stl"), tolerance=0.01, angularTolerance=0.1)
     assy = cq.Assembly(name="gripper_module")
     colors = {
-        "far_arm_6061": (0.55, 0.58, 0.62), "near_arm_6061": (0.45, 0.48, 0.52),
+        f"far_arm_6061{SFX}": (0.55, 0.58, 0.62), f"near_arm_6061{SFX}": (0.45, 0.48, 0.52),
         "far_tip_block_semitron": (0.15, 0.15, 0.15), "near_tip_block_semitron": (0.15, 0.15, 0.15),
-        "flexure_blade_0p127_steel": (0.85, 0.70, 0.25), "bracket_6061": (0.60, 0.65, 0.72),
+        "flexure_blade_0p127_steel": (0.85, 0.70, 0.25), f"bracket_6061{SFX}": (0.60, 0.65, 0.72),
         "mhz2_6d_body": (0.80, 0.80, 0.82), "mhz2_6d_finger_near": (0.7, 0.7, 0.72), "mhz2_6d_finger_far": (0.7, 0.7, 0.72),
         "die_10x6x0p5": (0.81, 0.89, 0.97), "nest_rails": (0.56, 0.56, 0.56),
     }
@@ -363,7 +441,7 @@ def main():
         c = colors[name]
         assy.add(shape, name=name, color=cq.Color(c[0], c[1], c[2], 1.0))
     assy.add(keepout(), name="objective_keepout_wd20", color=cq.Color(0.85, 0.64, 0.25, 0.25))
-    assy.save(os.path.join(OUT, "gripper_module_assembly.step"))
+    assy.save(os.path.join(OUT, f"gripper_module_assembly{SFX}.step"))
 
     # ---- 2-D views (SVG) of the assembly without the keep-out ----
     comp = cq.Compound.makeCompound([s.val() for s in {**parts, **ctx}.values()])
@@ -382,7 +460,7 @@ def main():
         "iso": rotated(-60, 0, -35),               # 30 deg elevation, 35 deg azimuth
     }
     for vname, c in views.items():
-        exporters.export(cq.Workplane().add(c), os.path.join(OUT, f"view_{vname}.svg"),
+        exporters.export(cq.Workplane().add(c), os.path.join(OUT, f"view_{vname}{SFX}.svg"),
                          opt={"width": 1200, "height": 800, "marginLeft": 20, "marginTop": 20,
                               "showAxes": False, "projectionDir": (0, 0, 1), "strokeWidth": 0.4,
                               "strokeColor": (30, 30, 30), "hiddenColor": (180, 180, 190), "showHidden": False})

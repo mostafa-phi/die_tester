@@ -159,6 +159,33 @@ indices mirror the wafer map (row, column), so a die's identity is its pocket. T
 operation at the sorting station if ever needed. A second tray position along X would
 need +130 mm X travel and is the Month-2 option if two wafers must be resident.
 
+## Horizontal actuator layout (`--horizontal`, files with `_h`)
+
+`python docs/cad/gripper_module.py --horizontal` and `python docs/cad/station_assembly.py --vendor --horizontal`
+build the alternative in which the MHZ2-6D lies along Y beside the die line (body X −40…−20, Y −44.5…−5.7,
+Z 10…20, ports toward −X), the fingers point +Y toward the bars, the arm root plates hang from the finger
+outer faces, and the bracket is a flat plate on the body using the actuator's vertical M3 through-threads.
+Parts that change: `far_arm_6061_h`, `near_arm_6061_h`, `bracket_6061_h`; tip blocks and blade are identical.
+
+| | vertical (default) | horizontal |
+|---|---|---|
+| bracket top plate to die bottom | 70 mm | 26 mm |
+| arm crossing over the X axis | Z 82 (X slider top 65 + far-column drop 12 + 5) | same, unavoidable: the arm comes from the Z slider and must clear the X slider |
+| what spans crossing → gripper | SMC body + L-bracket (the actuator is part of the load path) | one 25 mm square drop bar (56 mm) + flat plate |
+| tallest part under the objective | near head, 9.0 mm above die top | same |
+| far root plate to objective barrel | 7.0 mm | 7.0 mm |
+| actuator body to objective barrel / tube | 7.9 / 4.9 mm | 9.4 / 40.5 mm |
+| gripper module mass at the end of the arm | ~30 g actuator + bracket, 70 mm below the arm | same mass, 26 mm below the plate + 56 mm bar |
+
+So the horizontal layout does **not** shorten the drop from the arm to the die (that is set by the X-axis
+slider height), it moves it out of the actuator into a stiff bar and takes the actuator out of the
+Ø40-tube neighbourhood. Two things it uncovered in the station model, fixed for both layouts:
+the arm bars now cross the X-axis band at `arm_cross_z` = 82 with a drop bar when the bracket is lower,
+and the Velmex cleats are relocated 120 mm toward the motor end (they are clamps, free along the body)
+because the low SMC body swept through one of them at the far tray columns. Clearance checks are now
+per arm member and per swept part (`gap_parts`), which removed several false overlaps from the union boxes.
+Renders: `out/render_gripper_vendor_h_{iso,side,front}.png`, `out/render_station_vendor_h_{iso,side}.png`.
+
 ## Compatibility results (from `station_checks.txt`)
 
 - **Microscope:** finger bars 12.0 mm below the objective front lens (WD 20); near head
