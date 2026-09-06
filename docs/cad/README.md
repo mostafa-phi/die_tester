@@ -130,6 +130,46 @@ Renders of the vendor-model assembly: `out/render_station_vendor_{iso,plan,front
 | **Gripper module** | actuator body X −40…−20, Y −2…8; bars 5 mm above the die | Only the two 3 mm bars and the tip blocks enter the objective footprint. |
 | **Y stage** (105 mm travel) + **wafer tray** | tray of **8 columns × 14 rows = 112 pockets** (one 100 mm wafer), 128 × 106 mm, on the Y-stage deck; columns at die X **−150 … −262** (16 mm pitch), rows at 7.5 mm pitch; X selects the column, Y the row | Dies return to their own pocket after test (results live in the map); 11 mm from the X axis band; the gripper never crosses the fiber line. |
 
+## Nest (chip stage): self-registering, temperature-controlled  (`nest_module.py`)
+
+![nest](out/render_nest_iso.png)
+
+**Access for the fibers.** The fiber tips protrude ~5 mm from their holders, so the holder
+bodies come to Y −5 and Y +11 (facets at Y 0 / 6), 25 mm wide, from 8 mm below to 4 mm above
+the fiber axis (envelope; measure the real holder). Nothing of the nest may be in that space:
+the riser is a **10 mm wide neck** (Y −2…8) from the cage plate down to Z −12, below the
+holders' underside, and only then widens to 26 × 26 mm for the TEC and the KB1X1 base. Checked
+clearances: cage and neck 3.0 mm from the holder faces, chuck block 5.5 mm, wide body 4 mm
+under the holders; the gripper arms 3.2 mm from the holders at the nest.
+
+**Registration.**
+
+| Axis | Mechanism |
+|---|---|
+| Z, pitch, roll | lapped copper chuck pad (flat ≤ 3 µm) under 75 % of the backside |
+| X, yaw | two Semitron ESd 480 **stop pads** on the +X end face (Y 0.6–1.2 and 4.8–5.4, 0.6 mm in from the facets, contact band Z 0.05–0.40): yaw from a 4.2 mm base ≈ 0.03° |
+| Y | free (the fiber stages approach along Y and measure the gap); **corner guards** 0.6 mm outside each facet plane, only at X ≤ 0.5 and X ≥ 9.5 where no fiber goes, plus an X guard 0.4 mm behind the −X end face: the die cannot leave the pad, and nothing touches it but the two pads and the chuck |
+
+**Push-to-stop** (replaces the X-Y-θ correction stage): the gripper sets the die down 0.2 mm
+short of the pads, opens, and indexes +1.73 mm in X. Its open near nose meets the −X end face,
+slides the die onto the pads and overtravels 0.10 mm, so the flexure blade limits the push to
+0.25 N. Vacuum on, jaws retract. The camera then reads Y and confirms X against the pads (a
+die that stuck on the chuck would stop short and is caught there).
+
+**Thermal.** The chuck is a C101 copper block (Ni-plated): a 9 × 5 mm pad island (0.5 mm
+inboard of every die edge) on a 13 × 4.8 mm block whose neck passes through the cage plate
+and the riser (0.3 mm air gap all round) to a **15 × 15 × 2.5 mm TEC** in the riser's wide
+section at Z −12; the aluminium riser is the hot-side heat sink (add fins or a water block on
+the wide section if more than ~2 W is pumped). Thermistor bore Ø1.0 × 5 deep from the +X
+face at Z −6. **Vacuum**: 6 × Ø0.5 holes in the pad into a 7 × 4 × 1 mm plenum, bore to a
+Ø1.5 stub tube leaving the −X face at Z −6 through a clearance hole in the riser neck, so no
+seal is needed between copper and riser; the stub takes a silicone hose to the M5 fitting.
+
+Parts: `nest_chuck_copper` (copper, lap the pad after plating), `nest_cage_semitron`
+(one piece, 2 × M2 + 2 dowels to the riser), `nest_riser_6061` (T-shaped, TEC pocket, wire
+channel to −X). `out/nest_checks.txt` lists all clearances (gripper closed / open / push,
+holders, fibers, die). Renders: `out/render_nest_{iso,top,front,setdown_iso,chuck_iso}.png`.
+
 ## Movement pattern (one exchange)
 
 Coordinates are X-carriage centre / Z-carriage height of the arm end plate / Y-stage

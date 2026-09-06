@@ -1,9 +1,11 @@
-Nest registration: rails -> Z/pitch/roll; +X pads (Y 0.6-1.2, 4.8-5.4, 4.2 mm base) -> X and yaw;
-Y free within +/-0.6 mm (corner guards). Push-to-stop: set down 0.2 mm short, jaws open,
-gripper +1.7 mm -> near nose seats the die with 0.25 N (blade overtravel 0.1 mm).
-Contact band on the end faces Z 0.05..0.4 (top 0.10 below the die top), pads 0.6 mm from the facets.
+Nest: lapped copper chuck pad -> Z/pitch/roll; +X Semitron stop pads (Y 0.6-1.2, 4.8-5.4; 4.2 mm base) -> X and yaw;
+Y free within +/-0.6 mm (corner guards). Fiber protrusion 5.0 mm: holder bodies at Y <= -5.0 and >= 11.0.
+Chuck pad 9 x 5 mm = 75 % of the backside on metal, 0.5 mm inboard of every edge; 6 x dia 0.5 vacuum holes; copper neck to a 15 x 15 TEC at Z -12.0.
+Push-to-stop: set down 0.2 mm short, jaws open, gripper +1.73 mm -> near nose seats the die with 0.25 N (blade overtravel 0.1 mm).
 
-cage blocks vs the die (must never be under it; +X pads touch the seated die's end face):
+chuck pad inside the die footprint (positive = pad edge inboard of the die edge):
+  pad X 0.5..9.5 in die 0..10 (margins 0.5 / 0.5); pad Y 0.5..5.5 in die 0..6 (margins 0.5 / 0.5)
+cage blocks vs the die (only the +X stop pads touch the seated die):
   X guard -X-Y                       vs die seated                :    0.40  OK 
   X guard -X-Y                       vs die set down (-0.2 X)     :    0.20  OK 
   X guard -X-Y                       vs die Y-offset -0.4         :    0.20  OK 
@@ -69,7 +71,7 @@ cage blocks vs the gripper, jaws CLOSED on the seated die:
   Y guard +X+Y                       vs blade (closed)            :   11.17  OK 
   Y guard +X+Y                       vs near_arm (closed)         :   10.23  OK 
   Y guard +X+Y                       vs far_arm (closed)          :    5.10  OK 
-cage blocks vs the gripper, jaws OPEN (+/-1.5) at the set-down position:
+cage blocks vs the gripper, jaws OPEN at the set-down position:
   X guard -X-Y                       vs far_tip (open)            :   11.63  OK 
   X guard -X-Y                       vs near_tip (open)           :    0.63  OK 
   X guard -X-Y                       vs blade (open)              :    2.37  OK 
@@ -119,7 +121,7 @@ cage blocks vs the gripper during the push (jaws open, +X indexed):
   Y guard +X+Y                       vs far_tip (push)            :    2.57  OK 
   Y guard +X+Y                       vs near_tip (push)           :    9.20  OK 
   Y guard +X+Y                       vs blade (push)              :   10.94  OK 
-cage blocks, cage plate and insert vs fiber / holder envelopes:
+nest vs fiber / holder envelopes (holder front 5 mm from the facet, body 25 wide, Z -8..+4):
   X guard -X-Y                       vs fiber_in                  :    1.40  OK 
   Y guard -X-Y                       vs fiber_in                  :    0.50  OK 
   X guard -X+Y                       vs fiber_in                  :    4.80  OK 
@@ -129,7 +131,9 @@ cage blocks, cage plate and insert vs fiber / holder envelopes:
   stop pad +X+Y                      vs fiber_in                  :    4.80  OK 
   Y guard +X+Y                       vs fiber_in                  :    6.60  OK 
   cage plate                         vs fiber_in                  :    1.89  OK 
-  rail insert                        vs fiber_in                  :    0.60  OK 
+  chuck block                        vs fiber_in                  :    0.50  OK 
+  riser neck                         vs fiber_in                  :    4.89  OK 
+  riser wide body                    vs fiber_in                  :   12.39  OK 
   X guard -X-Y                       vs fiber_out                 :    4.80  OK 
   Y guard -X-Y                       vs fiber_out                 :    6.60  OK 
   X guard -X+Y                       vs fiber_out                 :    1.40  OK 
@@ -139,25 +143,42 @@ cage blocks, cage plate and insert vs fiber / holder envelopes:
   stop pad +X+Y                      vs fiber_out                 :    1.00  OK 
   Y guard +X+Y                       vs fiber_out                 :    0.50  OK 
   cage plate                         vs fiber_out                 :    1.89  OK 
-  rail insert                        vs fiber_out                 :    0.60  OK 
-  X guard -X-Y                       vs clamp_in                  :   11.00  OK 
-  Y guard -X-Y                       vs clamp_in                  :   11.00  OK 
-  X guard -X+Y                       vs clamp_in                  :   16.80  OK 
-  Y guard -X+Y                       vs clamp_in                  :   18.60  OK 
-  stop pad +X-Y                      vs clamp_in                  :   11.00  OK 
-  Y guard +X-Y                       vs clamp_in                  :   11.00  OK 
-  stop pad +X+Y                      vs clamp_in                  :   16.80  OK 
-  Y guard +X+Y                       vs clamp_in                  :   18.60  OK 
-  cage plate                         vs clamp_in                  :   10.00  OK 
-  rail insert                        vs clamp_in                  :   12.60  OK 
-  X guard -X-Y                       vs clamp_out                 :   16.80  OK 
-  Y guard -X-Y                       vs clamp_out                 :   18.60  OK 
-  X guard -X+Y                       vs clamp_out                 :   11.00  OK 
-  Y guard -X+Y                       vs clamp_out                 :   11.00  OK 
-  stop pad +X-Y                      vs clamp_out                 :   16.80  OK 
-  Y guard +X-Y                       vs clamp_out                 :   18.60  OK 
-  stop pad +X+Y                      vs clamp_out                 :   11.00  OK 
-  Y guard +X+Y                       vs clamp_out                 :   11.00  OK 
-  cage plate                         vs clamp_out                 :   10.00  OK 
-  rail insert                        vs clamp_out                 :   12.60  OK 
+  chuck block                        vs fiber_out                 :    0.50  OK 
+  riser neck                         vs fiber_out                 :    4.89  OK 
+  riser wide body                    vs fiber_out                 :   12.39  OK 
+  X guard -X-Y                       vs holder_in                 :    4.00  OK 
+  Y guard -X-Y                       vs holder_in                 :    4.00  OK 
+  X guard -X+Y                       vs holder_in                 :    9.80  OK 
+  Y guard -X+Y                       vs holder_in                 :   11.60  OK 
+  stop pad +X-Y                      vs holder_in                 :    4.00  OK 
+  Y guard +X-Y                       vs holder_in                 :    4.00  OK 
+  stop pad +X+Y                      vs holder_in                 :    9.80  OK 
+  Y guard +X+Y                       vs holder_in                 :   11.60  OK 
+  cage plate                         vs holder_in                 :    3.00  OK 
+  chuck block                        vs holder_in                 :    5.50  OK 
+  riser neck                         vs holder_in                 :    3.00  OK 
+  riser wide body                    vs holder_in                 :    4.00  OK 
+  X guard -X-Y                       vs holder_out                :    9.80  OK 
+  Y guard -X-Y                       vs holder_out                :   11.60  OK 
+  X guard -X+Y                       vs holder_out                :    4.00  OK 
+  Y guard -X+Y                       vs holder_out                :    4.00  OK 
+  stop pad +X-Y                      vs holder_out                :    9.80  OK 
+  Y guard +X-Y                       vs holder_out                :   11.60  OK 
+  stop pad +X+Y                      vs holder_out                :    4.00  OK 
+  Y guard +X+Y                       vs holder_out                :    4.00  OK 
+  cage plate                         vs holder_out                :    3.00  OK 
+  chuck block                        vs holder_out                :    5.50  OK 
+  riser neck                         vs holder_out                :    3.00  OK 
+  riser wide body                    vs holder_out                :    4.00  OK 
+holder bodies vs the gripper at the nest (jaws closed):
+  far_tip                            vs holder_in                 :    6.50  OK 
+  near_tip                           vs holder_in                 :    6.50  OK 
+  blade                              vs holder_in                 :    6.50  OK 
+  near_arm                           vs holder_in                 :    3.20  OK 
+  far_arm                            vs holder_in                 :    6.00  OK 
+  far_tip                            vs holder_out                :    6.50  OK 
+  near_tip                           vs holder_out                :    6.50  OK 
+  blade                              vs holder_out                :    6.50  OK 
+  near_arm                           vs holder_out                :    6.00  OK 
+  far_arm                            vs holder_out                :    3.20  OK 
 near nose face at the end of the push: X 0.10 = blade overtravel (die -X end face at X 0.00 on the pads)

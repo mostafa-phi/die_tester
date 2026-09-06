@@ -41,7 +41,8 @@ S = dict(
     # fiber side
     holder_axis_above_deck=20.0,   # fiber axis height above the NanoMax top platform (holder-dependent; measure)
     nanomax_w=112.0, nanomax_h=62.5, nanomax_platform_h=4.0, nanomax_gap_y=45.0,   # inner face to facet
-    fiber_protrusion=12.0,         # fiber tip to V-groove clamp
+    fiber_protrusion=5.0,          # fiber tip beyond the holder front face (user: ~5 mm)
+    holder_w=25.0, holder_zb=-8.0, holder_zt=4.0, holder_len=20.0,   # holder body envelope (measure: width, height below/above the fiber axis)
     # microscope (behind the nest, +X, as in the bench photo)
     obj_wd=20.0, obj_dia=34.0, obj_len=40.0, tube_dia=40.0, tube_len=60.0,
     column_x=80.0, column_dia=40.0, column_top=260.0,
@@ -90,8 +91,12 @@ def nest():
         kb_top = table_z + 20
     import nest_module as NM                                                   # self-registering nest: rails + stop pads + cage
     riser = NM.riser(table_z, kb_top)
-    ins = NM.rail_insert()
+    ins = NM.chuck()
+    S["_nest_tec"] = NM.tec()
     S["_nest_cage"] = NM.cage(); S["_nest_cage_parts"] = NM.cage_parts()
+    nx0, nx1, ny0, ny1 = NM.N["neck"]; wx0, wx1, wy0, wy1 = NM.N["wide"]
+    S["_nest_riser_parts"] = [box(nx0, nx1, ny0, ny1, NM.N["neck_bottom"], NM.N["cage"][4]),      # neck (cage width in Y)
+                              box(wx0, wx1, wy0, wy1, kb_top, NM.N["wide_top"]), kb]              # wide body below the holders, base
     return kb.union(riser), ins
 
 
@@ -125,16 +130,19 @@ def nanomax(side):
     # fiber holder: post on the platform near the inner edge, arm to the clamp, clamp, fiber
     if side < 0:
         post = box(-4, 14, y1 - 14, y1 - 6, ptop, die_top + 4)
-        arm = box(1, 9, y1 - 8, -S["fiber_protrusion"], die_top - 1.5, die_top + 1.5)
-        clamp = box(1, 9, -S["fiber_protrusion"] - 8, -S["fiber_protrusion"], die_top - 2, die_top + 2)
+        arm = box(1, 9, y1 - 8, -S["fiber_protrusion"] - S["holder_len"] + 1, die_top - 1.5, die_top + 1.5)
+        clamp = box(5 - S["holder_w"] / 2, 5 + S["holder_w"] / 2, -S["fiber_protrusion"] - S["holder_len"], -S["fiber_protrusion"],
+                    S["holder_zb"], S["holder_zt"])
         fib = cq.Workplane("XZ").center(5, die_top).circle(0.0625).extrude(S["fiber_protrusion"] - 0.02).translate((0, -0.02, 0))
     else:
         yf = G.P["die_wid"]
         post = box(-4, 14, y0 + 6, y0 + 14, ptop, die_top + 4)
-        arm = box(1, 9, yf + S["fiber_protrusion"], y0 + 8, die_top - 1.5, die_top + 1.5)
-        clamp = box(1, 9, yf + S["fiber_protrusion"], yf + S["fiber_protrusion"] + 8, die_top - 2, die_top + 2)
+        arm = box(1, 9, yf + S["fiber_protrusion"] + S["holder_len"] - 1, y0 + 8, die_top - 1.5, die_top + 1.5)
+        clamp = box(5 - S["holder_w"] / 2, 5 + S["holder_w"] / 2, yf + S["fiber_protrusion"], yf + S["fiber_protrusion"] + S["holder_len"],
+                    S["holder_zb"], S["holder_zt"])
         fib = cq.Workplane("XZ").center(5, die_top).circle(0.0625).extrude(-(S["fiber_protrusion"] - 0.02)).translate((0, yf + 0.02, 0))
     tag = "in" if side < 0 else "out"
+    S[f"_holder_parts_{tag}"] = [post, arm, clamp]
     stage_shape = stage if stage is not None else body.union(plat)
     return [(f"nanomax300_{tag}", stage_shape), (f"fiber_holder_{tag}", post.union(arm).union(clamp)), (f"fiber_{tag}", fib)]
 
@@ -377,6 +385,13 @@ def gap_parts(parts, b):
     return min(gap(bb(pp), b) for pp in parts)
 
 
+def gap_any(a, b):
+    """gap() where either side may be a list of member shapes (min over all member pairs)."""
+    al = a if isinstance(a, list) else [a]
+    bl = b if isinstance(b, list) else [b]
+    return min(gap(bb(x), bb(y)) for x in al for y in bl)
+
+
 def gap(a, b):
     """Separation between two AABBs: >0 = clear by that much (max over axes), <=0 = overlap in all axes."""
     dx = max(a[0] - b[1], b[0] - a[1])
@@ -398,7 +413,7 @@ def main():
     # ---- static ----
     static = {}
     static["optical_table"] = table()
-    kb, ins = nest(); static["nest_riser_kinematic"] = kb; static["nest_rail_insert_17-4"] = ins
+    kb, ins = nest(); static["nest_riser_kinematic"] = kb; static["nest_chuck_copper"] = ins; static["nest_tec"] = S["_nest_tec"]
     static["nest_cage_semitron"] = S["_nest_cage"]
     for name, s in nanomax(-1) + nanomax(+1): static[name] = s
     for name, s in microscope(): static[name] = s
@@ -441,6 +456,13 @@ def main():
         ("gripper far_arm @nest", grip_nest["far_arm"], "microscope_column", static["microscope_column"]),
         ("gripper near_arm @nest", grip_nest["near_arm"], "fiber_holder_in", static["fiber_holder_in"]),
         ("nest_cage (per member)", S["_nest_cage_parts"], "fiber_holder_in", static["fiber_holder_in"]),
+        ("nest_riser (neck/wide/base)", S["_nest_riser_parts"], "fiber_holder_in (per member)", S["_holder_parts_in"]),
+        ("nest_riser (neck/wide/base)", S["_nest_riser_parts"], "fiber_holder_out (per member)", S["_holder_parts_out"]),
+        ("nest_cage (per member)", S["_nest_cage_parts"], "fiber_holder_in (per member)", S["_holder_parts_in"]),
+        ("nest_chuck", static["nest_chuck_copper"], "fiber_holder_in (per member)", S["_holder_parts_in"]),
+        ("nest_chuck", static["nest_chuck_copper"], "fiber_holder_in", static["fiber_holder_in"]),
+        ("gripper near_arm @nest", grip_nest["near_arm"], "fiber_holder_out", static["fiber_holder_out"]),
+        ("gripper far_arm @nest", grip_nest["far_arm"], "fiber_holder_in", static["fiber_holder_in"]),
         ("nest_cage (per member)", S["_nest_cage_parts"], "fiber_holder_out", static["fiber_holder_out"]),
         ("nest_cage (per member)", S["_nest_cage_parts"], "fiber_in", static["fiber_in"]),
         ("nest_cage (per member)", S["_nest_cage_parts"], "fiber_out", static["fiber_out"]),
@@ -491,7 +513,7 @@ def main():
     for an, a, bn, b in pairs:
         if bn in ("objective", "microscope_tube", "microscope_column"):
             continue
-        gp = gap_parts(a, bb(b)) if isinstance(a, list) else gap(bb(a), bb(b))
+        gp = gap_any(a, b)
         flag = "  OK " if gp > 2 else ("  TIGHT" if gp > 0 else "  ** OVERLAP **")
         rep.append(f"  {an:26s} vs {bn:20s}: {gp:7.1f}{flag}")
     rep.append("")
@@ -543,7 +565,7 @@ def main():
     # ---- assembly export (nest configuration + ghost of stick configuration) ----
     assy = cq.Assembly(name="test_station")
     col = {
-        "optical_table": (0.86, 0.88, 0.90), "nest_riser_kinematic": (0.60, 0.63, 0.68), "nest_rail_insert_17-4": (0.56, 0.56, 0.56), "nest_cage_semitron": (0.16, 0.16, 0.18),
+        "optical_table": (0.86, 0.88, 0.90), "nest_riser_kinematic": (0.60, 0.63, 0.68), "nest_chuck_copper": (0.72, 0.45, 0.20), "nest_tec": (0.85, 0.85, 0.88), "nest_cage_semitron": (0.16, 0.16, 0.18),
         "nanomax300_in": (0.56, 0.69, 0.82), "nanomax300_out": (0.56, 0.69, 0.82), "fiber_holder_in": (0.36, 0.40, 0.44),
         "fiber_holder_out": (0.36, 0.40, 0.44), "fiber_in": (0.94, 0.82, 0.50), "fiber_out": (0.94, 0.82, 0.50),
         "objective": (0.20, 0.23, 0.27), "microscope_tube": (0.25, 0.28, 0.32), "microscope_arm": (0.77, 0.79, 0.82), "microscope_column": (0.77, 0.79, 0.82),

@@ -6,13 +6,19 @@ Z carriage: nest arm at Z 70.0 -> tray at Z 58.1 (drop 11.9 mm) + 8 mm approach 
 Y stage: row pitch 7.5 x 14 rows -> travel 97.5 mm (axis 105)
 
 clearances vs boxes (AABB separation, mm; negative = overlap):
-  gripper near_arm @nest     vs fiber_holder_in     :    10.2  OK 
-  nest_cage (per member)     vs fiber_holder_in     :    10.0  OK 
-  nest_cage (per member)     vs fiber_holder_out    :    10.0  OK 
+  gripper near_arm @nest     vs fiber_holder_in     :     3.2  OK 
+  nest_cage (per member)     vs fiber_holder_in     :     3.0  OK 
+  nest_riser (neck/wide/base) vs fiber_holder_in (per member):     3.0  OK 
+  nest_riser (neck/wide/base) vs fiber_holder_out (per member):     3.0  OK 
+  nest_cage (per member)     vs fiber_holder_in (per member):     3.0  OK 
+  nest_chuck                 vs fiber_holder_in (per member):     5.5  OK 
+  nest_chuck                 vs fiber_holder_in     :     5.5  OK 
+  gripper near_arm @nest     vs fiber_holder_out    :     6.0  OK 
+  gripper far_arm @nest      vs fiber_holder_in     :     6.0  OK 
+  nest_cage (per member)     vs fiber_holder_out    :     3.0  OK 
   nest_cage (per member)     vs fiber_in            :     1.9  TIGHT
   nest_cage (per member)     vs fiber_out           :     1.9  TIGHT
-  nest_cage (per member)     vs die_at_nest         :     0.0  ** OVERLAP **
-  gripper far_arm @nest      vs fiber_holder_out    :    10.2  OK 
+  gripper far_arm @nest      vs fiber_holder_out    :     3.2  OK 
   gripper bracket @nest      vs fiber_holder_in     :    26.7  OK 
   arm_L @nest                vs nanomax300_in       :    93.0  OK 
   arm_L @nest                vs fiber_holder_in     :    65.5  OK 
@@ -40,9 +46,9 @@ clearances vs boxes (AABB separation, mm; negative = overlap):
   gripper far_arm @far col   vs wafer_tray          :     4.7  OK 
   gripper near_arm @far col  vs wafer_tray          :     4.7  OK 
   x_carriage @nest           vs nanomax300_in       :    58.5  OK 
-  x_carriage @nest           vs fiber_holder_in     :    77.6  OK 
-  z_axis_body @nest          vs fiber_holder_in     :    86.3  OK 
-  x_axis_body                vs fiber_holder_in     :    26.5  OK 
+  x_carriage @nest           vs fiber_holder_in     :    74.1  OK 
+  z_axis_body @nest          vs fiber_holder_in     :    82.8  OK 
+  x_axis_body                vs fiber_holder_in     :    23.0  OK 
   gripper bracket @nest      vs fiber_holder_out    :    26.7  OK 
   gripper mhz2_body @nest    vs fiber_holder_in     :    20.7  OK 
   gripper mhz2_body @nest    vs fiber_holder_out    :    20.7  OK 
@@ -84,10 +90,10 @@ clearances vs microscope cylinders (radial or vertical, mm):
 
 swept volumes nest <-> tray (after the 8 mm lift; per member) vs static objects:
   gripper band vs nanomax300_in         :    42.7  OK     arm band:   101.0  OK 
-  gripper band vs fiber_holder_in       :    10.2  OK     arm band:    73.5  OK 
+  gripper band vs fiber_holder_in       :     6.5  OK     arm band:    73.5  OK 
   gripper band vs fiber_in              :     7.5  OK     arm band:    77.4  OK 
   gripper band vs nanomax300_out        :    43.2  OK     arm band:   101.0  OK 
-  gripper band vs fiber_holder_out      :    10.2  OK     arm band:    73.5  OK 
+  gripper band vs fiber_holder_out      :     6.5  OK     arm band:    73.5  OK 
   gripper band vs nest_riser_kinematic  :    12.5  OK     arm band:    82.5  OK 
   gripper band vs x_axis_body_velmex    :    42.8  OK     arm band:    28.0  OK 
   gripper band vs x_axis_riser_short    :    46.0  OK     arm band:    78.0  OK 
