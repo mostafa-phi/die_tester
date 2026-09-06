@@ -52,6 +52,15 @@ FIBER = dict(
 # ----------------------------------------------------------------------------
 OBJ_WD, OBJ_DIA, TUBE_DIA = 20.0, 34.0, 40.0
 
+# ----------------------------------------------------------------------------
+# Bench levels: the optical-table plane follows from the fiber stages (NanoMax 300 deck + platform + holder)
+# putting the fiber axis at the die-top height. Everything under the die (nest stack) is built up from TABLE_Z.
+# ----------------------------------------------------------------------------
+NANOMAX = dict(w=112.0, h=62.5, platform_h=4.0, gap_y=45.0)   # footprint, deck height, top platform, inner face to facet
+HOLDER_AXIS_ABOVE_DECK = 20.0                                  # fiber axis above the NanoMax platform (holder-dependent; measure)
+TABLE_Z = DIE_TOP - HOLDER_AXIS_ABOVE_DECK - NANOMAX["h"] - NANOMAX["platform_h"]   # -86.0
+KB1X1_H = 12.7                                                 # Thorlabs KB1X1 kinematic base, assembled height (vendor STEP 2374-E0W)
+
 
 # ----------------------------------------------------------------------------
 # CadQuery helpers

@@ -7,7 +7,7 @@ Frame, die, contact rules and shared helpers are in `common/`; the rules for wor
 | Folder | What | Depends on | Outputs |
 |---|---|---|---|
 | [`gripper/`](gripper/README.md) | end-face die gripper module: SMC MHZ2-6D, two arms, tip blocks, flexure blade, bracket; vertical (default) and horizontal (`_h`) layouts | `common` | per-part STEP/STL, assemblies, `checks[_h].txt`, renders |
-| [`nest/`](nest/README.md) | self-registering, temperature-controlled chip stage: copper vacuum chuck, Semitron cage with stop pads and guards, T-riser with TEC | `common`, `gripper` | part STEP/STL, assemblies (seated / set-down), `checks.txt`, renders |
+| [`nest/`](nest/README.md) | self-registering, temperature-controlled chip stage: copper vacuum chuck, Semitron cage with stop pads and guards, T-riser with TEC, on the die stage (Suruga KXC04015-C X stage over a Suruga RPG38 rotary on a KB1X1) | `common`, `gripper` | part STEP/STL, assemblies (seated / set-down), `checks.txt` incl. the moving-nest sweep, renders |
 | [`tray/`](tray/README.md) | 8 × 14 wafer tray with nose-slot pockets | `common`, `gripper` | print STL, pocket check STEP, `checks.txt`, renders (full-tray STEP ignored) |
 | [`station/`](station/README.md) | full station: nest, gripper, Velmex X/Z/Y axes, NanoMax fiber stages, microscope, tray; clearance checks; layout and movement pattern | all of the above | `checks[_vendor][_h].txt`, renders (assemblies ignored: 8–106 MB) |
 | `vendor/` | manufacturer STEP (git-ignored) and the fetch script; see `vendor/README.md` | | |

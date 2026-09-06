@@ -2,8 +2,8 @@
 
 `model.py` (CadQuery) → `STEP/`, `STL/`, `renders/`, `checks.txt`. Rebuild with `python cad/build.py`.
 Imports `cad/gripper` (the jaws for the clearance checks) and `cad/common` (die, contact rules,
-fiber-holder envelope `FIBER`). Used by `cad/station` (`riser()`, `chuck()`, `cage()`, `cage_parts()`,
-`tec()`, `N`).
+fiber-holder envelope `FIBER`, bench levels `TABLE_Z` / `KB1X1_H`). Used by `cad/station` (`levels()`,
+`stack()`, `riser()`, `chuck()`, `cage()`, `cage_parts()`, `moving_members()`, `tec()`, `N`).
 
 ![nest](renders/nest_iso.png)
 ![set-down, jaws open](renders/nest_setdown_iso.png)
@@ -19,7 +19,7 @@ ever touch the die.
 | Axis | Mechanism |
 |---|---|
 | Z, pitch, roll | lapped copper chuck pad (flat ≤ 3 µm), 9 × 5 mm = 75 % of the backside, 0.5 mm inboard of every edge |
-| X, yaw | two Semitron ESd 480 **stop pads** on the +X end face (Y 0.6–1.2 and 4.8–5.4, 0.6 mm in from the facets, contact band Z 0.05–0.40): yaw from a 4.2 mm base ≈ 0.03° |
+| X, yaw | two Semitron ESd 480 **stop pads** on the +X end face (Y 0.6–1.2 and 4.8–5.4, 0.6 mm in from the facets, contact band Z 0.05–0.30): yaw from a 4.2 mm base ≈ 0.03° |
 | Y | free; **corner guards** 0.6 mm outside each facet plane only at X ≤ 0.5 and X ≥ 9.5 where no fiber goes, plus an X guard 0.4 mm behind the −X end face |
 
 Milling cannot make a sharp inside corner, and the die's corners are not trusted either: the stop pads
@@ -30,6 +30,42 @@ space. The die registers on two pads and a plane, never in a corner.
 indexes +1.735 mm in X; the open near nose meets the −X end face, slides the die 0.2 mm onto the pads and
 overtravels 0.10 mm, so the flexure blade limits the push to 0.25 N. Vacuum on, jaws retract. The camera
 then reads Y and confirms X (a die that stuck to the chuck stops short and is caught there).
+
+## Die stage: the nest moves
+
+The devices span about 8 mm along the die, the NanoMax fiber stages travel only 4 mm, so the die is
+stepped from device to device by moving the nest, as the current tester does with its centre stage.
+One X move keeps both fibers registered to each other. The gripper meets the nest only at the stage
+**home** position; the exchange sequence homes the stage first and the software fence enforces it.
+
+| Level (bottom up) | Part | Z (table = −86.0) |
+|---|---|---|
+| kinematic base | Thorlabs KB1X1 (2374-E0W), 25.4 sq × 12.7 | −86.0 … −73.3 |
+| adapter | `STEP/nest_adapter_kb_rpg.step`, 6061, 3 mm: KB1X1 platform pattern → RPG38 base holes | −73.3 … −70.3 |
+| rotary | **Suruga RPG38** manual rotary stage, Ø38 × 16, ±5° fine by micrometer head (~0.024° per graduation, 360° coarse with clamp); micrometer points −X | −70.3 … −54.3 |
+| adapter | `STEP/nest_adapter_rpg_kxc.step`, 6061, 3 mm: RPG38 table (4 × M2.6) → KXC04015 base (4 × M3 on 32 mm) | −54.3 … −51.3 |
+| X stage | **Suruga KXC04015-C** (crossed-roller, 40 × 40 table, 30 tall, 15 mm travel, ball screw Ø6 × 1 mm lead, 2 µm full / 1 µm half step, ±0.2 µm repeatability, 0.31 kg, 5-phase stepper on the DS102): motor section 59 mm toward −X, its 28 mm motor box 4 mm above the table top | −51.3 … −21.3 |
+| riser | `STEP/nest_riser_6061.step`: 38 × 38 wide body (M3 counterbored on the stage's 32 mm grid, TEC pocket, wire channel) to Z −12, then the 10 mm neck to the cage plate | −21.3 … −4.5 |
+
+**Why the rotary sits under the X stage.** The yaw the fibers see is the sum of the stop-pad
+registration (per die, ~0.03°) and two static errors: the nest datum vs the fiber-stage axes and the
+X-stage travel vs those axes. With the RPG38 under the whole stack one adjustment aligns both; it is
+set once with a gauge die (camera or two-device fit), locked, and only rechecked when the stack has
+been off its base. Per-device realignment tolerates 0.1° of yaw; open-loop stepping across 8 mm needs
+0.02°, which is what the micrometer resolution gives. Dicing squareness between the end face and the
+facet is the floor no stage can remove.
+
+**Travel used.** ±4 mm of the ±7.5 available brings any waveguide at die X 1 … 9 under a fiber fixed
+at station X 5. `checks.txt` sweeps the stage from −7.5 to +7.5 and reports the worst clearance of every
+moving member (neck, wide body, cage plate, corner blocks, chuck, stage table) against the fixed fibers
+and holder bodies: the corner blocks come within 0.4 mm of a fiber at ±4 (their tops are 0.30, 0.09 below
+the fiber envelope), the neck and cage plate keep 3.0 mm to the holders at any offset, the riser keeps
+5.5 mm to the motor box at −7.5. The motor section and the RPG38 micrometer point −X because +X is the
+microscope column and ±Y are the fiber stages (the station checks confirm 68 mm to the column).
+
+**Thermal note.** The riser's wide body is now 9.3 mm thick on the stage table, so the KXC04015 table
+becomes part of the TEC's hot-side path. Fine below ~2 W; above that put a copper spreader with a
+thermal break under the riser or take the heat off with a water block rather than into the stage.
 
 ## Fiber access
 
@@ -56,17 +92,19 @@ riser); silicone hose to the M5 fitting.
 |---|---|---|---|
 | `STEP/nest_chuck_copper.step` (+STL) | C101 copper, Ni plate | CNC + lap | pad island, vacuum holes, plenum, neck, stub tube, thermistor bore |
 | `STEP/nest_cage_semitron.step` (+STL) | Semitron ESd 480 | CNC | one piece: plate with the copper window, 4 corner blocks (stop pads, X guard, Y guards); 2 × M2 + 2 × Ø1.5 dowels to the riser |
-| `STEP/nest_riser_6061.step` | 6061 | CNC | T-riser: neck, wide body, TEC pocket, wire channel, vacuum-stub and thermistor clearances; on the KB1X1 |
-| — | TEC 15 × 15 × 2.5, thermistor, KB1X1 (Thorlabs 2374-E0W) | buy | |
+| `STEP/nest_riser_6061.step` | 6061 | CNC | T-riser: neck, 38 × 38 wide body with the TEC pocket, wire channel, vacuum-stub and thermistor clearances, 4 × M3 counterbored to the KXC04015 table |
+| `STEP/nest_adapter_kb_rpg.step`, `STEP/nest_adapter_rpg_kxc.step` | 6061 | CNC / waterjet | 3 mm adapter plates between the KB1X1, the RPG38 and the KXC04015 (bolt patterns to confirm on the parts) |
+| — | Suruga KXC04015-C X stage, Suruga RPG38 rotary, TEC 15 × 15 × 2.5, thermistor, KB1X1 (Thorlabs 2374-E0W) | buy | the X stage runs on the existing DS102 (controller #3's X axis) |
 
-Assemblies: `STEP/nest_module_assembly.step` (die seated, jaws closed, fiber/holder envelopes) and
-`STEP/nest_module_setdown.step` (jaws open at the set-down position). `checks.txt` lists every
+Assemblies: `STEP/nest_module_assembly.step` (die seated, jaws closed, fiber/holder envelopes, full
+stack) and `STEP/nest_module_setdown.step` (jaws open at the set-down position). `checks.txt` lists every
 clearance: corner blocks vs die (seated / set down / Y-offset), vs the jaws closed / open / during the
-push, nest vs fiber and holder envelopes, holders vs the gripper. Expected non-OK lines: the two stop
-pads TOUCH the seated die (by design) and the ledge-height items marked TIGHT at exactly 0.
+push, nest vs fiber and holder envelopes, holders vs the gripper, and the moving-nest sweep. Expected
+non-OK lines: the two stop pads TOUCH the seated die (by design).
 
 ## Open items (measure on the bench)
 
 - Real fiber-holder envelope (width, height below/above the fiber axis, front-face-to-tip): `common.FIBER`.
+- KXC04015-C and RPG38 vendor STEP (Suruga CAD download needs an account): replace the envelopes in `stack()` and confirm the adapter bolt patterns.
 - TEC part number, heat load and whether the riser needs a water block.
 - Die backside finish (vacuum seal on a lapped pad needs it flat and clean).

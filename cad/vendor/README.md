@@ -11,6 +11,8 @@ committed**; `fetch_vendor_step.sh` downloads what can be fetched without a logi
 | `velmex_MN10-0150-21.step` | Velmex BiSlide MN10-0150-xxx-21 with 2 cleats and PK266 motor (X axis) | velmex.com Technical library → BiSlide → "MN10-0150-xxx-21 2Cleats PK266.stp" (captcha; download by hand, rename) |
 | `velmex_MN10-0050-21.step` | Velmex BiSlide MN10-0050-xxx-21 with PK266 (Z and Y axes) | same, "MN10-0050-xxx-21 PK266.stp" |
 | `smc_MHZ2-6D.step` | SMC MHZ2-6D parallel gripper (drawn open) | smcworld.com CAD library (SMC account), export STEP AP214 from the SolidWorks file |
+| `suruga_KXC04015-C.step` (wanted) | Suruga KXC04015-C X stage under the nest | surugaseiki.com CAD download (account); until then `cad/nest` uses the catalog envelope |
+| `suruga_RPG38.step` (wanted) | Suruga RPG38 manual rotary under the X stage | MISUMI / Suruga CAD download; envelope until then |
 
 Frames and the split into fixed / moving solids are handled in `cad/station/model.py` (`velmex()`,
 `nanomax()`, `nest()`) and `cad/gripper/model.py` (`actuator_vendor()`); if a vendor updates a file and

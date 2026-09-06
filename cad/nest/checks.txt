@@ -2,6 +2,8 @@ Nest: lapped copper chuck pad -> Z/pitch/roll; +X Semitron stop pads (Y 0.6-1.2,
 Y free within +/-0.6 mm (corner guards). Fiber protrusion 5.0 mm: holder bodies at Y <= -5.0 and >= 11.0.
 Chuck pad 9 x 5 mm = 75 % of the backside on metal, 0.5 mm inboard of every edge; 6 x dia 0.5 vacuum holes; copper neck to a 15 x 15 TEC at Z -12.0.
 Push-to-stop: set down 0.2 mm short, jaws open, gripper +1.73 mm -> near nose seats the die with 0.25 N (blade overtravel 0.1 mm).
+Die stage stack (table Z -86.0): KB1X1 top -73.3, adapter, RPG38 -70.3..-54.3, adapter, KXC04015-C -51.3..-21.3 (table top), riser wide body -21.3..-12.0 (9.3 mm: TEC pocket 2.5 + floor), neck to the cage plate at -4.5.
+Stage travel 15 mm (+/-7.5); device stepping uses +/-4. Motor section and RPG38 micrometer point -X (X < -15). The gripper meets the nest at stage HOME only.
 
 chuck pad inside the die footprint (positive = pad edge inboard of the die edge):
   pad X 0.5..9.5 in die 0..10 (margins 0.5 / 0.5); pad Y 0.5..5.5 in die 0..6 (margins 0.5 / 0.5)
@@ -34,43 +36,43 @@ cage blocks vs the gripper, jaws CLOSED on the seated die:
   X guard -X-Y                       vs far_tip (closed)          :   10.33  OK 
   X guard -X-Y                       vs near_tip (closed)         :    0.30  OK 
   X guard -X-Y                       vs blade (closed)            :    0.67  OK 
-  X guard -X-Y                       vs near_arm (closed)         :    5.10  OK 
-  X guard -X-Y                       vs far_arm (closed)          :    5.10  OK 
+  X guard -X-Y                       vs near_arm (closed)         :    5.20  OK 
+  X guard -X-Y                       vs far_arm (closed)          :    5.20  OK 
   Y guard -X-Y                       vs far_tip (closed)          :    9.43  OK 
   Y guard -X-Y                       vs near_tip (closed)         :    2.10  OK 
   Y guard -X-Y                       vs blade (closed)            :    2.10  OK 
-  Y guard -X-Y                       vs near_arm (closed)         :    5.10  OK 
-  Y guard -X-Y                       vs far_arm (closed)          :    5.10  OK 
+  Y guard -X-Y                       vs near_arm (closed)         :    5.20  OK 
+  Y guard -X-Y                       vs far_arm (closed)          :    5.20  OK 
   X guard -X+Y                       vs far_tip (closed)          :   10.33  OK 
   X guard -X+Y                       vs near_tip (closed)         :    0.30  OK 
   X guard -X+Y                       vs blade (closed)            :    0.67  OK 
-  X guard -X+Y                       vs near_arm (closed)         :    5.10  OK 
-  X guard -X+Y                       vs far_arm (closed)          :    5.10  OK 
+  X guard -X+Y                       vs near_arm (closed)         :    5.20  OK 
+  X guard -X+Y                       vs far_arm (closed)          :    5.20  OK 
   Y guard -X+Y                       vs far_tip (closed)          :    9.43  OK 
   Y guard -X+Y                       vs near_tip (closed)         :    2.10  OK 
   Y guard -X+Y                       vs blade (closed)            :    2.10  OK 
-  Y guard -X+Y                       vs near_arm (closed)         :    5.10  OK 
-  Y guard -X+Y                       vs far_arm (closed)          :    5.10  OK 
+  Y guard -X+Y                       vs near_arm (closed)         :    5.20  OK 
+  Y guard -X+Y                       vs far_arm (closed)          :    5.20  OK 
   stop pad +X-Y                      vs far_tip (closed)          :    0.30  OK 
   stop pad +X-Y                      vs near_tip (closed)         :    9.93  OK 
   stop pad +X-Y                      vs blade (closed)            :   11.67  OK 
   stop pad +X-Y                      vs near_arm (closed)         :   10.73  OK 
-  stop pad +X-Y                      vs far_arm (closed)          :    5.10  OK 
+  stop pad +X-Y                      vs far_arm (closed)          :    5.20  OK 
   Y guard +X-Y                       vs far_tip (closed)          :    2.10  OK 
   Y guard +X-Y                       vs near_tip (closed)         :    9.43  OK 
   Y guard +X-Y                       vs blade (closed)            :   11.17  OK 
   Y guard +X-Y                       vs near_arm (closed)         :   10.23  OK 
-  Y guard +X-Y                       vs far_arm (closed)          :    5.10  OK 
+  Y guard +X-Y                       vs far_arm (closed)          :    5.20  OK 
   stop pad +X+Y                      vs far_tip (closed)          :    0.30  OK 
   stop pad +X+Y                      vs near_tip (closed)         :    9.93  OK 
   stop pad +X+Y                      vs blade (closed)            :   11.67  OK 
   stop pad +X+Y                      vs near_arm (closed)         :   10.73  OK 
-  stop pad +X+Y                      vs far_arm (closed)          :    5.10  OK 
+  stop pad +X+Y                      vs far_arm (closed)          :    5.20  OK 
   Y guard +X+Y                       vs far_tip (closed)          :    2.10  OK 
   Y guard +X+Y                       vs near_tip (closed)         :    9.43  OK 
   Y guard +X+Y                       vs blade (closed)            :   11.17  OK 
   Y guard +X+Y                       vs near_arm (closed)         :   10.23  OK 
-  Y guard +X+Y                       vs far_arm (closed)          :    5.10  OK 
+  Y guard +X+Y                       vs far_arm (closed)          :    5.20  OK 
 cage blocks vs the gripper, jaws OPEN at the set-down position:
   X guard -X-Y                       vs far_tip (open)            :   11.63  OK 
   X guard -X-Y                       vs near_tip (open)           :    0.63  OK 
@@ -181,4 +183,52 @@ holder bodies vs the gripper at the nest (jaws closed):
   blade                              vs holder_out                :    6.50  OK 
   near_arm                           vs holder_out                :    6.00  OK 
   far_arm                            vs holder_out                :    3.20  OK 
+the nest moves under FIXED fibers (at station X 5) and holders: worst clearance of every moving member over stage offsets -7.5..+7.5 (device stepping +/-4, travel ends +/-7.5):
+  X guard -X+Y             vs fiber_in (station X 5)    :    4.80 @+1.0  OK 
+  X guard -X+Y             vs fiber_out (station X 5)   :    1.30 @+4.0  OK 
+  X guard -X+Y             vs holder_out                :    4.00 @-7.5  OK 
+  X guard -X-Y             vs fiber_in (station X 5)    :    1.30 @+4.0  OK 
+  X guard -X-Y             vs fiber_out (station X 5)   :    4.80 @+1.0  OK 
+  X guard -X-Y             vs holder_in                 :    4.00 @-7.5  OK 
+  Y guard +X+Y             vs fiber_in (station X 5)    :    6.60 @-7.5  OK 
+  Y guard +X+Y             vs fiber_out (station X 5)   :    0.40 @-4.0  OK 
+  Y guard +X+Y             vs holder_out                :    4.00 @-7.5  OK 
+  Y guard +X-Y             vs fiber_in (station X 5)    :    0.40 @-4.0  OK 
+  Y guard +X-Y             vs fiber_out (station X 5)   :    6.60 @-7.5  OK 
+  Y guard +X-Y             vs holder_in                 :    4.00 @-7.5  OK 
+  Y guard -X+Y             vs fiber_in (station X 5)    :    6.60 @-2.0  OK 
+  Y guard -X+Y             vs fiber_out (station X 5)   :    0.40 @+4.0  OK 
+  Y guard -X+Y             vs holder_out                :    4.00 @-7.5  OK 
+  Y guard -X-Y             vs fiber_in (station X 5)    :    0.40 @+4.0  OK 
+  Y guard -X-Y             vs fiber_out (station X 5)   :    6.60 @-2.0  OK 
+  Y guard -X-Y             vs holder_in                 :    4.00 @-7.5  OK 
+  cage plate               vs fiber_in (station X 5)    :    1.89 @-7.5  OK 
+  cage plate               vs fiber_out (station X 5)   :    1.89 @-7.5  OK 
+  cage plate               vs holder_in                 :    3.00 @-7.5  OK 
+  cage plate               vs holder_out                :    3.00 @-7.5  OK 
+  chuck block              vs fiber_in (station X 5)    :    0.50 @-4.0  OK 
+  chuck block              vs fiber_out (station X 5)   :    0.50 @-4.0  OK 
+  chuck block              vs holder_in                 :    5.50 @-7.5  OK 
+  chuck block              vs holder_out                :    5.50 @-7.5  OK 
+  riser neck               vs fiber_in (station X 5)    :    4.89 @-7.5  OK 
+  riser neck               vs fiber_out (station X 5)   :    4.89 @-7.5  OK 
+  riser neck               vs holder_in                 :    3.00 @-7.5  OK 
+  riser neck               vs holder_out                :    3.00 @-7.5  OK 
+  riser wide body          vs fiber_in (station X 5)    :   12.39 @-7.5  OK 
+  riser wide body          vs fiber_out (station X 5)   :   12.39 @-7.5  OK 
+  riser wide body          vs holder_in                 :    4.00 @-7.5  OK 
+  riser wide body          vs holder_out                :    4.00 @-7.5  OK 
+  riser wide body          vs kxc04015_motor            :    5.50 @-7.5  OK 
+  stage table              vs fiber_in (station X 5)    :   21.69 @-7.5  OK 
+  stage table              vs fiber_out (station X 5)   :   21.69 @-7.5  OK 
+  stage table              vs kxc04015_motor            :    4.50 @-7.5  OK 
+  stop pad +X+Y            vs fiber_in (station X 5)    :    4.80 @-7.5  OK 
+  stop pad +X+Y            vs fiber_out (station X 5)   :    0.90 @-4.0  OK 
+  stop pad +X+Y            vs holder_out                :    4.00 @-7.5  OK 
+  stop pad +X-Y            vs fiber_in (station X 5)    :    0.90 @-4.0  OK 
+  stop pad +X-Y            vs fiber_out (station X 5)   :    4.80 @-7.5  OK 
+  stop pad +X-Y            vs holder_in                 :    4.00 @-7.5  OK 
+fixed stack members vs the holders and fibers (RPG38 micrometer and KXC motor point -X):
+  kxc04015_table                     vs holder_in                 :   13.30  OK 
+  kxc04015_table                     vs holder_out                :   13.30  OK 
 near nose face at the end of the push: X 0.10 = blade overtravel (die -X end face at X 0.00 on the pads)

@@ -1,6 +1,6 @@
 # System Redesign Study — Batch Edge-Coupled Testing of Hundreds of 10 × 6 mm Photonic Dies
 
-**Status:** concept study for review, rev. 2.9 (CAD of the gripper, the self-registering nest, the wafer tray and the full station in [`cad/`](../cad/README.md))
+**Status:** concept study for review, rev. 2.10 (CAD of the gripper, the self-registering nest on its die stage, the wafer tray and the full station in [`cad/`](../cad/README.md))
 **Scope:** ground-up redesign of the die-tester stage and handling system. The current
 machine is architected around a single manually loaded die; this study treats the whole
 stage system as open for redesign and asks what a machine looks like when the unit of
@@ -37,7 +37,11 @@ the rail nest with the self-registering, temperature-controlled **chuck-and-cage
 (§3) and drops the X-Y-θ correction stage. Rev. 2.9 restructures the CAD into one folder
 per component (`cad/gripper`, `cad/nest`, `cad/tray`, `cad/station`, shared `cad/common`)
 with a single build script that keeps them synchronized, and brings §3 and the interactive
-model up to the chuck nest.
+model up to the chuck nest. Rev. 2.10 puts the nest on a **die stage**: the devices span ~8 mm
+along the die and the NanoMax fiber stages travel only 4 mm, so a Suruga KXC04015-C X stage under
+the nest steps the die from device to device (as the current tester's centre stage does), over a
+Suruga RPG38 rotary that is set once to align the nest datum and the stage travel to the fiber
+axes; the gripper meets the nest at stage home only.
 
 Coordinate convention follows the brief: **X** = 10 mm die dimension, **Y** = 6 mm die
 dimension (optical propagation; fibers approach along ±Y), **Z** = vertical, **θ** =
@@ -103,8 +107,9 @@ split, plus the optical engines:
 - **Transfer** places the selected die into the test nest and returns it after test.
   It needs only ~±0.3 mm, ±1° placement accuracy — vision registration at the nest closes
   the rest. This is deliberately a cheap, robust motion system, not a precision stage.
-- **Precision presentation** is one fixed nest (§3) that registers X and yaw mechanically
-  (push-to-stop) and leaves Y to vision and the fiber stages.
+- **Precision presentation** is one nest (§3) that registers X and yaw mechanically
+  (push-to-stop), leaves Y to vision and the fiber stages, and steps the die along X from
+  device to device on a short-travel stage under it (rev. 2.10).
   No long-travel precision axis exists anywhere in the machine: the die never travels
   far while registered, and nothing precise ever moves far.
 - **Optical engines**: the two fiber aligners (each XYZ + fine alignment) and machine
@@ -183,7 +188,7 @@ One nest, machined and lapped once, characterized exhaustively (chuck-and-cage, 
   outside them (checked closed / open / during the push in `cad/nest/checks.txt`).
 - **In-plane registration — X and yaw mechanical, Y by vision:** two **Semitron ESd 480
   stop pads** on the +X end face (Y 0.6–1.2 and 4.8–5.4, 0.6 mm in from the facets, contact
-  band Z 0.05–0.40, yaw from a 4.2 mm base ≈ 0.03°). The gripper sets the die down 0.2 mm
+  band Z 0.05–0.30, yaw from a 4.2 mm base ≈ 0.03°). The gripper sets the die down 0.2 mm
   short of the pads, opens, and indexes +1.7 mm: its open compliant nose slides the die onto
   the pads and overtravels 0.1 mm, so the flexure limits the push to **0.25 N**
   (**push-to-stop**). Milling cannot make a sharp inside corner and the die's corners are
@@ -194,11 +199,20 @@ One nest, machined and lapped once, characterized exhaustively (chuck-and-cage, 
   facet planes at the die corners only (X ≤ 0.5 and X ≥ 9.5) and an X guard 0.4 mm behind
   the −X end face cage the die so it cannot leave the pad, and touch nothing in normal
   operation. The facet faces are never a datum surface.
-- **Exchange sequence per die:** fibers retract (interlocked) → jaws descend beside the
-  outgoing die's end faces, close, chuck vacuum off, lift → carry to its tray pocket →
-  return with the incoming die → lower onto the chuck 0.2 mm short of the pads, jaws
-  open, push-to-stop, chuck vacuum on, jaws retract and rise → camera confirms X against
-  the pads and reads Y → fibers approach.
+- **Die stage (rev. 2.10):** the nest sits on a Suruga KXC04015-C X stage (15 mm travel,
+  1 µm half step, on the existing DS102) that steps the die ±4 mm so every device comes under
+  the fibers, which then realign per device; one X move keeps both fibers registered to each
+  other, exactly as the current tester works. Under it a Suruga RPG38 manual rotary (±5°, about
+  0.024° per micrometer graduation) is set once with a gauge die so the stop-pad datum and the
+  stage travel are parallel to the fiber-stage axes, then clamped. Per-device realignment needs
+  only ~0.1° of yaw; open-loop stepping would need ~0.02°, which the micrometer resolves. The
+  gripper meets the nest at the stage's home position only, enforced by the fence. Stack and
+  clearances: [`cad/nest`](../cad/nest/README.md).
+- **Exchange sequence per die:** die stage to home → fibers retract (interlocked) → jaws
+  descend beside the outgoing die's end faces, close, chuck vacuum off, lift → carry to its
+  tray pocket → return with the incoming die → lower onto the chuck 0.2 mm short of the pads,
+  jaws open, push-to-stop, chuck vacuum on, jaws retract and rise → camera confirms X against
+  the pads and reads Y → fibers approach → die stage steps device by device.
 - **No structure above the die top surface** in the central 8 mm of X, no structure at
   waveguide height anywhere in the ±Y fiber approach cones, and a software/hardware
   interlocked fiber-retract corridor before any nest actuation (carries over R1/R5/R6

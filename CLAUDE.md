@@ -9,8 +9,10 @@ disagree with each other.
 
 - **Frame.** X = die long axis (10 mm) = gripper stroke / transfer direction, +X toward the far end
   face. Y = optical axis (6 mm); the input fiber comes from −Y, the output fiber from +Y. Z up;
-  **Z = 0 is the die's bottom face when the die sits on the nest** (die top Z 0.5, die centre Y 3).
-  Defined once in `cad/common/__init__.py`; the docs and the three.js viewer use the same frame.
+  **Z = 0 is the die's bottom face when the die sits on the nest at the die stage's home position**
+  (die top Z 0.5, die centre Y 3). The nest moves ±7.5 mm in X on its stage to step devices; the
+  gripper meets it at home only. Defined once in `cad/common/__init__.py`; the docs and the three.js
+  viewer use the same frame.
 - **Contact rules (never violated, in any state of any mechanism).** The dies are air-clad TFLN:
   the **top surface** and the two **facets (Y = 0 and Y = 6 faces)** are never touched by anything.
   The die is held or pushed only on its **end faces (X = 0 / X = 10)** inside the contact band
@@ -19,7 +21,9 @@ disagree with each other.
   or motion gets a clearance check against these rules before it is documented.
 - **Fiber side.** Fiber tips protrude ~5 mm from the holders; the holder envelope is `common.FIBER`
   (25 wide, Z −8…+4, 20 long) until measured. Fibers are only ever moved by their own NanoMax stages
-  and retract 1 mm before the gripper moves.
+  and retract 1 mm before the gripper moves. The fibers stay at station X 5; the die stage brings
+  each device to them, so any part that moves with the nest is checked against fixed fibers and
+  holders over the whole stage travel (`cad/nest` moving-nest sweep).
 - **Single sources of truth.** Die dimensions, contact band, fiber/holder envelope, microscope
   envelope, the box/cylinder helpers and the AABB clearance functions live in `cad/common`. A number
   that two components share must not be typed twice; import it. Component-local parameters stay in
@@ -92,5 +96,6 @@ Therefore:
 ## 5. Still-open measurements (do not silently replace with guesses)
 
 Real fiber-holder envelope, microscope working distance and tube diameter, TEC part number and
-heat load, die backside finish, Velmex carriage bolt patterns. Until measured they stay as the
+heat load, die backside finish, Velmex carriage bolt patterns, Suruga KXC04015-C / RPG38 vendor STEP
+and their bolt patterns for the two adapter plates. Until measured they stay as the
 named parameters above with their assumed values stated in the component READMEs.

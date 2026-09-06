@@ -42,9 +42,9 @@ def vendor_step(fname):
 # Station parameters
 # ----------------------------------------------------------------------------
 S = dict(
-    # fiber side
-    holder_axis_above_deck=20.0,   # fiber axis height above the NanoMax top platform (holder-dependent; measure)
-    nanomax_w=112.0, nanomax_h=62.5, nanomax_platform_h=4.0, nanomax_gap_y=45.0,   # inner face to facet
+    # fiber side: bench levels from common (TABLE_Z follows from these)
+    holder_axis_above_deck=C.HOLDER_AXIS_ABOVE_DECK,   # fiber axis height above the NanoMax top platform (holder-dependent; measure)
+    nanomax_w=C.NANOMAX["w"], nanomax_h=C.NANOMAX["h"], nanomax_platform_h=C.NANOMAX["platform_h"], nanomax_gap_y=C.NANOMAX["gap_y"],
     # fiber holder envelope: single source common.FIBER (shared with the nest)
     fiber_protrusion=C.FIBER["protrusion"], holder_w=C.FIBER["holder_w"], holder_zb=C.FIBER["holder_zb"],
     holder_zt=C.FIBER["holder_zt"], holder_len=C.FIBER["holder_len"],
@@ -68,7 +68,7 @@ S = dict(
 )
 
 die_top = G.die_top
-table_z = die_top - S["holder_axis_above_deck"] - S["nanomax_h"] - S["nanomax_platform_h"]   # -86.5
+table_z = C.TABLE_Z                                                                          # -86.0 (single source: common)
 cy = G.die_cy                                                                                # 3.0
 S["table_z"] = table_z
 
@@ -81,7 +81,9 @@ def table():
 
 
 def nest():
-    """Nest (cad/nest): copper chuck + Semitron cage + T-riser with the TEC, on a KB1X1 kinematic base."""
+    """Nest (cad/nest): copper chuck + Semitron cage + T-riser with the TEC on the die-stage stack
+    (KB1X1 kinematic base, adapter, RPG38 rotary, adapter, KXC04015-C X stage). Returns name -> shape of the
+    static-frame parts at the stage home position and fills S['_nest_*'] member lists for the checks."""
     kb = vendor_step("thorlabs_KB1X1.step")
     if kb is not None:
         # Thorlabs 2374-E0W: 25.4 x 25.4 x 12.7 mm assembled, modelled with Y as the thickness ->
@@ -92,16 +94,21 @@ def nest():
         kb = kb.translate((5 - (b2.xmin + b2.xmax) / 2, cy - (b2.ymin + b2.ymax) / 2, table_z - b2.zmin))
         kb_top = table_z + (b2.zmax - b2.zmin)                                 # 12.7
     else:
-        kb = box(-14, 24, -16, 22, table_z, table_z + 20)                     # kinematic base envelope
-        kb_top = table_z + 20
-    riser = NM.riser(table_z, kb_top)
-    ins = NM.chuck()
-    S["_nest_tec"] = NM.tec()
+        kb = box(5 - 12.7, 5 + 12.7, cy - 12.7, cy + 12.7, table_z, table_z + C.KB1X1_H)   # KB1X1 envelope 25.4 sq x 12.7
+        kb_top = table_z + C.KB1X1_H
+    z = NM.levels(table_z, kb_top)
+    stk, _ = NM.stack(table_z, kb_top)
+    riser = NM.riser(z["stage_top"])
+    S["_nest_tec"] = NM.tec(); S["_nest_levels"] = z
     S["_nest_cage"] = NM.cage(); S["_nest_cage_parts"] = NM.cage_parts()
     nx0, nx1, ny0, ny1 = NM.N["neck"]; wx0, wx1, wy0, wy1 = NM.N["wide"]
     S["_nest_riser_parts"] = [box(nx0, nx1, ny0, ny1, NM.N["neck_bottom"], NM.N["cage"][4]),      # neck (cage width in Y)
-                              box(wx0, wx1, wy0, wy1, kb_top, NM.N["wide_top"]), kb]              # wide body below the holders, base
-    return kb.union(riser), ins
+                              box(wx0, wx1, wy0, wy1, z["stage_top"], NM.N["wide_top"])]          # wide body on the stage table
+    S["_nest_stack_parts"] = list(stk.values()) + [kb]                                            # everything under the riser
+    S["_nest_moving"] = NM.moving_members(0.0)                                                    # what the X stage carries (dict)
+    parts = {"nest_kb1x1": kb, "nest_riser_6061": riser, "nest_chuck_copper": NM.chuck()}
+    parts.update({"nest_" + n if not n.startswith("nest_") else n: v for n, v in stk.items()})
+    return parts
 
 
 def nanomax(side):
@@ -364,8 +371,8 @@ def main():
     # ---- static ----
     static = {}
     static["optical_table"] = table()
-    kb, ins = nest(); static["nest_riser_kinematic"] = kb; static["nest_chuck_copper"] = ins; static["nest_tec"] = S["_nest_tec"]
-    static["nest_cage_semitron"] = S["_nest_cage"]
+    for n, s in nest().items(): static[n] = s
+    static["nest_tec"] = S["_nest_tec"]; static["nest_cage_semitron"] = S["_nest_cage"]
     for name, s in nanomax(-1) + nanomax(+1): static[name] = s
     for name, s in microscope(): static[name] = s
     xax, xmot, (xr1, xr2) = x_axis(); static["x_axis_body_velmex"] = xax; static["x_axis_motor_end"] = xmot
@@ -394,6 +401,10 @@ def main():
     # ---- checks ----
     rep = []
     rep.append(f"table plane Z = {table_z:.1f} (die bottom = 0). Nest die top at {die_top}; fiber axis at {die_top} via holder {S['holder_axis_above_deck']} above NanoMax deck")
+    zl = S["_nest_levels"]
+    rep.append(f"die stage stack: KB1X1 top {zl['kb_top']:.1f} / RPG38 {zl['ad1_top']:.1f}..{zl['rpg_top']:.1f} / KXC04015-C {zl['kxc_bottom']:.1f}..{zl['stage_top']:.1f} "
+               f"(table top) / riser to the cage plate at {NM.N['cage'][4]:.1f}; X stage travel +/-{NM.N['kxc']['travel'] / 2:.1f}, stepping +/-{NM.N['stage_step_used']:.0f}; "
+               f"exchange at stage HOME only (fence)")
     rep.append(f"wafer tray: {S['tray_cols']} columns x {S['tray_rows']} rows = {S['tray_cols']*S['tray_rows']} pockets, "
                f"{tray_ext[1]-tray_ext[0]:.0f} x {tray_ext[2]:.0f} mm; columns at die X {S['tray_col0_x']:.0f} .. {far_col_x:.0f} (pitch {S['tray_col_pitch']})")
     rep.append(f"X carriage: nest {xc:.0f} -> farthest column {xc2:.0f}  (travel used {abs(far_col_x):.0f} of {S['x_travel']:.0f} mm)")
@@ -407,8 +418,18 @@ def main():
         ("gripper far_arm @nest", grip_nest["far_arm"], "microscope_column", static["microscope_column"]),
         ("gripper near_arm @nest", grip_nest["near_arm"], "fiber_holder_in", static["fiber_holder_in"]),
         ("nest_cage (per member)", S["_nest_cage_parts"], "fiber_holder_in", static["fiber_holder_in"]),
-        ("nest_riser (neck/wide/base)", S["_nest_riser_parts"], "fiber_holder_in (per member)", S["_holder_parts_in"]),
-        ("nest_riser (neck/wide/base)", S["_nest_riser_parts"], "fiber_holder_out (per member)", S["_holder_parts_out"]),
+        ("nest_riser (neck/wide)", S["_nest_riser_parts"], "fiber_holder_in (per member)", S["_holder_parts_in"]),
+        ("nest_riser (neck/wide)", S["_nest_riser_parts"], "fiber_holder_out (per member)", S["_holder_parts_out"]),
+        ("die stage stack (per member)", S["_nest_stack_parts"], "fiber_holder_in (per member)", S["_holder_parts_in"]),
+        ("die stage stack (per member)", S["_nest_stack_parts"], "fiber_holder_out (per member)", S["_holder_parts_out"]),
+        ("die stage stack (per member)", S["_nest_stack_parts"], "nanomax300_in", static["nanomax300_in"]),
+        ("die stage stack (per member)", S["_nest_stack_parts"], "nanomax300_out", static["nanomax300_out"]),
+        ("die stage stack (per member)", S["_nest_stack_parts"], "x_axis_riser_short", None),
+        ("die stage stack (per member)", S["_nest_stack_parts"], "gripper @nest (per member)", None),
+        ("nest moving @-7.5 (per member)", [v.translate((-7.5, 0, 0)) for v in S["_nest_moving"].values()], "nanomax300_in", static["nanomax300_in"]),
+        ("nest moving @+7.5 (per member)", [v.translate((7.5, 0, 0)) for v in S["_nest_moving"].values()], "nanomax300_out", static["nanomax300_out"]),
+        ("nest moving @-7.5 (per member)", [v.translate((-7.5, 0, 0)) for v in S["_nest_moving"].values()], "fiber_holder_in (per member)", S["_holder_parts_in"]),
+        ("nest moving @+7.5 (per member)", [v.translate((7.5, 0, 0)) for v in S["_nest_moving"].values()], "fiber_holder_out (per member)", S["_holder_parts_out"]),
         ("nest_cage (per member)", S["_nest_cage_parts"], "fiber_holder_in (per member)", S["_holder_parts_in"]),
         ("nest_chuck", static["nest_chuck_copper"], "fiber_holder_in (per member)", S["_holder_parts_in"]),
         ("nest_chuck", static["nest_chuck_copper"], "fiber_holder_in", static["fiber_holder_in"]),
@@ -464,6 +485,8 @@ def main():
     for an, a, bn, b in pairs:
         if bn in ("objective", "microscope_tube", "microscope_column"):
             continue
+        if b is None:
+            b = xr2 if bn == "x_axis_riser_short" else list(grip_nest.values())
         gp = gap_any(a, b)
         flag = "  OK " if gp > 2 else ("  TIGHT" if gp > 0 else "  ** OVERLAP **")
         rep.append(f"  {an:26s} vs {bn:20s}: {gp:7.1f}{flag}")
@@ -478,6 +501,10 @@ def main():
     lowcut = box(-200, 200, -100, 100, -50, G.bar_z1 + 0.01)          # bars only (under the objective)
     incut = box(-10, 200, -100, 100, G.bar_z1 + 0.01, 300)             # heads near the die, above bar height
     outcut = box(-200, -10, -100, 100, G.bar_z1 + 0.01, 300)           # root plates / transitions, outboard
+    for sn_, sv_ in (("die stage: RPG38 micrometer", static["nest_rpg38_micrometer"]), ("die stage: KXC motor", static["nest_kxc04015_motor"]),
+                     ("die stage: KXC knob", static["nest_kxc04015_knob"]), ("die stage: RPG38 clamp", static["nest_rpg38_clamp"])):
+        g_ = gap_cyl(bb(sv_), (S["column_x"], cy), S["column_dia"] / 2, table_z, S["column_top"])
+        rep.append(f"  {sn_:24s} vs {'microscope_column (dia 40)':26s}: {g_:7.1f}{'  OK ' if g_ > 2 else ('  TIGHT' if g_ > 0 else '  ** OVERLAP **')}")
     for pn, part in [("far_arm bars @nest", grip_nest["far_arm"].intersect(lowcut)), ("far_arm root @nest", grip_nest["far_arm"].intersect(outcut)),
                      ("near_arm bars @nest", grip_nest["near_arm"].intersect(lowcut)), ("near_arm head @nest", grip_nest["near_arm"].intersect(incut)),
                      ("near_arm root @nest", grip_nest["near_arm"].intersect(outcut)),
@@ -495,7 +522,7 @@ def main():
     a_sweeps = [sweep(bb(pp)) for pp in arm_parts]
     rep.append("")
     rep.append("swept volumes nest <-> tray (after the 8 mm lift; per member) vs static objects:")
-    statics = ["nanomax300_in", "fiber_holder_in", "fiber_in", "nanomax300_out", "fiber_holder_out", "nest_riser_kinematic",
+    statics = ["nanomax300_in", "fiber_holder_in", "fiber_in", "nanomax300_out", "fiber_holder_out", "nest_riser_6061", "nest_kxc04015_motor",
                "x_axis_body_velmex", "x_axis_riser_short", "microscope_arm"] + (["x_axis_cleats"] if "x_axis_cleats" in static else [])
     for n in statics:
         g1 = min(gap(g, bb(static[n])) for g in g_sweeps); g2 = min(gap(g, bb(static[n])) for g in a_sweeps)
@@ -516,7 +543,9 @@ def main():
     # ---- assembly export (nest configuration + ghost of stick configuration) ----
     assy = cq.Assembly(name="test_station")
     col = {
-        "optical_table": (0.86, 0.88, 0.90), "nest_riser_kinematic": (0.60, 0.63, 0.68), "nest_chuck_copper": (0.72, 0.45, 0.20), "nest_tec": (0.85, 0.85, 0.88), "nest_cage_semitron": (0.16, 0.16, 0.18),
+        "optical_table": (0.86, 0.88, 0.90), "nest_kb1x1": (0.45, 0.48, 0.52), "nest_riser_6061": (0.60, 0.63, 0.68), "nest_chuck_copper": (0.72, 0.45, 0.20), "nest_tec": (0.85, 0.85, 0.88), "nest_cage_semitron": (0.16, 0.16, 0.18),
+        "nest_adapter_kb_rpg": (0.60, 0.63, 0.68), "nest_adapter_rpg_kxc": (0.60, 0.63, 0.68), "nest_rpg38_body": (0.20, 0.20, 0.22), "nest_rpg38_micrometer": (0.75, 0.75, 0.78), "nest_rpg38_clamp": (0.20, 0.20, 0.22),
+        "nest_kxc04015_base": (0.20, 0.20, 0.22), "nest_kxc04015_table": (0.25, 0.25, 0.27), "nest_kxc04015_coupling": (0.20, 0.20, 0.22), "nest_kxc04015_motor": (0.30, 0.30, 0.32), "nest_kxc04015_knob": (0.20, 0.20, 0.22),
         "nanomax300_in": (0.56, 0.69, 0.82), "nanomax300_out": (0.56, 0.69, 0.82), "fiber_holder_in": (0.36, 0.40, 0.44),
         "fiber_holder_out": (0.36, 0.40, 0.44), "fiber_in": (0.94, 0.82, 0.50), "fiber_out": (0.94, 0.82, 0.50),
         "objective": (0.20, 0.23, 0.27), "microscope_tube": (0.25, 0.28, 0.32), "microscope_arm": (0.77, 0.79, 0.82), "microscope_column": (0.77, 0.79, 0.82),

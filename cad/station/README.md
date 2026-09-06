@@ -20,6 +20,7 @@ stages with holder envelopes, the microscope envelope and the table, then comput
 | Velmex BiSlide **MN10-0050-M02-21** (Z) | `velmex_MN10-0050-21.step` | **placed** vertically on the X slider, motor up (tower top Z ≈ 450); slider parked 20 mm above its low limit, adapter plate + 25 mm drop bar to the arm level |
 | Velmex BiSlide **MN10-0050-M02-21** (Y) | same file | **placed** under the tray, body Y −152…+168, motor toward +Y; slider top 65.1 above the table so the tray ledges sit 11.9 mm below nest height |
 | SMC MHZ2-6D-M9N | `smc_MHZ2-6D.step` | **placed** through `cad/gripper` (fingers set from the drawn open position to closed) |
+| Suruga KXC04015-C X stage, Suruga RPG38 rotary | — | envelopes from the Suruga catalog drawings (`cad/nest`), through `cad/nest`; vendor STEP needs a Suruga CAD account |
 | Microscope objective / tube / column | — | envelope (`common.OBJ_WD`, `OBJ_DIA`, `TUBE_DIA`); measure |
 
 ## Layout (frame: X = die long axis, Y = optical axis, Z up, die bottom at nest = 0)
@@ -27,7 +28,7 @@ stages with holder envelopes, the microscope envelope and the table, then comput
 | Element | Position | Why |
 |---|---|---|
 | Optical table plane | Z −86 | NanoMax deck 62.5 + platform 4 + holder 20 puts the fiber axis at die-top height (Z 0.5); all risers follow from this. |
-| Nest (`cad/nest`) | T-riser neck X −8…18, Y −2…8 down to Z −12, wide body Y −10…16 below, on a KB1X1; copper chuck; Semitron cage X −2.5…12.5, Y −2…8 | Narrow at the top so both fiber corridors stay open; nothing stands where a fiber can go. |
+| Nest (`cad/nest`) on its **die stage** | T-riser neck X −8…18, Y −2…8 down to Z −12, 38 × 38 wide body to Z −21.3 on a **Suruga KXC04015-C** X stage (±7.5 mm, motor toward −X) on a **Suruga RPG38** rotary (micrometer toward −X) on a KB1X1; copper chuck; Semitron cage X −2.5…12.5, Y −2…8 | Narrow at the top so both fiber corridors stay open; the nest steps the die from device to device under fixed fibers; the gripper meets it at stage home only. |
 | NanoMax 300 (input / output) | inner faces 45 mm from the facets: Y −157…−45 and Y 51…163; X −51…61 | Fiber holders reach in from the platforms; holder fronts 5 mm from the facets. |
 | Microscope | objective Ø34 centred on the die, front lens at WD 20; Ø40 tube above; arm to a Ø40 column at **X = 80** | Behind the nest, as on the bench. |
 | **X axis** (MN10-0150, 381 mm travel; 262 used) | along X, centre-line **Y = −100**, on an **86 mm riser** (two pedestals) so the body sits at Z 0…55, above the NanoMax envelope and above the tray deck that crosses under it; body X −604…−40, motor to X −668 | Beside the input fiber stage, outside the fiber corridor, above the stage's protruding actuators. |
@@ -43,6 +44,7 @@ Fibers are only ever moved by their own NanoMax stages.
 
 | Step | Axis | From → to | Interlock |
 |---|---|---|---|
+| 0 | die stage X (KXC04015) | nest to its **home** position (stage origin sensor) | home flag set; the gripper never enters otherwise |
 | 1 | NanoMax Y (both) | fibers retract 1.0 mm along ±Y | fibers-retracted flag set |
 | 2 | Z | +8 mm (arm end plate Z 70 → 78), gripper open | fibers retracted, objective gap ≥ 11 mm |
 | 3 | Z | −8 mm: noses descend beside the die's end faces | — |
@@ -56,6 +58,7 @@ Fibers are only ever moved by their own NanoMax stages.
 | 11 | Z, gripper | Z −8 mm: die onto the chuck pad; jaws open (+1.5 mm per side) | — |
 | 12 | X | **push-to-stop: gripper +1.7 mm** — the open near nose meets the die's −X end face, slides it 0.2 mm onto the two +X pads and overtravels 0.1 mm, so the blade limits the push to 0.25 N; X and yaw are now mechanical | — |
 | 13 | nest, X, Z | chuck vacuum on (seat detection); gripper −1.7 mm, Z +8 mm, X out to the park position; camera pose check; fibers approach | vacuum switch reads seated |
+| 14 | die stage X | steps the die ±4 mm to bring each device under the fibers (fibers realign per device; the stage stays inside the fence while the gripper is parked) | gripper parked |
 
 Exchange time budget: ~20 s with lead-screw stages at 20 mm/s; the X move dominates.
 
@@ -72,6 +75,9 @@ the seated die, and the fiber envelope 1.9 mm above the cage plate.
 - **Fiber stages and holders:** gripper arms 3.2 mm from the holder bodies at the nest; X axis 9 mm from
   the input NanoMax body and above its actuator zone; Z tower 77 mm from it. The die's travel path (after
   the 8 mm lift) clears both holders and never crosses the fiber line.
+- **Die stage:** every stack member 13 mm below the holder bodies and 28 mm from both NanoMax bodies; the
+  KXC motor section and the RPG38 micrometer, both toward −X, keep 68 mm and more to the microscope column and
+  44 mm to the X-axis pedestal; the moving nest keeps 3.0 mm to the holders at the travel ends.
 - **Tray side:** Z tower at the farthest column clear of the Y-stage body; the Y stage and the tray deck
   pass under the X axis between the two pedestals (11 / 8 mm at the extreme row); X travel used 262 of 381 mm.
 
@@ -85,4 +91,4 @@ riser vs the 5 mm-protrusion fiber holders (10 mm neck).
 1. Fiber axis height above the NanoMax platform (`holder_axis_above_deck`, assumed 20): sets every riser height.
 2. Objective working distance and the diameter of whatever sits above it (`common.OBJ_WD`, `TUBE_DIA`).
 3. The real fiber holder (`common.FIBER`).
-4. Vendor carriage bolt patterns (Velmex) for the riser, tower bracket and arm end plate.
+4. Vendor carriage bolt patterns (Velmex) for the riser, tower bracket and arm end plate; RPG38 and KXC04015 bolt patterns for the two adapter plates.

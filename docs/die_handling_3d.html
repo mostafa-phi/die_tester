@@ -128,6 +128,7 @@
         <span class="sw" style="background:#3a9d5d"></span><span>End faces, middle 3 mm. Gripper noses only.</span>
         <span class="sw" style="background:#8f8f8f"></span><span>Backside. Nest chuck pad, pocket ledges, ejector pins.</span>
         <span class="sw" style="background:#b87333"></span><span>Nest: lapped copper vacuum chuck (9 × 5 mm pad, TEC below); two +X stop pads register X and yaw by push-to-stop; corner guards cage Y to ±0.6 mm.</span>
+        <span class="sw" style="background:#44474d"></span><span>Die stage under the nest: Suruga KXC04015-C X stage (15 mm travel) steps the die from device to device under the fixed fibers; Suruga RPG38 rotary below it is set once for yaw. The gripper meets the nest at stage home only.</span>
         <span class="sw" style="background:#3d3d3d"></span><span>Noses: 0.35 mm tall, top 0.10 mm below the die surface; the two 3 × 3 mm bars and tip blocks are the only tool parts under the objective.</span>
       </div>
       <div class="hint">Geometry follows the CAD package (<code>cad/station</code>, <code>cad/gripper</code>, <code>cad/nest</code>, <code>cad/tray</code>; envelope build) and the concept study rev. 2.9. Still to measure on the bench: fiber-axis height above the NanoMax platform, objective working distance and tube diameter.</div>
@@ -428,8 +429,8 @@
     names: ['Measuring', 'Fibers retract', 'Gripper enters along X', 'Z down beside the end faces', 'Jaws close', 'Chuck vacuum off, lift',
       'Carry to its own pocket', 'Set onto the pocket ledges', 'Release and rise', 'Move to the next die', 'Pick the next die', 'Return to the nest and seat', 'Release, retreat, fibers approach'],
     descs: [
-      'Fibers coupled at both facets from the two NanoMax 300 stages at ±Y; die held by vacuum on the copper chuck pad, seated against the two +X stop pads. The gripper waits at Z +8 mm, 60 mm out along X, clear of the objective footprint. Microscope column behind the nest at X +80.',
-      'Both NanoMax Y axes back the fibers off by the safety retract. Small, because the tool comes in along X, never through the fiber corridor.',
+      'Fibers coupled at both facets from the two NanoMax 300 stages at ±Y; die held by vacuum on the copper chuck pad, seated against the two +X stop pads. Between devices the die stage under the nest steps the die ±4 mm along X (shown at home). The gripper waits at Z +8 mm, 60 mm out along X, clear of the objective footprint. Microscope column behind the nest at X +80.',
+      'Die stage to home (origin sensor), then both NanoMax Y axes back the fibers off by the safety retract. Small, because the tool comes in along X, never through the fiber corridor.',
       'X carriage −200 → −140: the two finger bars slide in 13.5 mm above the die, under the objective. Actuator body, bracket and arm stay outside the Ø40 tube.',
       'Z −8 mm: the open noses (1.9 mm outside each end face) descend beside the middle 3 mm of the end faces. Near head top 11 mm under the front lens.',
       'Jaws close to the finger-on-finger stop; the 0.127 mm blade preloads 0.32 N on the die. X and θ are now defined by the nose faces.',
@@ -449,9 +450,24 @@
       // cage plate), Semitron cage plate with four corner blocks (+X stop pads, -X guard, Y guards), copper chuck (block, neck to the
       // TEC, 9 x 5 lapped pad island at Z -1.5..0), TEC 15 x 15 under the neck
       g.add(cb(-540, 220, -280, 280, tz - 12, tz, mat(0xd6dae0)));
-      g.add(cb(-14, 24, -16, 22, tz, tz + 20, mat(COL.stage)));
-      g.add(cb(-8, 18, -10, 16, tz + 20, -12, mat(COL.stage)));                           // riser wide body / heat sink
-      g.add(cb(-8, 18, -2, 8, -12, -4.5, mat(COL.stage)));                                // riser neck between the fiber holders
+      // die stage stack (cad/nest levels()): KB1X1 12.7, adapter 3, RPG38 16 (micrometer -X), adapter 3, KXC04015-C 30 (table top Z -21.3,
+      // motor section 59 toward -X, motor box 4 mm above the table top), riser 38 sq wide body on the table
+      const mDark = mat(0x33363c), mAl = mat(COL.stage);
+      g.add(cb(-7.7, 17.7, -9.7, 15.7, tz, tz + 12.7, mat(0x6f7378)));                     // KB1X1 kinematic base
+      g.add(cb(-15, 25, -17, 23, tz + 12.7, tz + 15.7, mAl));                              // adapter KB1X1 -> RPG38
+      const rpg = vcyl(5, 3, 19, tz + 15.7, tz + 31.7, mDark); g.add(rpg);                // RPG38 body dia 38 x 16
+      const mic = cyl(6.5, 43, mat(0xbfc3c9)); mic.rotation.z = Math.PI / 2; mic.position.set(-14 - 21.5 + 6, tz + 23.7, 3 + 19 - 8.5); g.add(mic);   // micrometer head -X
+      g.add(cb(24 - 4, 24 + 10, 3 + 19 - 12, 3 + 19 - 4, tz + 17.7, tz + 29.7, mDark));  // opposing clamp +X
+      g.add(cb(-15, 25, -17, 23, tz + 31.7, tz + 34.7, mAl));                              // adapter RPG38 -> KXC04015 base
+      const kz = tz + 34.7;                                                                // KXC04015-C bottom (Z -51.3)
+      g.add(cb(-15, 28.5, -17, 23, kz, kz + 21, mDark));                                   // base 40 x 43.5 x 21
+      this.kxcTable = new THREE.Group(); g.add(this.kxcTable);
+      this.kxcTable.add(cb(-15, 25, -17, 23, kz + 21, kz + 30, mat(0x44474d)));            // table 40 sq, top at Z -21.3 (moves +/-7.5 in X)
+      g.add(cb(-27, -15, -11, 17, kz, kz + 15, mDark));                                    // coupling housing (the table passes over it)
+      g.add(cb(-74, -27, -11, 17, kz + 4, kz + 34, mat(0x4d5058)));                        // 5-phase stepper box, 4 mm above the table top
+      const knob = cyl(6, 4, mDark); knob.rotation.z = Math.PI / 2; knob.position.set(-76, kz + 22, 3); g.add(knob);
+      this.kxcTable.add(cb(-14, 24, -16, 22, kz + 30, -12, mAl));                          // riser wide body / heat sink on the stage table
+      this.kxcTable.add(cb(-8, 18, -2, 8, -12, -4.5, mAl));                              // riser neck between the fiber holders
       g.add(cb(-2.5, 12.5, -4.5, 10.5, -14.5, -12, mat(0xdadde2)));                      // TEC 15 x 15 x 2.5 (cold face at Z -12)
       g.add(cb(-2.5, 12.5, -2, 8, -4.5, -1.5, mat(COL.tip)));                             // cage plate (Semitron ESd 480)
       const mCu = mat(0xb87333, { roughness: 0.35 });
@@ -544,6 +560,7 @@
       this.die2 = makeDie(); g.add(this.die2);
       // labels
       addLabel('nest · copper vacuum chuck · +X stop pads · TEC below', () => new THREE.Vector3(5, -5, -12));
+      addLabel('die stage · Suruga KXC04015-C (X ±7.5) on RPG38 rotary · KB1X1', () => new THREE.Vector3(-30, tz + 40, -20));
       addLabel('fiber', () => new THREE.Vector3(5, 2.4, -9));
       addLabel('fiber', () => new THREE.Vector3(5, 2.4, 15));
       addLabel('NanoMax 300 (input)', () => new THREE.Vector3(5, tz + 66, -ST.gapY - 56));
