@@ -18,6 +18,13 @@ if ! "$PY" -c "import trimesh, rtree, scipy, networkx, lxml" 2>/dev/null; then
   "$PY" -m pip install --quiet -r "$HERE/skills/dfam-check/requirements.txt" 2>&1 | grep -v "WARNING: Running pip" || true
 fi
 
+# cadgen pulls in cadquery-ocp-novtk + a proxy package that shadows the full OCP build CadQuery needs
+# (docs/cad/*.py are CadQuery). Keep the full build in front.
+if ! "$PY" -c "import cadquery" 2>/dev/null; then
+  "$PY" -m pip uninstall -y -q cadquery-ocp-proxy cadquery-ocp-novtk 2>/dev/null || true
+  "$PY" -m pip install --quiet --force-reinstall --no-deps "cadquery-ocp==7.9.3.1.1" 2>&1 | grep -v "WARNING: Running pip" || true
+fi
+
 # --- Playwright browser alias -------------------------------------------------------------
 PWB="${PLAYWRIGHT_BROWSERS_PATH:-/opt/pw-browsers}"
 if [ -d "$PWB" ] && [ -w "$PWB" ]; then

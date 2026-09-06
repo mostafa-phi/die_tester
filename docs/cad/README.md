@@ -93,8 +93,22 @@ Model: `station_assembly.py` → `out/station_assembly.step`, `out/view_station_
 the nest, the transport axes, the two **Thorlabs NanoMax 300** fiber stages with holder
 arms, and the **microscope column behind the nest at +X** (where it stands in the bench
 photo) on one optical-table plane, and computes clearances. Bought parts are envelopes
-(Velmex BiSlide MN10 class 102 × 64 mm bodies, NanoMax 112 × 112 × 62.5 mm); replace
-them with vendor STEP in Fusion.
+(Velmex BiSlide MN10 class 102 × 64 mm bodies, NanoMax 112 × 112 × 62.5 mm).
+
+**Manufacturer models.** `python docs/cad/station_assembly.py --vendor` places real vendor STEP
+files from `docs/cad/vendor/` (git-ignored; `vendor/fetch_vendor_step.sh` downloads them) and
+writes `out/station_assembly_vendor.step` (106 MB) plus `out/station_checks_vendor.txt`:
+
+| Part | Model | Source | Status |
+|---|---|---|---|
+| Thorlabs NanoMax 300, MAX313D/M (×2) | 22803-E0W.step | thorlabs.com product assets (direct link in the fetch script) | **placed**; the input stage is rotated −90° so its Z micrometer (46 mm out of the +X face) points −Y and its Y micrometers +X, keeping 9 mm to the X axis. A 180° rotation would put that micrometer 37 mm into the X axis. A left-handed NanoMax would allow the mirror layout. |
+| Thorlabs KB1X1 kinematic base | 2374-E0W.step | thorlabs.com | **placed** under the nest riser (25.4 × 25.4 × 12.7 mm assembled) |
+| Velmex BiSlide MN10 (X, Y, Z) | e.g. `MN10-0100-xxx-11-LR.stp` | velmex.com Technical library (browser captcha, download by hand) | envelope until the files are dropped in `vendor/` |
+| SMC MHZ2-6D-M9N | series MHZ2 | smcworld.com CAD library (free account required since March 2026) | catalogue-dimensioned envelope |
+| Microscope objective / tube / column | — | your microscope's vendor | envelope; measure WD and tube diameter |
+
+Renders of the vendor-model assembly: `out/render_station_vendor_{iso,plan,front,side}.png`
+(made with `cadgen step snapshot`, the `cad` skill's renderer).
 
 ![station iso](out/view_station_iso.svg)
 ![station plan](out/view_station_plan.svg)

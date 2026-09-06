@@ -1,0 +1,3 @@
+docs/cad/vendor/*.step
+docs/cad/vendor/*.stp
+docs/cad/out/station_assembly_vendor.step

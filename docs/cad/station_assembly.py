@@ -22,6 +22,17 @@ import gripper_module as G   # noqa: E402  (parts + P in the shared frame)
 OUT = G.OUT
 box = G.box
 mat_note = []
+VENDOR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vendor")
+USE_VENDOR = "--vendor" in sys.argv          # place manufacturer STEP models where they exist (see vendor/fetch_vendor_step.sh)
+
+
+def vendor_step(fname):
+    """Manufacturer STEP from docs/cad/vendor/, or None (caller falls back to its envelope)."""
+    p = os.path.join(VENDOR, fname)
+    if USE_VENDOR and os.path.exists(p):
+        print(f"[vendor] {fname}")
+        return cq.importers.importStep(p)
+    return None
 
 # ----------------------------------------------------------------------------
 # Station parameters
@@ -61,8 +72,19 @@ def table():
 
 def nest():
     """Two-piece nest: riser + lapped rail insert, on a KB1X1-class kinematic base."""
-    kb = box(-14, 24, -16, 22, table_z, table_z + 20)                        # kinematic base envelope
-    riser = box(-8, 18, -10, 16, table_z + 20, -4.5)                          # riser column
+    kb = vendor_step("thorlabs_KB1X1.step")
+    if kb is not None:
+        # Thorlabs 2374-E0W: 25.4 x 25.4 x 12.7 mm assembled, modelled with Y as the thickness ->
+        # rotate Y->Z, centre on the die (X 5, Y 3), bottom on the table
+        b = kb.val().BoundingBox()
+        kb = kb.rotate((0, 0, 0), (1, 0, 0), 90)
+        b2 = kb.val().BoundingBox()
+        kb = kb.translate((5 - (b2.xmin + b2.xmax) / 2, cy - (b2.ymin + b2.ymax) / 2, table_z - b2.zmin))
+        kb_top = table_z + (b2.zmax - b2.zmin)                                 # 12.7
+    else:
+        kb = box(-14, 24, -16, 22, table_z, table_z + 20)                     # kinematic base envelope
+        kb_top = table_z + 20
+    riser = box(-8, 18, -10, 16, kb_top, -4.5)                                 # riser column
     insert = box(-1, 11, 0.6, 5.4, -4.5, -1.5)                                # rail insert body (narrow in Y)
     r1 = box(0, 10, 1.0, 1.9, -1.5, 0.0)
     r2 = box(0, 10, 4.1, 5.0, -1.5, 0.0)
@@ -82,9 +104,25 @@ def nanomax(side):
     else:
         y0, y1 = G.P["die_wid"] + g, G.P["die_wid"] + g + S["nanomax_w"]
     x0, x1 = 5 - S["nanomax_w"] / 2, 5 + S["nanomax_w"] / 2
-    body = box(x0, x1, y0, y1, table_z, table_z + S["nanomax_h"])
-    plat = box(x0 + 10, x1 - 10, y0 + 6, y1 - 6, table_z + S["nanomax_h"], table_z + S["nanomax_h"] + S["nanomax_platform_h"])
-    ptop = table_z + S["nanomax_h"] + S["nanomax_platform_h"]
+    stage = vendor_step("thorlabs_MAX313D_M.step")
+    if stage is not None:
+        # Thorlabs 22803-E0W (MAX313D/M): base plate X -114.5..-2.5, Y -14..98, Z 0; body Y face at -14 is the
+        # side without micrometers, so it faces the die; the three micrometers point away (+Y in the file).
+        # The Z micrometer sticks 46 mm out of the +X face. Input stage: rotating 180 deg would point it at the
+        # X axis (37 mm overlap), so rotate -90 deg instead: the micrometer-free -X face turns toward the die,
+        # the two Y micrometers point +X (toward the column side, nothing there at Y -90..-150) and the Z
+        # micrometer points -Y. (A left-handed NanoMax would allow the mirror-symmetric layout.) Output stage: as modelled.
+        if side < 0:
+            stage = stage.rotate((0, 0, 0), (0, 0, 1), -90)                   # (x, y) -> (y, -x): body Y 14..115.5, base X -14..98
+            stage = stage.translate((5 - 42.0, y1 - 115.5, table_z))          # inner (body) face -> Y -45, base centred on the die
+        else:
+            stage = stage.translate((5 + 58.5, y0 + 14.0, table_z))           # inner face -> Y 51
+        ptop = table_z + 62.5                                                 # NanoMax 300 deck height (Thorlabs)
+        body = plat = None
+    else:
+        body = box(x0, x1, y0, y1, table_z, table_z + S["nanomax_h"])
+        plat = box(x0 + 10, x1 - 10, y0 + 6, y1 - 6, table_z + S["nanomax_h"], table_z + S["nanomax_h"] + S["nanomax_platform_h"])
+        ptop = table_z + S["nanomax_h"] + S["nanomax_platform_h"]
     # fiber holder: post on the platform near the inner edge, arm to the clamp, clamp, fiber
     if side < 0:
         post = box(-4, 14, y1 - 14, y1 - 6, ptop, die_top + 4)
@@ -98,7 +136,8 @@ def nanomax(side):
         clamp = box(1, 9, yf + S["fiber_protrusion"], yf + S["fiber_protrusion"] + 8, die_top - 2, die_top + 2)
         fib = cq.Workplane("XZ").center(5, die_top).circle(0.0625).extrude(-(S["fiber_protrusion"] - 0.02)).translate((0, yf + 0.02, 0))
     tag = "in" if side < 0 else "out"
-    return [(f"nanomax300_{tag}", body.union(plat)), (f"fiber_holder_{tag}", post.union(arm).union(clamp)), (f"fiber_{tag}", fib)]
+    stage_shape = stage if stage is not None else body.union(plat)
+    return [(f"nanomax300_{tag}", stage_shape), (f"fiber_holder_{tag}", post.union(arm).union(clamp)), (f"fiber_{tag}", fib)]
 
 
 def microscope():
@@ -343,8 +382,11 @@ def main():
     rep.append("")
     rep.append("the gripper band sweep necessarily passes under the objective (that is the exchange); its clearance there is the")
     rep.append("bar height check in gripper_checks.txt (tallest part 9.0 mm above die top vs WD).")
+    suffix = "_vendor" if USE_VENDOR else ""
+    if USE_VENDOR:
+        rep.insert(0, "VENDOR MODELS: Thorlabs MAX313D/M (22803-E0W) x2, KB1X1 (2374-E0W); envelopes elsewhere. AABBs of the stages include their micrometers.")
     txt = "\n".join(rep); print(txt)
-    with open(os.path.join(OUT, "station_checks.txt"), "w") as f: f.write(txt + "\n")
+    with open(os.path.join(OUT, f"station_checks{suffix}.txt"), "w") as f: f.write(txt + "\n")
 
     # ---- assembly export (nest configuration + ghost of stick configuration) ----
     assy = cq.Assembly(name="test_station")
@@ -365,7 +407,10 @@ def main():
         assy.add(s, name=n, color=cq.Color(0.18, 0.31, 0.44, 0.25))
     for n, s in grip_stick.items(): assy.add(s, name=f"gripper_at_far_col_{n}", color=cq.Color(0.25, 0.25, 0.27, 0.25))
     assy.add(keepout(), name="objective_keepout", color=cq.Color(0.85, 0.64, 0.25, 0.25))
-    assy.save(os.path.join(OUT, "station_assembly.step"))
+    assy.save(os.path.join(OUT, f"station_assembly{suffix}.step"))
+    if USE_VENDOR:
+        print("wrote vendor-model assembly to", OUT, "(SVG views skipped; render with `cadgen step snapshot`)")
+        return
 
     # ---- views ----
     solids = [s.val() for s in list(static.values()) + list(moving_nest.values()) + [ybody, ycar, deck, stick] + list(grip_nest.values())]
