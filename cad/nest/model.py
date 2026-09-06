@@ -21,13 +21,16 @@ exiting as a stub tube on the -X side; a thermistor bore enters from +X.
 Die stage (the nest moves): the devices span ~8 mm along X but the fiber stages only travel
 4 mm, so the die is stepped from device to device by a Suruga KXC04015-C X stage under the
 nest (15 mm travel, DS102-driven, 1 um half step), exactly as the current tester does with its
-centre stage. A Suruga RPG38 manual rotary stage (micrometer head, +/-5 deg fine, ~0.024 deg per
-graduation) sits UNDER the X stage so one adjustment aligns both the stop-pad datum and the
-stage travel to the fiber-stage axes; it is set once with a gauge die and clamped. The stack
-from the table up: KB1X1 kinematic base, adapter, RPG38, adapter, KXC04015-C, riser, cage/chuck.
-The motor and the micrometer point -X (the only free direction: +X is the microscope column,
-+/-Y the fiber stages). The gripper meets the nest only at the stage HOME position; the exchange
-sequence homes the stage first and the fence enforces it.
+centre stage. A MISUMI RMPG40W-N motorized worm-gear rotary stage (40 mm class, horizontal table,
+5-phase stepper on the DS102's second axis) sits UNDER the X stage so one rotation aligns both the
+stop-pad datum and the stage travel to the fiber-stage axes; it is set with a gauge die and can
+re-trim yaw per die if open-loop device stepping is wanted. The stack from the table up: KB1X1
+kinematic base, 5 mm adapter, RMPG40W-N (35 tall), 3 mm adapter, KXC04015-C (30), riser, cage/chuck.
+Both motors point -X (the only free direction: +X is the microscope column, +/-Y the fiber stages);
+the rotary's body is longer on its motor side, which is turned toward -Y. The stack needs 100 mm
+under the die, so the fiber stages and the Y stage sit on 25 mm risers (common.NANOMAX_RISER) and
+the table plane is at Z -111. The gripper meets the nest only at the stage HOME position; the
+exchange sequence homes the stage first and the fence enforces it.
 
 Frame, die and contact rules: cad/common (X die long axis, Y optical axis, Z up, die bottom at the nest = 0).
 The gripper parts used for the checks come from cad/gripper.
@@ -36,9 +39,9 @@ Outputs (this folder):
   STEP/nest_chuck_copper.step (+STL/)   C101 copper, Ni plated, pad lapped flat <= 3 um; 6 x dia 0.5 vacuum holes
   STEP/nest_cage_semitron.step (+STL/)  Semitron ESd 480 frame: 4 corner blocks (X stop pads, X guard, Y guards)
   STEP/nest_riser_6061.step             T-shaped riser / heat sink: 10 mm neck, TEC pocket, on the KXC04015 table
-  STEP/nest_adapter_kb_rpg.step         adapter plate KB1X1 -> RPG38            (6061, 3 mm)
-  STEP/nest_adapter_rpg_kxc.step        adapter plate RPG38 -> KXC04015 base    (6061, 3 mm)
-  STEP/nest_module_assembly.step        chuck + cage + riser + TEC + die stage stack + die + gripper (closed) + fiber/holder envelopes
+  STEP/nest_adapter_kb_rpg.step         adapter plate KB1X1 -> RMPG40W-N base   (6061, 5 mm, 4 x M3 tapped on 32 sq)
+  STEP/nest_adapter_rpg_kxc.step        adapter plate RMPG40W-N table -> KXC04015 base (6061, 3 mm, M2 at +/-10, M3 tapped at +/-16)
+  STEP/nest_module_assembly.step        chuck + cage + riser + TEC + die stage stack (vendor STEP where present) + die + gripper (closed) + envelopes
   STEP/nest_module_setdown.step         same with the jaws open at the set-down position (push step)
   checks.txt                            clearances vs gripper (closed / open / push), holders, fibers, die; stage at home and +/-travel
 
@@ -85,8 +88,16 @@ N = dict(
     # --- push-to-stop ---
     place_short=0.2, push_overtravel=0.10,
     # --- die stage stack under the riser (bottom up), all centred on the die centre (X 5, Y 3) ---
-    adapter_t=3.0,                                                      # two 6061 adapter plates (bolt-pattern changes)
-    rpg=dict(dia=38.0, h=16.0, mic_dia=13.0, mic_len=37.0, clamp_len=10.0),   # Suruga RPG38: dia 38 table, 16 tall, micrometer head -X
+    adapter_t=3.0, adapter1_t=5.0,                                      # 6061 adapter plates (bolt-pattern changes); the lower one takes the
+                                                                        # RMPG40W-N's M3 fixing bolts (they protrude 5 mm below its base)
+    # MISUMI RMPG40W-N (from the vendor STEP): body 40 (X) x 55 (Y) x 35 tall, rotation axis 20 from the short end / 35 from the motor
+    # end; 39 sq table 6.5 thick with 8 x M2 on a 10 mm grid + dia 8 bore; base 4 x M3 cbore on 32 x 32 around the axis (bolted from
+    # above); worm housing + 28 sq stepper along the body's +X (motor centre 24 from the axis toward the long end), cable dia 14 to X 184
+    rot=dict(w=40.0, len_short=20.0, len_long=35.0, h=35.0, table=39.0, table_t=6.5, worm=(20.0, 42.0), motor=(42.0, 59.5), motor_sq=28.0,
+             motor_off=24.0, cable=(60.0, 100.0), cable_d=14.0, motor_side=-1),   # motor_side: the long end / motor go to station -Y
+                                                                        # cable: only the 40 mm straight lead-out is modelled; the vendor file
+                                                                        # draws it straight to 184 (station X -179), which would run into the
+                                                                        # Y-stage riser at X < -150 -> route it down/along -Y after the lead-out
     kxc=dict(table=40.0, h=30.0, base_h=21.0, base_len=43.5, overhang=3.5,    # Suruga KXC04015-C (catalog p.1-132): 40 sq table, 30 tall,
              motor_len=59.0, coupling_len=12.0, coupling_h=15.0,        # 59 mm motor section: 12 mm coupling housing (15 tall, the table
              motor_w=28.0, motor_z=(4.0, 34.0), knob_len=4.0, knob_dia=12.0,   # passes over it) + 47 mm motor box 28 wide, 4..34 tall (above the table top!)
@@ -181,8 +192,8 @@ def levels(table_z=C.TABLE_Z, kb_top=None):
     """Z of every interface in the die-stage stack (bottom up). kb_top defaults to the KB1X1 height from common."""
     kb_top = table_z + C.KB1X1_H if kb_top is None else kb_top
     t = N["adapter_t"]
-    z = {"table": table_z, "kb_top": kb_top, "ad1_top": kb_top + t}
-    z["rpg_top"] = z["ad1_top"] + N["rpg"]["h"]
+    z = {"table": table_z, "kb_top": kb_top, "ad1_top": kb_top + N["adapter1_t"]}
+    z["rpg_top"] = z["ad1_top"] + N["rot"]["h"]
     z["ad2_top"] = z["rpg_top"] + t
     z["kxc_bottom"] = z["ad2_top"]
     z["kxc_base_top"] = z["kxc_bottom"] + N["kxc"]["base_h"]
@@ -191,10 +202,11 @@ def levels(table_z=C.TABLE_Z, kb_top=None):
 
 
 def adapter_kb_rpg(z0):
-    """Square plate on the KB1X1 top platform (25.4 sq) carrying the RPG38 base: 4 x M3 up into the RPG38's
-    dia 3.5 counterbored holes (32 pitch assumed; confirm on the part), 4 x clearance for the KB1X1 platform screws."""
-    t = N["adapter_t"]; d = N["rpg"]["dia"]
-    a = box(DIE_CX - d / 2 - 1, DIE_CX + d / 2 + 1, DIE_CY - d / 2 - 1, DIE_CY + d / 2 + 1, z0, z0 + t)
+    """Plate on the KB1X1 top platform (25.4 sq) carrying the RMPG40W-N base: 4 x M3 tapped on the rotary's 32 x 32 pattern
+    (its fixing bolts come down through its body, confirmed in the vendor STEP), 4 x clearance for the KB1X1 platform screws."""
+    t = N["adapter1_t"]; r = N["rot"]; sgn = r["motor_side"]
+    y0, y1 = sorted((DIE_CY + sgn * r["len_long"], DIE_CY - sgn * r["len_short"]))
+    a = box(DIE_CX - r["w"] / 2, DIE_CX + r["w"] / 2, y0, y1, z0, z0 + t)
     for dx in (-16, 16):
         for dy in (-16, 16):
             a = a.cut(cyl_z(DIE_CX + dx, DIE_CY + dy, z0 - 0.1, z0 + t + 0.1, 1.25))
@@ -205,27 +217,66 @@ def adapter_kb_rpg(z0):
 
 
 def adapter_rpg_kxc(z0):
-    """Plate on the RPG38 table (4 x M2.6 pattern) carrying the KXC04015 base: 4 x M3 tapped on the 32 mm grid."""
+    """Plate on the RMPG40W-N table (8 x M2 on a 10 mm grid, confirmed in the vendor STEP) carrying the KXC04015 base:
+    4 x M3 tapped on the 32 mm grid, 4 x M2 clearance at (+/-10, +/-10), dia 8 relief over the rotary's bore."""
     t = N["adapter_t"]; k = N["kxc"]["table"]
     a = box(DIE_CX - k / 2, DIE_CX + k / 2, DIE_CY - k / 2, DIE_CY + k / 2, z0, z0 + t)
     p = N["kxc"]["mount_pitch"] / 2
     for dx in (-p, p):
         for dy in (-p, p):
             a = a.cut(cyl_z(DIE_CX + dx, DIE_CY + dy, z0 - 0.1, z0 + t + 0.1, 1.25))
-    for dx in (-8, 8):
-        for dy in (-8, 8):
-            a = a.cut(cyl_z(DIE_CX + dx, DIE_CY + dy, z0 - 0.1, z0 + t + 0.1, 1.45))
+    for dx in (-10, 10):
+        for dy in (-10, 10):
+            a = a.cut(cyl_z(DIE_CX + dx, DIE_CY + dy, z0 - 0.1, z0 + t + 0.1, 1.15))
     return a
 
 
-def rpg38(z0):
-    """Suruga RPG38 envelope: dia 38 body, micrometer head (dia 13, 37 long) pointing -X, opposing clamp +X. (body, micrometer, clamp)."""
-    r = N["rpg"]
-    body = cyl_z(DIE_CX, DIE_CY, z0, z0 + r["h"], r["dia"] / 2)
-    zc = z0 + r["h"] / 2
-    mic = cyl_x(DIE_CY + r["dia"] / 2 - r["mic_dia"] / 2 - 2, zc, DIE_CX - r["dia"] / 2 - r["mic_len"], DIE_CX - r["dia"] / 2 + 6, r["mic_dia"] / 2)
-    clamp = box(DIE_CX + r["dia"] / 2 - 4, DIE_CX + r["dia"] / 2 + r["clamp_len"], DIE_CY + r["dia"] / 2 - 12, DIE_CY + r["dia"] / 2 - 4, z0 + 2, z0 + r["h"] - 2)
-    return body, mic, clamp
+def _rot_frame(w, z0):
+    """Vendor RMPG40W-N file frame (X = worm/motor direction, Y = rotation axis (table at +Y), Z = body length with the axis at Z -24)
+    -> station: axis vertical through the die centre, motor toward -X, long end toward motor_side * Y."""
+    sgn = N["rot"]["motor_side"]
+    w = w.rotate((0, 0, 0), (1, 0, 0), 90)                      # (x, y, z) -> (x, -z, y): axis up
+    w = w.rotate((0, 0, 0), (0, 0, 1), 180)                     # -> (-x, z, y): motor toward -X, long end (+z) toward +Y
+    if sgn < 0:
+        w = w.mirror("XZ")                                      # long end toward -Y instead
+    return w.translate((DIE_CX, DIE_CY + sgn * 24.0, z0 + 16.5))   # file axis lands at Y -/+24 after the rotations / mirror
+
+
+def rmpg40w(z0):
+    """MISUMI RMPG40W-N envelope in the station frame: body, table, worm housing, motor, cable. Base face at z0, table top at z0 + 35."""
+    r = N["rot"]; sgn = r["motor_side"]
+    yl = DIE_CY + sgn * r["len_long"]; ys = DIE_CY - sgn * r["len_short"]
+    y0, y1 = min(yl, ys), max(yl, ys)
+    body = box(DIE_CX - r["w"] / 2, DIE_CX + r["w"] / 2, y0, y1, z0, z0 + r["h"] - r["table_t"])
+    body = body.cut(cyl_z(DIE_CX, DIE_CY, z0 - 0.1, z0 + r["h"] + 0.1, 4.0))
+    t = r["table"]
+    table = box(DIE_CX - t / 2, DIE_CX + t / 2, DIE_CY - t / 2, DIE_CY + t / 2, z0 + r["h"] - r["table_t"], z0 + r["h"])
+    for dx in (-10, 0, 10):
+        for dy in (-10, 0, 10):
+            table = table.cut(cyl_z(DIE_CX + dx, DIE_CY + dy, z0 + r["h"] - 3.7, z0 + r["h"] + 0.1, 4.0 if (dx == 0 and dy == 0) else 0.8))
+    ym = DIE_CY + sgn * r["motor_off"]; ms = r["motor_sq"] / 2; zc = z0 + 16.5
+    worm = box(DIE_CX - r["worm"][1], DIE_CX - r["worm"][0], ym - 14, ym + 14, zc - 14, zc + 14)
+    motor = box(DIE_CX - r["motor"][1], DIE_CX - r["motor"][0], ym - ms, ym + ms, zc - ms, zc + ms)
+    cable = cyl_x(ym - sgn * 5.5, zc - 11.6, DIE_CX - r["cable"][1], DIE_CX - r["cable"][0], r["cable_d"] / 2)
+    return {"body": body, "table": table, "worm": worm, "motor": motor, "cable": cable}
+
+
+def rmpg40w_vendor(z0, path=None):
+    """MISUMI RMPG40W-N from the vendor STEP (cad/vendor/misumi_RMPG40W-N.step, git-ignored). 5 solids: body (with worm housing,
+    motor, cable), table plate, three M3 fixing bolts. Split by bounding box; bolts merged into the body. Returns the same dict
+    as rmpg40w() (worm/motor/cable are the body's sub-boxes for the checks) or None."""
+    path = path or C.vendor_path("misumi_RMPG40W-N.step")
+    if not os.path.exists(path):
+        return None
+    wp = cq.importers.importStep(path)
+    sol = sorted(wp.solids().vals(), key=lambda t: -t.Volume())
+    body = _rot_frame(cq.Workplane().add(sol[0]), z0)
+    body = body.cut(box(DIE_CX - 400, DIE_CX - N["rot"]["cable"][1], -100, 100, z0 - 50, z0 + 100))   # drop the straight cable past the lead-out
+    table = _rot_frame(cq.Workplane().add(sol[1]), z0)
+    bolts = _rot_frame(cq.Workplane().add(cq.Compound.makeCompound(sol[2:])), z0)
+    env = rmpg40w(z0)
+    return {"body": body, "table": table, "bolts": bolts, "worm": body.intersect(env["worm"]), "motor": body.intersect(env["motor"]),
+            "cable": body.intersect(box(*[c for pair in zip(bb(env["cable"])[0::2], bb(env["cable"])[1::2]) for c in pair]))}
 
 
 def kxc04015(z0, x_off=0.0):
@@ -250,14 +301,44 @@ def kxc04015(z0, x_off=0.0):
     return {"base": base, "table": table, "coupling": coupling, "motor": motor, "knob": knob}
 
 
-def stack(table_z=C.TABLE_Z, kb_top=None, x_off=0.0):
-    """All die-stage stack parts under the riser, name -> shape, plus the levels dict."""
+def kxc04015_vendor(z0, x_off=0.0, path=None):
+    """Suruga KXC04015-C from the vendor STEP (cad/vendor/suruga_KXC04015-C.step, git-ignored). File frame: X = travel
+    (motor at +X), Y = up (base bottom Y 0, table top Y 30), Z = width (+/-20), table drawn at mid travel. Confirmed from the
+    file: table 8 x M3 on a 16 mm grid + dia 4 centre pin; base 4 x dia 3.5 through on 32 x 32 + dia 4 centre + one dia 5 at
+    (27.5, 4); base solid runs to X 31 (sensor cover), motor box 28 sq x 38 long at X 41..79, 34 tall (4 above the table top).
+    Station frame: X = -file X (motor toward -X), Y = file Z, Z = file Y. Returns the same dict as kxc04015() or None."""
+    path = path or C.vendor_path("suruga_KXC04015-C.step")
+    if not os.path.exists(path):
+        return None
+    wp = cq.importers.importStep(path)
+    parts = {}
+    for t in wp.solids().vals():
+        b = t.BoundingBox()
+        if b.ymin > 15 and b.xmax < 25:
+            k = "table"
+        elif b.xmin > 40:
+            k = "motor"
+        elif b.xmax <= 31.5 and b.ymin < 1:
+            k = "base"
+        else:
+            k = "coupling"
+        w = cq.Workplane().add(t).rotate((0, 0, 0), (1, 0, 0), 90).rotate((0, 0, 0), (0, 0, 1), 180)   # (x, y, z) -> (-x, z, y)
+        w = w.translate((DIE_CX + (x_off if k == "table" else 0.0), DIE_CY, z0))
+        parts[k] = w
+    parts["knob"] = parts["coupling"]                                                                  # knob/cable are in the coupling solid
+    return parts
+
+
+def stack(table_z=C.TABLE_Z, kb_top=None, x_off=0.0, vendor=False):
+    """All die-stage stack parts under the riser, name -> shape, plus the levels dict. vendor=True places the Suruga
+    KXC04015-C and MISUMI RMPG40W-N STEP files when they are present."""
     z = levels(table_z, kb_top)
-    body, mic, clamp = rpg38(z["ad1_top"])
-    kx = kxc04015(z["kxc_bottom"], x_off)
-    parts = {"nest_adapter_kb_rpg": adapter_kb_rpg(z["kb_top"]), "rpg38_body": body, "rpg38_micrometer": mic, "rpg38_clamp": clamp,
-             "nest_adapter_rpg_kxc": adapter_rpg_kxc(z["rpg_top"]), "kxc04015_base": kx["base"], "kxc04015_table": kx["table"],
-             "kxc04015_coupling": kx["coupling"], "kxc04015_motor": kx["motor"], "kxc04015_knob": kx["knob"]}
+    ro = (rmpg40w_vendor(z["ad1_top"]) if vendor else None) or rmpg40w(z["ad1_top"])
+    kx = (kxc04015_vendor(z["kxc_bottom"], x_off) if vendor else None) or kxc04015(z["kxc_bottom"], x_off)
+    parts = {"nest_adapter_kb_rpg": adapter_kb_rpg(z["kb_top"])}
+    parts.update({f"rmpg40w_{k}": v for k, v in ro.items()})
+    parts.update({"nest_adapter_rpg_kxc": adapter_rpg_kxc(z["rpg_top"]), "kxc04015_base": kx["base"], "kxc04015_table": kx["table"],
+                  "kxc04015_coupling": kx["coupling"], "kxc04015_motor": kx["motor"], "kxc04015_knob": kx["knob"]})
     return parts, z
 
 
@@ -327,7 +408,7 @@ def moving_members(x_off=0.0):
 def main():
     z = levels()
     ch, cg, rs, te = chuck(), cage(), riser(z["stage_top"]), tec()
-    stk, _ = stack()
+    stk, _ = stack(vendor=True)                       # vendor stages where their files exist, envelopes otherwise
     die_seated = C.die()
     die_placed = C.die().translate((-N["place_short"], 0, 0))
     die_yoff = C.die().translate((-N["place_short"], -0.4, 0))
@@ -363,11 +444,11 @@ def main():
         f"{len(N['vac_holes'])} x dia {N['vac_d']} vacuum holes; copper neck to a {N['tec'][0]:.0f} x {N['tec'][1]:.0f} TEC at Z {N['tec_z']}.",
         f"Push-to-stop: set down {N['place_short']} mm short, jaws open, gripper +{push:.2f} mm -> near nose seats the die with "
         f"{G.flexure_k() * N['push_overtravel'] * 1e-3:.2f} N (blade overtravel {N['push_overtravel']} mm).",
-        f"Die stage stack (table Z {z['table']:.1f}): KB1X1 top {z['kb_top']:.1f}, adapter, RPG38 {z['ad1_top']:.1f}..{z['rpg_top']:.1f}, adapter, "
+        f"Die stage stack (table Z {z['table']:.1f}): KB1X1 top {z['kb_top']:.1f}, adapter, RMPG40W-N {z['ad1_top']:.1f}..{z['rpg_top']:.1f}, adapter, "
         f"KXC04015-C {z['kxc_bottom']:.1f}..{z['stage_top']:.1f} (table top), riser wide body {z['stage_top']:.1f}..{N['wide_top']:.1f} "
         f"({N['wide_top'] - z['stage_top']:.1f} mm: TEC pocket {N['tec'][2]} + floor), neck to the cage plate at {N['cage'][4]:.1f}.",
-        f"Stage travel {k['travel']:.0f} mm (+/-{k['travel'] / 2:.1f}); device stepping uses +/-{N['stage_step_used']:.0f}. Motor section and RPG38 "
-        f"micrometer point -X (X < {DIE_CX - k['table'] / 2:.0f}). The gripper meets the nest at stage HOME only.",
+        f"Stage travel {k['travel']:.0f} mm (+/-{k['travel'] / 2:.1f}); device stepping uses +/-{N['stage_step_used']:.0f}. Both motors point -X "
+        f"(X < {DIE_CX - k['table'] / 2:.0f}); the rotary's long end and motor toward {'-' if N['rot']['motor_side'] < 0 else '+'}Y. The gripper meets the nest at stage HOME only.",
         "",
     ]
 
@@ -443,7 +524,23 @@ def main():
             need = 2.0
         if g < 6.0 or on.startswith("fiber"):
             rep.append(f"  {mn:24s} vs {on:26s}: {g:7.2f} @{xo:+.1f}{'  OK ' if g > need else ('  TIGHT' if g > -1e-6 else '  ** OVERLAP **')}")
-    rep.append("fixed stack members vs the holders and fibers (RPG38 micrometer and KXC motor point -X):")
+    kv = kxc04015_vendor(z["kxc_bottom"])
+    if kv is not None:
+        rep.append("KXC04015-C vendor STEP vs the catalog envelope (station frame; the file is the record where they differ):")
+        ke = kxc04015(z["kxc_bottom"])
+        for kname in ("base", "table", "motor", "coupling"):
+            bv, be = bb(kv[kname]), bb(ke[kname])
+            rep.append(f"  {kname:10s} vendor X {bv[0]:6.1f}..{bv[1]:6.1f} Y {bv[2]:6.1f}..{bv[3]:6.1f} Z {bv[4]:6.1f}..{bv[5]:6.1f}   "
+                       f"envelope X {be[0]:6.1f}..{be[1]:6.1f} Y {be[2]:6.1f}..{be[3]:6.1f} Z {be[4]:6.1f}..{be[5]:6.1f}")
+    rv = rmpg40w_vendor(z["ad1_top"])
+    if rv is not None:
+        rep.append("RMPG40W-N vendor STEP vs the envelope (station frame):")
+        re_ = rmpg40w(z["ad1_top"])
+        for kname in ("body", "table", "motor", "cable"):
+            bv, be = bb(rv[kname]), bb(re_[kname])
+            rep.append(f"  {kname:10s} vendor X {bv[0]:6.1f}..{bv[1]:6.1f} Y {bv[2]:6.1f}..{bv[3]:6.1f} Z {bv[4]:6.1f}..{bv[5]:6.1f}   "
+                       f"envelope X {be[0]:6.1f}..{be[1]:6.1f} Y {be[2]:6.1f}..{be[3]:6.1f} Z {be[4]:6.1f}..{be[5]:6.1f}")
+    rep.append("fixed stack members vs the holders and fibers (both motors point -X):")
     for sn, sv in stk.items():
         for fn_, fe in fib.items():
             g = gap(bb(sv), bb(fe))
@@ -483,6 +580,9 @@ def main():
     for k in ("far_tip", "near_tip", "blade", "near_arm", "far_arm"):
         a2.add(grip_open[k].translate((-N["place_short"], 0, 0)), name=f"gripper_{k}_open", color=cq.Color(0.55, 0.58, 0.62, 1.0))
     a2.save(os.path.join(DIRS["STEP"], "nest_module_setdown.step"))
+    for old in ("nest_module_assembly_vendor.step",):
+        try: os.remove(os.path.join(DIRS["STEP"], old))
+        except OSError: pass
     print("wrote", DIRS["comp"])
 
 

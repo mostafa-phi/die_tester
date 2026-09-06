@@ -58,7 +58,10 @@ OBJ_WD, OBJ_DIA, TUBE_DIA = 20.0, 34.0, 40.0
 # ----------------------------------------------------------------------------
 NANOMAX = dict(w=112.0, h=62.5, platform_h=4.0, gap_y=45.0)   # footprint, deck height, top platform, inner face to facet
 HOLDER_AXIS_ABOVE_DECK = 20.0                                  # fiber axis above the NanoMax platform (holder-dependent; measure)
-TABLE_Z = DIE_TOP - HOLDER_AXIS_ABOVE_DECK - NANOMAX["h"] - NANOMAX["platform_h"]   # -86.0
+NANOMAX_RISER = 25.0                                           # riser plate under each NanoMax (and under the Y stage): the motorized
+                                                               # die-stage stack (KB1X1 + RMPG40W-N 35 + KXC04015 30 + riser) needs
+                                                               # 100 mm under the die; the fiber stages set the table plane, so they rise
+TABLE_Z = DIE_TOP - HOLDER_AXIS_ABOVE_DECK - NANOMAX["h"] - NANOMAX["platform_h"] - NANOMAX_RISER   # -111.0
 KB1X1_H = 12.7                                                 # Thorlabs KB1X1 kinematic base, assembled height (vendor STEP 2374-E0W)
 
 

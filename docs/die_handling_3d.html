@@ -128,7 +128,7 @@
         <span class="sw" style="background:#3a9d5d"></span><span>End faces, middle 3 mm. Gripper noses only.</span>
         <span class="sw" style="background:#8f8f8f"></span><span>Backside. Nest chuck pad, pocket ledges, ejector pins.</span>
         <span class="sw" style="background:#b87333"></span><span>Nest: lapped copper vacuum chuck (9 × 5 mm pad, TEC below); two +X stop pads register X and yaw by push-to-stop; corner guards cage Y to ±0.6 mm.</span>
-        <span class="sw" style="background:#44474d"></span><span>Die stage under the nest: Suruga KXC04015-C X stage (15 mm travel) steps the die from device to device under the fixed fibers; Suruga RPG38 rotary below it is set once for yaw. The gripper meets the nest at stage home only.</span>
+        <span class="sw" style="background:#44474d"></span><span>Die stage under the nest: Suruga KXC04015-C X stage (15 mm travel) steps the die from device to device under the fixed fibers; MISUMI RMPG40W-N motorized rotary below it sets yaw. The stack needs 100 mm, so the fiber stages sit on 25 mm risers. The gripper meets the nest at stage home only.</span>
         <span class="sw" style="background:#3d3d3d"></span><span>Noses: 0.35 mm tall, top 0.10 mm below the die surface; the two 3 × 3 mm bars and tip blocks are the only tool parts under the objective.</span>
       </div>
       <div class="hint">Geometry follows the CAD package (<code>cad/station</code>, <code>cad/gripper</code>, <code>cad/nest</code>, <code>cad/tray</code>; envelope build) and the concept study rev. 2.9. Still to measure on the bench: fiber-axis height above the NanoMax platform, objective working distance and tube diameter.</div>
@@ -409,8 +409,8 @@
   // Scene 1: test station exchange (mirrors cad/station/model.py, envelope build)
   // =====================================================================
   const ST = {
-    tableZ: -86, gapY: 45, nanoW: 112, nanoH: 62.5, platH: 4, protr: 5,
-    xAxisCy: -100, axisW: 102, axisH: 64, carT: 10, carLen: 102, xRiser: 86, xcNest: -140,
+    tableZ: -111, riser: 25, gapY: 45, nanoW: 112, nanoH: 62.5, platH: 4, protr: 5,   // NanoMax and Y stage on 25 mm risers (die-stage stack needs 100 mm)
+    xAxisCy: -100, axisW: 102, axisH: 64, carT: 10, carLen: 102, xRiser: 111, xcNest: -140,
     xBody: [-460, -80], zBodyLen: 150, yBody: [-38, 167],
     cols: 8, rows: 14, colPitch: 16, rowPitch: 7.5, col0X: -150,
     gxPark: -60,                         // gripper die-origin X while a die is measured (far tip at X -44, outside the nest and keep-out)
@@ -450,16 +450,20 @@
       // cage plate), Semitron cage plate with four corner blocks (+X stop pads, -X guard, Y guards), copper chuck (block, neck to the
       // TEC, 9 x 5 lapped pad island at Z -1.5..0), TEC 15 x 15 under the neck
       g.add(cb(-540, 220, -280, 280, tz - 12, tz, mat(0xd6dae0)));
-      // die stage stack (cad/nest levels()): KB1X1 12.7, adapter 3, RPG38 16 (micrometer -X), adapter 3, KXC04015-C 30 (table top Z -21.3,
-      // motor section 59 toward -X, motor box 4 mm above the table top), riser 38 sq wide body on the table
+      // die stage stack (cad/nest levels()): KB1X1 12.7, adapter 5, MISUMI RMPG40W-N motorized rotary 35 (body 40 x 55, axis 20 from the
+      // short end, motor toward -X, long end toward -Y), adapter 3, KXC04015-C 30 (table top Z -25.3, motor section 59 toward -X,
+      // motor box 4 mm above the table top), riser 38 sq wide body on the table
       const mDark = mat(0x33363c), mAl = mat(COL.stage);
       g.add(cb(-7.7, 17.7, -9.7, 15.7, tz, tz + 12.7, mat(0x6f7378)));                     // KB1X1 kinematic base
-      g.add(cb(-15, 25, -17, 23, tz + 12.7, tz + 15.7, mAl));                              // adapter KB1X1 -> RPG38
-      const rpg = vcyl(5, 3, 19, tz + 15.7, tz + 31.7, mDark); g.add(rpg);                // RPG38 body dia 38 x 16
-      const mic = cyl(6.5, 43, mat(0xbfc3c9)); mic.rotation.z = Math.PI / 2; mic.position.set(-14 - 21.5 + 6, tz + 23.7, 3 + 19 - 8.5); g.add(mic);   // micrometer head -X
-      g.add(cb(24 - 4, 24 + 10, 3 + 19 - 12, 3 + 19 - 4, tz + 17.7, tz + 29.7, mDark));  // opposing clamp +X
-      g.add(cb(-15, 25, -17, 23, tz + 31.7, tz + 34.7, mAl));                              // adapter RPG38 -> KXC04015 base
-      const kz = tz + 34.7;                                                                // KXC04015-C bottom (Z -51.3)
+      g.add(cb(-15, 25, -32, 23, tz + 12.7, tz + 17.7, mAl));                              // adapter KB1X1 -> RMPG40W-N (5 mm)
+      const rz = tz + 17.7;                                                                // rotary base face (Z -93.3)
+      g.add(cb(-15, 25, -32, 23, rz, rz + 28.5, mDark));                                   // RMPG40W-N body
+      g.add(cb(-14.5, 24.5, -16.5, 22.5, rz + 28.5, rz + 35, mat(0x44474d)));              // rotary table 39 sq
+      g.add(cb(-37, -15, -35, -7, rz + 2.5, rz + 30.5, mDark));                            // worm housing toward -X
+      g.add(cb(-54.5, -37, -35, -7, rz + 2.5, rz + 30.5, mat(0x4d5058)));                  // 28 sq stepper
+      const rc = cyl(7, 40, mDark); rc.rotation.z = Math.PI / 2; rc.position.set(-75, rz + 5, -15.5); g.add(rc);   // cable lead-out (routed down after this)
+      g.add(cb(-15, 25, -17, 23, rz + 35, rz + 38, mAl));                                  // adapter RMPG40W-N -> KXC04015 base (3 mm)
+      const kz = rz + 38;                                                                  // KXC04015-C bottom (Z -55.3)
       g.add(cb(-15, 28.5, -17, 23, kz, kz + 21, mDark));                                   // base 40 x 43.5 x 21
       this.kxcTable = new THREE.Group(); g.add(this.kxcTable);
       this.kxcTable.add(cb(-15, 25, -17, 23, kz + 21, kz + 30, mat(0x44474d)));            // table 40 sq, top at Z -21.3 (moves +/-7.5 in X)
@@ -484,10 +488,11 @@
       [-1, 1].forEach((s) => {
         const yIn = s < 0 ? -ST.gapY : 6 + ST.gapY;                       // inner face
         const y0 = s < 0 ? yIn - ST.nanoW : yIn, y1 = y0 + ST.nanoW;
-        g.add(cb(-51, 61, y0, y1, tz, tz + ST.nanoH, mat(COL.axisFixed)));
+        g.add(cb(-51, 61, y0, y1, tz, tz + ST.riser, mat(COL.stage)));                 // 25 mm riser plate
+        g.add(cb(-51, 61, y0, y1, tz + ST.riser, tz + ST.riser + ST.nanoH, mat(COL.axisFixed)));
         const mv = new THREE.Group();                                      // platform + holder + fiber (moves with the stage's Y axis)
-        mv.add(cb(-41, 51, y0 + 6, y1 - 6, tz + ST.nanoH, tz + ST.nanoH + ST.platH, mat(COL.gantry)));
-        const pt = tz + ST.nanoH + ST.platH;
+        mv.add(cb(-41, 51, y0 + 6, y1 - 6, tz + ST.riser + ST.nanoH, tz + ST.riser + ST.nanoH + ST.platH, mat(COL.gantry)));
+        const pt = tz + ST.riser + ST.nanoH + ST.platH;
         // holder envelope (cad/common FIBER): tip 5 mm beyond the holder front, body 25 wide, Z -8..+4, 20 long
         if (s < 0) {
           mv.add(cb(-4, 14, y1 - 14, y1 - 6, pt, 4.5, mat(COL.clamp)));
@@ -532,9 +537,10 @@
       this.gr = makeGripper(); this.gr.position.set(gxr, 0, 0); this.zCar.add(this.gr);
       // Y stage (105 mm travel) under the wafer tray: 8 columns along X x 14 rows along Y = 112 pockets
       const trayX0 = ST.colX[ST.cols - 1] - 4, trayX1 = ST.colX[0] + 14, trayCx = (trayX0 + trayX1) / 2, trayLenY = ST.rows * ST.rowPitch + 1.5;
-      g.add(cb(trayCx - ST.axisW / 2, trayCx + ST.axisW / 2, ST.yBody[0], ST.yBody[1], tz, tz + ST.axisH, mat(COL.axisFixed)));
+      g.add(cb(trayCx - ST.axisW / 2, trayCx + ST.axisW / 2, ST.yBody[0], ST.yBody[1], tz, tz + ST.riser, mat(COL.stage)));   // Y-stage riser plate
+      g.add(cb(trayCx - ST.axisW / 2, trayCx + ST.axisW / 2, ST.yBody[0], ST.yBody[1], tz + ST.riser, tz + ST.riser + ST.axisH, mat(COL.axisFixed)));
       this.yCar = new THREE.Group(); g.add(this.yCar);
-      const yc0 = tz + ST.axisH, yc = 3;                                                 // carriage centre when the middle row is on the die line
+      const yc0 = tz + ST.riser + ST.axisH, yc = 3;                                      // carriage centre when the middle row is on the die line
       this.yCar.add(cb(trayCx - ST.axisW / 2, trayCx + ST.axisW / 2, yc - ST.carLen / 2, yc + ST.carLen / 2, yc0, yc0 + ST.carT, mat(COL.axisMove)));
       this.yCar.add(cb(trayX0 - 8, trayX1 + 8, yc - trayLenY / 2 - 8, yc + trayLenY / 2 + 8, yc0 + ST.carT, -6, mat(COL.deck)));
       const rowsY0 = Array.from({ length: ST.rows }, (_, k) => yc + (k - (ST.rows - 1) / 2) * ST.rowPitch - 3);
@@ -560,13 +566,13 @@
       this.die2 = makeDie(); g.add(this.die2);
       // labels
       addLabel('nest · copper vacuum chuck · +X stop pads · TEC below', () => new THREE.Vector3(5, -5, -12));
-      addLabel('die stage · Suruga KXC04015-C (X ±7.5) on RPG38 rotary · KB1X1', () => new THREE.Vector3(-30, tz + 40, -20));
+      addLabel('die stage · Suruga KXC04015-C (X ±7.5) on MISUMI RMPG40W-N rotary · KB1X1', () => new THREE.Vector3(-30, tz + 50, -20));
       addLabel('fiber', () => new THREE.Vector3(5, 2.4, -9));
       addLabel('fiber', () => new THREE.Vector3(5, 2.4, 15));
-      addLabel('NanoMax 300 (input)', () => new THREE.Vector3(5, tz + 66, -ST.gapY - 56));
-      addLabel('NanoMax 300 (output)', () => new THREE.Vector3(5, tz + 66, 6 + ST.gapY + 56));
+      addLabel('NanoMax 300 (input) on 25 mm riser', () => new THREE.Vector3(5, tz + ST.riser + 66, -ST.gapY - 56));
+      addLabel('NanoMax 300 (output) on 25 mm riser', () => new THREE.Vector3(5, tz + ST.riser + 66, 6 + ST.gapY + 56));
       addLabel('microscope column X +80', () => new THREE.Vector3(80, 200, 3));
-      addLabel('X axis · 381 mm · on 86 mm riser', () => new THREE.Vector3(-300, zb + ST.axisH + 2, ST.xAxisCy));
+      addLabel('X axis · 381 mm · on 111 mm riser', () => new THREE.Vector3(-300, zb + ST.axisH + 2, ST.xAxisCy));
       addLabel('Z axis', () => this.xCar.localToWorld(new THREE.Vector3(0, zc0 + ST.carT + ST.zBodyLen + 2, ST.xAxisCy)));
       addLabel('25 sq L-arm', () => this.zCar.localToWorld(new THREE.Vector3(gxr - 44, 105, -30)));
       addLabel('gripper module (SMC MHZ2-6D)', () => this.gr.localToWorld(new THREE.Vector3(-30, 72, 3)));

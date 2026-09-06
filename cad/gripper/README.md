@@ -95,7 +95,8 @@ Parts that change: `far_arm_6061_h`, `near_arm_6061_h`, `bracket_6061_h`; tip bl
 
 The horizontal layout does **not** shorten the drop from the arm to the die (set by the X-axis slider
 height); it moves that drop out of the actuator into a stiff bar and takes the actuator out of the Ø40-tube
-neighbourhood. The vertical layout stays the baseline. Renders: `renders/gripper_h_*.png`, `renders/gripper_vendor_h_iso.png`.
+neighbourhood. The vertical layout stays the baseline; the `_h` variant is kept building (gripper and
+station) for comparison until the actuator mount is frozen. Renders: `renders/gripper_h_*.png`, `renders/gripper_vendor_h_iso.png`.
 
 ## Open items
 

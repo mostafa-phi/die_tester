@@ -2,8 +2,8 @@ Nest: lapped copper chuck pad -> Z/pitch/roll; +X Semitron stop pads (Y 0.6-1.2,
 Y free within +/-0.6 mm (corner guards). Fiber protrusion 5.0 mm: holder bodies at Y <= -5.0 and >= 11.0.
 Chuck pad 9 x 5 mm = 75 % of the backside on metal, 0.5 mm inboard of every edge; 6 x dia 0.5 vacuum holes; copper neck to a 15 x 15 TEC at Z -12.0.
 Push-to-stop: set down 0.2 mm short, jaws open, gripper +1.73 mm -> near nose seats the die with 0.25 N (blade overtravel 0.1 mm).
-Die stage stack (table Z -86.0): KB1X1 top -73.3, adapter, RPG38 -70.3..-54.3, adapter, KXC04015-C -51.3..-21.3 (table top), riser wide body -21.3..-12.0 (9.3 mm: TEC pocket 2.5 + floor), neck to the cage plate at -4.5.
-Stage travel 15 mm (+/-7.5); device stepping uses +/-4. Motor section and RPG38 micrometer point -X (X < -15). The gripper meets the nest at stage HOME only.
+Die stage stack (table Z -111.0): KB1X1 top -98.3, adapter, RMPG40W-N -93.3..-58.3, adapter, KXC04015-C -55.3..-25.3 (table top), riser wide body -25.3..-12.0 (13.3 mm: TEC pocket 2.5 + floor), neck to the cage plate at -4.5.
+Stage travel 15 mm (+/-7.5); device stepping uses +/-4. Both motors point -X (X < -15); the rotary's long end and motor toward -Y. The gripper meets the nest at stage HOME only.
 
 chuck pad inside the die footprint (positive = pad edge inboard of the die edge):
   pad X 0.5..9.5 in die 0..10 (margins 0.5 / 0.5); pad Y 0.5..5.5 in die 0..6 (margins 0.5 / 0.5)
@@ -218,17 +218,27 @@ the nest moves under FIXED fibers (at station X 5) and holders: worst clearance 
   riser wide body          vs fiber_out (station X 5)   :   12.39 @-7.5  OK 
   riser wide body          vs holder_in                 :    4.00 @-7.5  OK 
   riser wide body          vs holder_out                :    4.00 @-7.5  OK 
-  riser wide body          vs kxc04015_motor            :    5.50 @-7.5  OK 
-  stage table              vs fiber_in (station X 5)    :   21.69 @-7.5  OK 
-  stage table              vs fiber_out (station X 5)   :   21.69 @-7.5  OK 
-  stage table              vs kxc04015_motor            :    4.50 @-7.5  OK 
+  riser wide body          vs kxc04015_coupling         :    4.50 @-7.5  OK 
+  riser wide body          vs kxc04015_knob             :    4.50 @-7.5  OK 
+  stage table              vs fiber_in (station X 5)    :   25.69 @-7.5  OK 
+  stage table              vs fiber_out (station X 5)   :   25.69 @-7.5  OK 
+  stage table              vs kxc04015_coupling         :    3.50 @-7.5  OK 
+  stage table              vs kxc04015_knob             :    3.50 @-7.5  OK 
   stop pad +X+Y            vs fiber_in (station X 5)    :    4.80 @-7.5  OK 
   stop pad +X+Y            vs fiber_out (station X 5)   :    0.90 @-4.0  OK 
   stop pad +X+Y            vs holder_out                :    4.00 @-7.5  OK 
   stop pad +X-Y            vs fiber_in (station X 5)    :    0.90 @-4.0  OK 
   stop pad +X-Y            vs fiber_out (station X 5)   :    4.80 @-7.5  OK 
   stop pad +X-Y            vs holder_in                 :    4.00 @-7.5  OK 
-fixed stack members vs the holders and fibers (RPG38 micrometer and KXC motor point -X):
-  kxc04015_table                     vs holder_in                 :   13.30  OK 
-  kxc04015_table                     vs holder_out                :   13.30  OK 
+KXC04015-C vendor STEP vs the catalog envelope (station frame; the file is the record where they differ):
+  base       vendor X  -26.0..  28.5 Y  -17.0..  23.6 Z  -55.3.. -30.3   envelope X  -15.0..  28.5 Y  -17.0..  23.0 Z  -55.3.. -34.3
+  table      vendor X  -15.9..  25.9 Y  -17.0..  23.0 Z  -39.1.. -25.3   envelope X  -15.0..  25.0 Y  -17.0..  23.0 Z  -34.3.. -25.3
+  motor      vendor X  -74.0.. -36.0 Y  -11.0..  17.0 Z  -54.3.. -21.3   envelope X  -74.0.. -27.0 Y  -11.0..  17.0 Z  -51.3.. -21.3
+  coupling   vendor X  -74.0.. -26.0 Y  -16.0..  30.8 Z  -54.3.. -22.6   envelope X  -27.0.. -15.0 Y  -11.0..  17.0 Z  -55.3.. -40.3
+RMPG40W-N vendor STEP vs the envelope (station frame):
+  body       vendor X  -95.0..  31.5 Y  -35.0..  23.0 Z  -93.3.. -62.8   envelope X  -15.0..  25.0 Y  -32.0..  23.0 Z  -93.3.. -64.8
+  table      vendor X  -14.5..  24.5 Y  -16.5..  22.5 Z  -64.8.. -58.3   envelope X  -14.5..  24.5 Y  -16.5..  22.5 Z  -64.8.. -58.3
+  motor      vendor X  -54.5.. -37.0 Y  -34.9..  -7.1 Z  -90.7.. -62.9   envelope X  -54.5.. -37.0 Y  -35.0..  -7.0 Z  -90.8.. -62.8
+  cable      vendor X  -68.0.. -55.0 Y  -22.5..  -8.5 Z  -90.8.. -81.4   envelope X  -95.0.. -55.0 Y  -22.5..  -8.5 Z  -95.4.. -81.4
+fixed stack members vs the holders and fibers (both motors point -X):
 near nose face at the end of the push: X 0.10 = blade overtravel (die -X end face at X 0.00 on the pads)

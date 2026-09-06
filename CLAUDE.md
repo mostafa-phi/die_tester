@@ -29,8 +29,8 @@ disagree with each other.
   that two components share must not be typed twice; import it. Component-local parameters stay in
   the component's `P` / `N` / `TR` / `S` dict.
 - **Vendor geometry.** Bought parts are placed from manufacturer STEP in `cad/vendor/` (git-ignored,
-  licensed downloads; see `cad/vendor/README.md`). Envelopes are fallbacks, never the record where a
-  vendor file exists. What we learned from vendor files (SMC finger gap, Velmex slider height,
+  licensed downloads; see `cad/vendor/README.md`) whenever the file is present; there is no separate
+  envelope build. Envelopes are fallbacks, never the record where a vendor file exists. What we learned from vendor files (SMC finger gap, Velmex slider height,
   NanoMax micrometer protrusion) is written into the model comments, not just the chat.
 - **Honesty of checks.** Clearance checks are per member (`gap_any`, `gap_parts`), never on the
   union bounding box of a compound part. Every non-OK line in a `checks*.txt` is either fixed or
@@ -45,7 +45,7 @@ cad/
   gripper/    model.py  README.md  STEP/  STL/  renders/  checks[_h].txt
   nest/       model.py  README.md  STEP/  STL/  renders/  checks.txt
   tray/       model.py  README.md  STEP/  STL/  renders/  checks.txt
-  station/    model.py  README.md  STEP/ (ignored)  renders/  checks[_vendor][_h].txt
+  station/    model.py  README.md  STEP/ (ignored)  renders/  checks[_h].txt
   vendor/     manufacturer STEP (ignored) + fetch script + README
   build.py    builds everything in dependency order, renders, writes build_manifest.json
   README.md   index
@@ -63,8 +63,10 @@ A change in `cad/common` or in any `model.py` silently invalidates the STEP, STL
 renders of every component downstream, and the numbers quoted in the READMEs and in `docs/`.
 Therefore:
 
-1. **After any change to `cad/common` or a `model.py`, run `python cad/build.py`** (add `--all`
-   when the vendor files are present so the vendor and horizontal variants are refreshed too).
+1. **After any change to `cad/common` or a `model.py`, run `python cad/build.py`**. It builds every
+   component, the horizontal-gripper `_h` variant included, and places manufacturer STEP wherever the
+   file exists in `cad/vendor` (envelope otherwise; the checks header says which). Run it with the
+   vendor files present before committing, so the committed checks are the vendor ones.
    Running a single `model.py` is for iteration only; never commit after a partial build.
 2. `build.py` writes `cad/build_manifest.json` with the sha256 of every source and every tracked
    output. **`python cad/build.py --check` must pass before committing** (exit 0). The
@@ -89,13 +91,13 @@ Therefore:
   (the vendored text-to-cad skills in `.claude/skills`) pulls a `novtk` OCP build that breaks
   CadQuery; the session hook repairs this. Renders use `cadgen step snapshot` (headless Chromium;
   the hook aliases the preinstalled Playwright browser revision).
-- Building everything takes a few minutes (the 112-pocket tray and the vendor station dominate);
-  `--no-render` skips the PNGs when only the checks are needed.
+- Building everything takes about 15 minutes (the 112-pocket tray and the two station passes
+  dominate); `--no-render` skips the PNGs when only the checks are needed.
 - Commit messages: imperative subject, body says which component changed and which numbers moved.
 
 ## 5. Still-open measurements (do not silently replace with guesses)
 
 Real fiber-holder envelope, microscope working distance and tube diameter, TEC part number and
-heat load, die backside finish, Velmex carriage bolt patterns, Suruga KXC04015-C / RPG38 vendor STEP
-and their bolt patterns for the two adapter plates. Until measured they stay as the
+heat load, die backside finish, Velmex carriage bolt patterns, the KB1X1 platform bolt pattern for
+the lower adapter plate, RMPG40W-N resolution and repeatability. Until measured they stay as the
 named parameters above with their assumed values stated in the component READMEs.

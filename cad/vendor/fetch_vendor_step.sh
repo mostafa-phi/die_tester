@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Manufacturer STEP models used by station_assembly.py --vendor. Files land in this directory and
+# Manufacturer STEP models placed by cad/build.py wherever present. Files land in this directory and
 # are git-ignored (30 MB each; vendor copyright). Re-run any time.
 set -eu
 cd "$(dirname "$0")"

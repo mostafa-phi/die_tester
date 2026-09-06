@@ -6,14 +6,14 @@ holders, microscope column/objective, optical table. Frame, die and contact rule
 the tray are imported from their own packages (cad/gripper, cad/nest, cad/tray); this file only
 places them and adds the transport, the fiber stages and the microscope.
 
-Bought parts: vendor STEP from cad/vendor (git-ignored, see vendor/fetch_vendor_step.sh) with --vendor,
-otherwise envelopes:
+Bought parts: vendor STEP from cad/vendor (git-ignored, see vendor/README.md) wherever the file is present,
+the envelope below otherwise (so a clone without the vendor files still builds and checks):
   - Velmex BiSlide MN10 class: 102 wide x 64 tall body; 102 x 102 x 10 carriage plate
   - Thorlabs NanoMax 300: 112 x 112 footprint, 62.5 deck height, 4 mm travel
   - Microscope: objective barrel dia 34, tube dia 40, column post dia 40 behind (+X)  (always an envelope)
 
-Run: python cad/station/model.py [--vendor] [--horizontal]
-     -> STEP/station_assembly[_vendor][_h].step (git-ignored, large) + checks[_vendor][_h].txt
+Run: python cad/station/model.py [--horizontal]
+     -> STEP/station_assembly[_h].step (git-ignored, large) + checks[_h].txt (the header lists the vendor files placed)
 """
 from __future__ import annotations
 import os, sys
@@ -27,14 +27,15 @@ from nest import model as NM                                                   #
 from tray import model as TM                                                   # noqa: E402
 
 DIRS = C.out_dirs(__file__)
-USE_VENDOR = "--vendor" in sys.argv          # place manufacturer STEP models where they exist
+VENDOR_PLACED = []                           # names of the manufacturer files actually placed (written into the checks header)
 
 
 def vendor_step(fname):
-    """Manufacturer STEP from cad/vendor/, or None (caller falls back to its envelope)."""
+    """Manufacturer STEP from cad/vendor/ when the file exists, else None (caller falls back to its envelope)."""
     p = C.vendor_path(fname)
-    if USE_VENDOR and os.path.exists(p):
+    if os.path.exists(p):
         print(f"[vendor] {fname}")
+        VENDOR_PLACED.append(fname)
         return cq.importers.importStep(p)
     return None
 
@@ -55,11 +56,14 @@ S = dict(
     axis_w=102.0, axis_h=64.0, car_t=10.0, car_len=102.0,
     x_travel=300.0, x_body_len=380.0, z_body_len=150.0, y_travel=105.0, y_body_len=205.0,
     x_axis_cy=-100.0,              # X axis centre-line in Y (beside the input NanoMax, outside the fiber corridor)
-    x_axis_riser=86.0,             # X axis on a riser ABOVE the NanoMax envelope and above the tray deck that passes under it (body bottom Z 0)
+    x_axis_riser=-C.TABLE_Z,       # X axis on a riser ABOVE the NanoMax envelope and above the tray deck that passes under it (body bottom Z 0)
+    nanomax_riser=C.NANOMAX_RISER, # plate under each NanoMax (the die-stage stack needs 100 mm under the die; the fiber axis stays at Z 0.5)
+    y_stage_riser=C.NANOMAX_RISER, # same plate under the Y stage so the tray stays 11.9 mm below nest height
     xc_nest=-140.0,                # X-carriage centre when the gripper is at the nest (arm reach 140; keeps the real Velmex slider inside its travel)
     arm_sec=25.0,                  # square arm bar
     arm_cross_z=82.0,              # underside of the arm bars where they cross the X-axis band: X slider top 65.1
-                                   # + 11.9 far-column drop + 5 mm margin. A lower bracket gets a vertical drop bar.
+                                   # + far-column drop (11.9) + 5 mm margin; recomputed in main() from the tray height.
+                                   # A lower bracket gets a vertical drop bar.
     cleat_shift=120.0,             # Velmex cleats are clamps, free along the body: moved 120 mm toward the motor end
                                    # (file z 247..317 -> 367..437) so the horizontal gripper body clears them at the far columns
     # wafer tray: geometry and column positions live in cad/tray (TM.TR)
@@ -97,7 +101,7 @@ def nest():
         kb = box(5 - 12.7, 5 + 12.7, cy - 12.7, cy + 12.7, table_z, table_z + C.KB1X1_H)   # KB1X1 envelope 25.4 sq x 12.7
         kb_top = table_z + C.KB1X1_H
     z = NM.levels(table_z, kb_top)
-    stk, _ = NM.stack(table_z, kb_top)
+    stk, _ = NM.stack(table_z, kb_top, vendor=True)
     riser = NM.riser(z["stage_top"])
     S["_nest_tec"] = NM.tec(); S["_nest_levels"] = z
     S["_nest_cage"] = NM.cage(); S["_nest_cage_parts"] = NM.cage_parts()
@@ -106,6 +110,9 @@ def nest():
                               box(wx0, wx1, wy0, wy1, z["stage_top"], NM.N["wide_top"])]          # wide body on the stage table
     S["_nest_stack_parts"] = list(stk.values()) + [kb]                                            # everything under the riser
     S["_nest_moving"] = NM.moving_members(0.0)                                                    # what the X stage carries (dict)
+    for fn_ in ("suruga_KXC04015-C.step", "misumi_RMPG40W-N.step"):
+        if os.path.exists(C.vendor_path(fn_)):
+            VENDOR_PLACED.append(fn_)
     parts = {"nest_kb1x1": kb, "nest_riser_6061": riser, "nest_chuck_copper": NM.chuck()}
     parts.update({"nest_" + n if not n.startswith("nest_") else n: v for n, v in stk.items()})
     return parts
@@ -119,6 +126,8 @@ def nanomax(side):
     else:
         y0, y1 = G.P["die_wid"] + g, G.P["die_wid"] + g + S["nanomax_w"]
     x0, x1 = 5 - S["nanomax_w"] / 2, 5 + S["nanomax_w"] / 2
+    zr = table_z + S["nanomax_riser"]                                          # NanoMax base sits on its riser plate
+    riser = box(x0, x1, y0, y1, table_z, zr)
     stage = vendor_step("thorlabs_MAX313D_M.step")
     if stage is not None:
         # Thorlabs 22803-E0W (MAX313D/M): base plate X -114.5..-2.5, Y -14..98, Z 0; body Y face at -14 is the
@@ -129,15 +138,15 @@ def nanomax(side):
         # micrometer points -Y. (A left-handed NanoMax would allow the mirror-symmetric layout.) Output stage: as modelled.
         if side < 0:
             stage = stage.rotate((0, 0, 0), (0, 0, 1), -90)                   # (x, y) -> (y, -x): body Y 14..115.5, base X -14..98
-            stage = stage.translate((5 - 42.0, y1 - 115.5, table_z))          # inner (body) face -> Y -45, base centred on the die
+            stage = stage.translate((5 - 42.0, y1 - 115.5, zr))               # inner (body) face -> Y -45, base centred on the die
         else:
-            stage = stage.translate((5 + 58.5, y0 + 14.0, table_z))           # inner face -> Y 51
-        ptop = table_z + 62.5                                                 # NanoMax 300 deck height (Thorlabs)
+            stage = stage.translate((5 + 58.5, y0 + 14.0, zr))                # inner face -> Y 51
+        ptop = zr + 62.5                                                      # NanoMax 300 deck height (Thorlabs)
         body = plat = None
     else:
-        body = box(x0, x1, y0, y1, table_z, table_z + S["nanomax_h"])
-        plat = box(x0 + 10, x1 - 10, y0 + 6, y1 - 6, table_z + S["nanomax_h"], table_z + S["nanomax_h"] + S["nanomax_platform_h"])
-        ptop = table_z + S["nanomax_h"] + S["nanomax_platform_h"]
+        body = box(x0, x1, y0, y1, zr, zr + S["nanomax_h"])
+        plat = box(x0 + 10, x1 - 10, y0 + 6, y1 - 6, zr + S["nanomax_h"], zr + S["nanomax_h"] + S["nanomax_platform_h"])
+        ptop = zr + S["nanomax_h"] + S["nanomax_platform_h"]
     # fiber holder: post on the platform near the inner edge, arm to the clamp, clamp, fiber
     if side < 0:
         post = box(-4, 14, y1 - 14, y1 - 6, ptop, die_top + 4)
@@ -155,7 +164,7 @@ def nanomax(side):
     tag = "in" if side < 0 else "out"
     S[f"_holder_parts_{tag}"] = [post, arm, clamp]
     stage_shape = stage if stage is not None else body.union(plat)
-    return [(f"nanomax300_{tag}", stage_shape), (f"fiber_holder_{tag}", post.union(arm).union(clamp)), (f"fiber_{tag}", fib)]
+    return [(f"nanomax300_{tag}", stage_shape), (f"nanomax_riser_{tag}", riser), (f"fiber_holder_{tag}", post.union(arm).union(clamp)), (f"fiber_{tag}", fib)]
 
 
 def microscope():
@@ -333,15 +342,19 @@ def y_stage_and_tray(active_col_x, active_row_y):
     xw0, xw1 = tray_cx - S["axis_w"] / 2, tray_cx + S["axis_w"] / 2
     ycar_c = active_row_y                                            # carriage / tray placed so the active row is at active_row_y
     vy = _vx()["y"]
+    zy = table_z + S["y_stage_riser"]                                # Y stage on its riser plate (same height as the NanoMax risers)
     if vy is not None:
-        tr = (tray_cx, VY_Y0, table_z - V["body_y0"])
+        tr = (tray_cx, VY_Y0, zy - V["body_y0"])
         ybody = place(vy["fixed"], 0.0, ROT_Y_AXIS, tr)
         ycar = place(vy["mov"], slider_target(vy, ycar_c - VY_Y0, "Y"), ROT_Y_AXIS, tr)       # station Y = VY_Y0 + file z
-        deck_z0 = table_z + (V["slider_top"] - V["body_y0"])                                    # slider top: table + 65.1
+        deck_z0 = zy + (V["slider_top"] - V["body_y0"])                                         # slider top: riser top + 65.1
+        yb = ybody.val().BoundingBox()
+        S["_y_riser"] = box(yb.xmin, yb.xmax, yb.ymin, yb.ymax, table_z, zy)
     else:
         yb0 = -38.0
-        ybody = box(xw0, xw1, yb0, yb0 + S["y_body_len"], table_z, table_z + S["axis_h"])
-        zc0 = table_z + S["axis_h"]
+        ybody = box(xw0, xw1, yb0, yb0 + S["y_body_len"], zy, zy + S["axis_h"])
+        S["_y_riser"] = box(xw0, xw1, yb0, yb0 + S["y_body_len"], table_z, zy)
+        zc0 = zy + S["axis_h"]
         ycar = box(xw0, xw1, ycar_c - S["car_len"] / 2, ycar_c + S["car_len"] / 2, zc0, zc0 + S["car_t"])
         deck_z0 = zc0 + S["car_t"]
     deck = box(tray_x0 - 8, tray_x1 + 8, ycar_c - tray_len_y / 2 - 8, ycar_c + tray_len_y / 2 + 8, deck_z0, deck_z0 + 6)
@@ -358,7 +371,9 @@ def gripper_at(gx, gz, open_mm=0.0):
         "far_arm": G.far_arm(), "near_arm": G.near_arm(), "far_tip": G.far_tip_block(),
         "near_tip": G.near_tip_block(), "blade": G.blade(), "bracket": G.bracket(),
     }
-    vend = G.actuator_vendor(open_mm) if USE_VENDOR else None
+    vend = G.actuator_vendor(open_mm)
+    if vend is not None and "smc_MHZ2-6D.step" not in VENDOR_PLACED:
+        VENDOR_PLACED.append("smc_MHZ2-6D.step")
     body, fn, ff = vend if vend is not None else G.actuator(open_mm)
     parts.update({"mhz2_body": body, "mhz2_fing_near": fn, "mhz2_fing_far": ff})
     return {k: v.translate((gx, 0, gz)) for k, v in parts.items()}
@@ -384,8 +399,10 @@ def main():
     xc = S["xc_nest"]
     xcar, zbody = z_tower(xc)
     z_iface_top = G.body_z1 + G.P["top_t"]            # bracket top plate top (Z 70)
-    zc, arm, arm_parts = z_carriage_and_arm(xc, z_iface_top, 0.0)
     ybody, ycar, deck, stick, z_led, tray_ext = y_stage_and_tray(S["tray_col0_x"], cy)
+    S["arm_cross_z"] = max(S["arm_cross_z"], S["x_axis_riser"] + table_z + (V["slider_top"] - V["body_y0"]) + (-z_led) + 5.0)   # >= X slider top + tray drop + margin
+    zc, arm, arm_parts = z_carriage_and_arm(xc, z_iface_top, 0.0)
+    static["y_stage_riser"] = S["_y_riser"]
     moving_nest = {"x_carriage": xcar, "z_axis_body_velmex": zbody, "z_carriage": zc, "arm_L_25sq": arm}
     grip_nest = gripper_at(0.0, 0.0)
 
@@ -402,7 +419,8 @@ def main():
     rep = []
     rep.append(f"table plane Z = {table_z:.1f} (die bottom = 0). Nest die top at {die_top}; fiber axis at {die_top} via holder {S['holder_axis_above_deck']} above NanoMax deck")
     zl = S["_nest_levels"]
-    rep.append(f"die stage stack: KB1X1 top {zl['kb_top']:.1f} / RPG38 {zl['ad1_top']:.1f}..{zl['rpg_top']:.1f} / KXC04015-C {zl['kxc_bottom']:.1f}..{zl['stage_top']:.1f} "
+    rep.append(f"NanoMax and Y stage on {S['nanomax_riser']:.0f} mm risers; arm crossing height over the X axis {S['arm_cross_z']:.1f}")
+    rep.append(f"die stage stack: KB1X1 top {zl['kb_top']:.1f} / RMPG40W-N {zl['ad1_top']:.1f}..{zl['rpg_top']:.1f} / KXC04015-C {zl['kxc_bottom']:.1f}..{zl['stage_top']:.1f} "
                f"(table top) / riser to the cage plate at {NM.N['cage'][4]:.1f}; X stage travel +/-{NM.N['kxc']['travel'] / 2:.1f}, stepping +/-{NM.N['stage_step_used']:.0f}; "
                f"exchange at stage HOME only (fence)")
     rep.append(f"wafer tray: {S['tray_cols']} columns x {S['tray_rows']} rows = {S['tray_cols']*S['tray_rows']} pockets, "
@@ -425,6 +443,8 @@ def main():
         ("die stage stack (per member)", S["_nest_stack_parts"], "nanomax300_in", static["nanomax300_in"]),
         ("die stage stack (per member)", S["_nest_stack_parts"], "nanomax300_out", static["nanomax300_out"]),
         ("die stage stack (per member)", S["_nest_stack_parts"], "x_axis_riser_short", None),
+        ("die stage stack (per member)", S["_nest_stack_parts"], "y_stage_body", ybody),
+        ("die stage stack (per member)", S["_nest_stack_parts"], "y_stage_riser", S["_y_riser"]),
         ("die stage stack (per member)", S["_nest_stack_parts"], "gripper @nest (per member)", None),
         ("nest moving @-7.5 (per member)", [v.translate((-7.5, 0, 0)) for v in S["_nest_moving"].values()], "nanomax300_in", static["nanomax300_in"]),
         ("nest moving @+7.5 (per member)", [v.translate((7.5, 0, 0)) for v in S["_nest_moving"].values()], "nanomax300_out", static["nanomax300_out"]),
@@ -501,8 +521,8 @@ def main():
     lowcut = box(-200, 200, -100, 100, -50, G.bar_z1 + 0.01)          # bars only (under the objective)
     incut = box(-10, 200, -100, 100, G.bar_z1 + 0.01, 300)             # heads near the die, above bar height
     outcut = box(-200, -10, -100, 100, G.bar_z1 + 0.01, 300)           # root plates / transitions, outboard
-    for sn_, sv_ in (("die stage: RPG38 micrometer", static["nest_rpg38_micrometer"]), ("die stage: KXC motor", static["nest_kxc04015_motor"]),
-                     ("die stage: KXC knob", static["nest_kxc04015_knob"]), ("die stage: RPG38 clamp", static["nest_rpg38_clamp"])):
+    for sn_, sv_ in (("die stage: RMPG40W motor", static["nest_rmpg40w_motor"]), ("die stage: RMPG40W cable", static["nest_rmpg40w_cable"]),
+                     ("die stage: KXC motor", static["nest_kxc04015_motor"]), ("die stage: KXC knob", static["nest_kxc04015_knob"])):
         g_ = gap_cyl(bb(sv_), (S["column_x"], cy), S["column_dia"] / 2, table_z, S["column_top"])
         rep.append(f"  {sn_:24s} vs {'microscope_column (dia 40)':26s}: {g_:7.1f}{'  OK ' if g_ > 2 else ('  TIGHT' if g_ > 0 else '  ** OVERLAP **')}")
     for pn, part in [("far_arm bars @nest", grip_nest["far_arm"].intersect(lowcut)), ("far_arm root @nest", grip_nest["far_arm"].intersect(outcut)),
@@ -522,7 +542,7 @@ def main():
     a_sweeps = [sweep(bb(pp)) for pp in arm_parts]
     rep.append("")
     rep.append("swept volumes nest <-> tray (after the 8 mm lift; per member) vs static objects:")
-    statics = ["nanomax300_in", "fiber_holder_in", "fiber_in", "nanomax300_out", "fiber_holder_out", "nest_riser_6061", "nest_kxc04015_motor",
+    statics = ["nanomax300_in", "fiber_holder_in", "fiber_in", "nanomax300_out", "fiber_holder_out", "nest_riser_6061", "nest_kxc04015_motor", "nest_rmpg40w_motor",
                "x_axis_body_velmex", "x_axis_riser_short", "microscope_arm"] + (["x_axis_cleats"] if "x_axis_cleats" in static else [])
     for n in statics:
         g1 = min(gap(g, bb(static[n])) for g in g_sweeps); g2 = min(gap(g, bb(static[n])) for g in a_sweeps)
@@ -533,10 +553,11 @@ def main():
     rep.append("")
     rep.append("the gripper band sweep necessarily passes under the objective (that is the exchange); its clearance there is the")
     rep.append("bar height check in cad/gripper/checks.txt (tallest part 9.0 mm above die top vs WD).")
-    suffix = ("_vendor" if USE_VENDOR else "") + G.SFX
-    if USE_VENDOR:
-        rep.insert(0, "VENDOR MODELS: Thorlabs MAX313D/M (22803-E0W) x2, KB1X1 (2374-E0W); Velmex MN10-0150-xxx-21 (X) and MN10-0050-xxx-21 (Z, Y) "
-                      "with PK266 motors; envelopes for the SMC gripper and the microscope. AABBs include micrometers, motors and switches.")
+    suffix = G.SFX
+    placed = sorted(set(VENDOR_PLACED))
+    rep.insert(0, ("VENDOR MODELS placed: " + ", ".join(placed) + "; envelopes for everything else (the microscope always). AABBs include "
+                   "micrometers, motors, cables and switches.") if placed else
+               "VENDOR MODELS: none present in cad/vendor (envelope build; see cad/vendor/README.md)")
     txt = "\n".join(rep); print(txt)
     with open(os.path.join(DIRS["comp"], f"checks{suffix}.txt"), "w") as f: f.write(txt + "\n")
 
@@ -544,7 +565,9 @@ def main():
     assy = cq.Assembly(name="test_station")
     col = {
         "optical_table": (0.86, 0.88, 0.90), "nest_kb1x1": (0.45, 0.48, 0.52), "nest_riser_6061": (0.60, 0.63, 0.68), "nest_chuck_copper": (0.72, 0.45, 0.20), "nest_tec": (0.85, 0.85, 0.88), "nest_cage_semitron": (0.16, 0.16, 0.18),
-        "nest_adapter_kb_rpg": (0.60, 0.63, 0.68), "nest_adapter_rpg_kxc": (0.60, 0.63, 0.68), "nest_rpg38_body": (0.20, 0.20, 0.22), "nest_rpg38_micrometer": (0.75, 0.75, 0.78), "nest_rpg38_clamp": (0.20, 0.20, 0.22),
+        "nest_adapter_kb_rpg": (0.60, 0.63, 0.68), "nest_adapter_rpg_kxc": (0.60, 0.63, 0.68), "nest_rmpg40w_body": (0.20, 0.20, 0.22), "nest_rmpg40w_table": (0.25, 0.25, 0.27),
+        "nest_rmpg40w_worm": (0.20, 0.20, 0.22), "nest_rmpg40w_motor": (0.30, 0.30, 0.32), "nest_rmpg40w_cable": (0.30, 0.30, 0.32), "nest_rmpg40w_bolts": (0.45, 0.48, 0.52),
+        "nanomax_riser_in": (0.60, 0.63, 0.68), "nanomax_riser_out": (0.60, 0.63, 0.68), "y_stage_riser": (0.60, 0.63, 0.68),
         "nest_kxc04015_base": (0.20, 0.20, 0.22), "nest_kxc04015_table": (0.25, 0.25, 0.27), "nest_kxc04015_coupling": (0.20, 0.20, 0.22), "nest_kxc04015_motor": (0.30, 0.30, 0.32), "nest_kxc04015_knob": (0.20, 0.20, 0.22),
         "nanomax300_in": (0.56, 0.69, 0.82), "nanomax300_out": (0.56, 0.69, 0.82), "fiber_holder_in": (0.36, 0.40, 0.44),
         "fiber_holder_out": (0.36, 0.40, 0.44), "fiber_in": (0.94, 0.82, 0.50), "fiber_out": (0.94, 0.82, 0.50),

@@ -2,10 +2,9 @@
 """
 Build every CAD component in dependency order and keep the folders synchronized.
 
-    python cad/build.py                 gripper -> nest -> tray -> station (envelope), then renders
-    python cad/build.py --vendor        also the station with the manufacturer STEP models (cad/vendor, git-ignored)
-    python cad/build.py --horizontal    also the horizontal-actuator variants (files with _h)
-    python cad/build.py --all           both of the above
+    python cad/build.py                 gripper (vertical + horizontal) -> nest -> tray -> station (default + horizontal), then renders.
+                                        Manufacturer STEP from cad/vendor (git-ignored) is placed wherever the file exists; a clone
+                                        without the files gets the envelope build and the same checks.
     python cad/build.py --no-render     skip the PNG renders (cadgen step snapshot)
     python cad/build.py --only nest     one component (its dependencies are NOT rebuilt; use for quick iteration only)
     python cad/build.py --check         no build: exit 1 if any model source changed since the last full build or a
@@ -37,6 +36,7 @@ SOURCES = ["common/__init__.py", "build.py"] + [f"{c}/model.py" for c in COMPONE
 
 # git-ignored outputs (large or vendor-derived): built, rendered from, but not hashed into the manifest
 IGNORED_OUTPUT_PATTERNS = ("_vendor", "station/STEP/station_assembly", "tray/STEP/wafer_tray_8x14.step")
+# note: the station and nest checks depend on which vendor files are present; the checks header says which were placed
 
 # renders: (component, STEP file relative to the component's STEP/, output name, camera)
 RENDERS = [
@@ -59,13 +59,15 @@ RENDERS = [
     ("station", "station_assembly.step", "station_iso.png", "iso"),
     ("station", "station_assembly.step", "station_plan.png", "top"),
     ("station", "station_assembly.step", "station_front.png", "front"),
-    ("station", "station_assembly_vendor.step", "station_vendor_iso.png", "iso"),
-    ("station", "station_assembly_vendor.step", "station_vendor_plan.png", "top"),
-    ("station", "station_assembly_vendor.step", "station_vendor_front.png", "front"),
-    ("station", "station_assembly_vendor.step", "station_vendor_side.png", "90:20"),
-    ("station", "station_assembly_vendor_h.step", "station_vendor_h_iso.png", "iso"),
-    ("station", "station_assembly_vendor_h.step", "station_vendor_h_side.png", "90:20"),
+    ("station", "station_assembly.step", "station_side.png", "90:20"),
+    ("station", "station_assembly_h.step", "station_h_iso.png", "iso"),
+    ("station", "station_assembly_h.step", "station_h_side.png", "90:20"),
 ]
+# outputs of earlier build layouts that a rebuild must remove (so the tree only holds what build.py produces)
+STALE = ["station/checks_vendor.txt", "station/checks_vendor_h.txt", "station/renders/station_vendor_iso.png",
+         "station/renders/station_vendor_plan.png", "station/renders/station_vendor_front.png", "station/renders/station_vendor_side.png",
+         "station/renders/station_vendor_h_iso.png", "station/renders/station_vendor_h_side.png", "station/STEP/station_assembly_vendor.step",
+         "station/STEP/station_assembly_vendor_h.step", "nest/STEP/nest_module_assembly_vendor.step"]
 
 
 def sha(path):
@@ -180,27 +182,23 @@ def check():
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--vendor", action="store_true")
-    ap.add_argument("--horizontal", action="store_true")
-    ap.add_argument("--all", action="store_true")
     ap.add_argument("--no-render", action="store_true")
     ap.add_argument("--only", choices=COMPONENTS)
     ap.add_argument("--check", action="store_true")
     a = ap.parse_args()
     if a.check:
         raise SystemExit(check())
-    vendor = a.vendor or a.all
-    horizontal = a.horizontal or a.all
     comps = [a.only] if a.only else COMPONENTS
     t0 = time.time()
+    for rel_ in STALE:
+        try:
+            os.remove(os.path.join(ROOT, rel_))
+        except OSError:
+            pass
     for comp in comps:
         build(comp, [])
-        if horizontal and comp in ("gripper", "station"):
+        if comp in ("gripper", "station"):
             build(comp, ["--horizontal"])
-        if vendor and comp == "station":
-            build(comp, ["--vendor"])
-            if horizontal:
-                build(comp, ["--vendor", "--horizontal"])
     if not a.no_render:
         print("[renders]")
         for comp, step, png, cam in RENDERS:

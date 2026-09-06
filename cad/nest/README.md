@@ -38,32 +38,37 @@ stepped from device to device by moving the nest, as the current tester does wit
 One X move keeps both fibers registered to each other. The gripper meets the nest only at the stage
 **home** position; the exchange sequence homes the stage first and the software fence enforces it.
 
-| Level (bottom up) | Part | Z (table = −86.0) |
+The stack needs 100 mm under the die, so the two NanoMax stages and the Y stage sit on **25 mm riser
+plates** (`common.NANOMAX_RISER`) and the table plane is at Z −111; the fiber axis stays at Z 0.5.
+
+| Level (bottom up) | Part | Z (table = −111.0) |
 |---|---|---|
-| kinematic base | Thorlabs KB1X1 (2374-E0W), 25.4 sq × 12.7 | −86.0 … −73.3 |
-| adapter | `STEP/nest_adapter_kb_rpg.step`, 6061, 3 mm: KB1X1 platform pattern → RPG38 base holes | −73.3 … −70.3 |
-| rotary | **Suruga RPG38** manual rotary stage, Ø38 × 16, ±5° fine by micrometer head (~0.024° per graduation, 360° coarse with clamp); micrometer points −X | −70.3 … −54.3 |
-| adapter | `STEP/nest_adapter_rpg_kxc.step`, 6061, 3 mm: RPG38 table (4 × M2.6) → KXC04015 base (4 × M3 on 32 mm) | −54.3 … −51.3 |
-| X stage | **Suruga KXC04015-C** (crossed-roller, 40 × 40 table, 30 tall, 15 mm travel, ball screw Ø6 × 1 mm lead, 2 µm full / 1 µm half step, ±0.2 µm repeatability, 0.31 kg, 5-phase stepper on the DS102): motor section 59 mm toward −X, its 28 mm motor box 4 mm above the table top | −51.3 … −21.3 |
-| riser | `STEP/nest_riser_6061.step`: 38 × 38 wide body (M3 counterbored on the stage's 32 mm grid, TEC pocket, wire channel) to Z −12, then the 10 mm neck to the cage plate | −21.3 … −4.5 |
+| kinematic base | Thorlabs KB1X1 (2374-E0W), 25.4 sq × 12.7 | −111.0 … −98.3 |
+| adapter | `STEP/nest_adapter_kb_rpg.step`, 6061, 5 mm: KB1X1 platform pattern → 4 × M3 tapped on the rotary's 32 × 32 (its bolts come down through its body) | −98.3 … −93.3 |
+| rotary | **MISUMI RMPG40W-N** motorized worm-gear rotary, horizontal table: body 40 × 55 × 35 tall with the axis 20 mm from the short end, 39 sq table with 8 × M2 on a 10 mm grid and a Ø8 bore; 28 mm 5-phase stepper on the DS102's second axis; motor toward −X, long end toward −Y. **Vendor STEP placed** (`cad/vendor/misumi_RMPG40W-N.step`) | −93.3 … −58.3 |
+| adapter | `STEP/nest_adapter_rpg_kxc.step`, 6061, 3 mm: rotary table (M2 at ±10) → KXC04015 base (4 × M3 tapped on 32 mm) | −58.3 … −55.3 |
+| X stage | **Suruga KXC04015-C** (crossed-roller, 40 × 40 table, 30 tall, 15 mm travel, ball screw Ø6 × 1 mm lead, 2 µm full / 1 µm half step, ±0.2 µm repeatability, 0.31 kg, 5-phase stepper on the DS102): motor section 59 mm toward −X, its 28 mm motor box 4 mm above the table top. **Vendor STEP placed** (`cad/vendor/suruga_KXC04015-C.step`): it confirms the table's 8 × M3 on a 16 mm grid with a Ø4 centre pin and the base's 4 × Ø3.5 on 32 × 32; the cable loop reaches Y +31 behind the motor, the base solid runs 11 mm further toward the motor than the catalog outline | −55.3 … −25.3 |
+| riser | `STEP/nest_riser_6061.step`: 38 × 38 wide body (M3 counterbored on the stage's 32 mm grid, TEC pocket, wire channel) to Z −12, then the 10 mm neck to the cage plate | −25.3 … −4.5 |
 
 **Why the rotary sits under the X stage.** The yaw the fibers see is the sum of the stop-pad
 registration (per die, ~0.03°) and two static errors: the nest datum vs the fiber-stage axes and the
-X-stage travel vs those axes. With the RPG38 under the whole stack one adjustment aligns both; it is
-set once with a gauge die (camera or two-device fit), locked, and only rechecked when the stack has
-been off its base. Per-device realignment tolerates 0.1° of yaw; open-loop stepping across 8 mm needs
-0.02°, which is what the micrometer resolution gives. Dicing squareness between the end face and the
-facet is the floor no stage can remove.
+X-stage travel vs those axes. With the rotary under the whole stack one rotation aligns both. Being
+motorized (worm gear, stepper on the DS102 axis the current centre stage's θ uses today), it is set
+with a gauge die and can also trim yaw per die from the camera or a two-device fit, which is what
+open-loop device stepping across 8 mm needs (0.02°). Per-device realignment alone tolerates 0.1°.
+Dicing squareness between the end face and the facet is the floor no stage can remove. The rotary's
+straight cable in the vendor file reaches 179 mm out along −X, which would run into the Y-stage riser;
+it is routed down after a 40 mm lead-out (only that lead-out is modelled).
 
 **Travel used.** ±4 mm of the ±7.5 available brings any waveguide at die X 1 … 9 under a fiber fixed
 at station X 5. `checks.txt` sweeps the stage from −7.5 to +7.5 and reports the worst clearance of every
 moving member (neck, wide body, cage plate, corner blocks, chuck, stage table) against the fixed fibers
 and holder bodies: the corner blocks come within 0.4 mm of a fiber at ±4 (their tops are 0.30, 0.09 below
 the fiber envelope), the neck and cage plate keep 3.0 mm to the holders at any offset, the riser keeps
-5.5 mm to the motor box at −7.5. The motor section and the RPG38 micrometer point −X because +X is the
-microscope column and ±Y are the fiber stages (the station checks confirm 68 mm to the column).
+5.5 mm to the motor box at −7.5. Both motors point −X because +X is the microscope column and ±Y are the
+fiber stages (the station checks confirm 87 mm and more to the column, 10 mm to the input NanoMax base).
 
-**Thermal note.** The riser's wide body is now 9.3 mm thick on the stage table, so the KXC04015 table
+**Thermal note.** The riser's wide body is 13.3 mm thick on the stage table, so the KXC04015 table
 becomes part of the TEC's hot-side path. Fine below ~2 W; above that put a copper spreader with a
 thermal break under the riser or take the heat off with a water block rather than into the stage.
 
@@ -93,8 +98,8 @@ riser); silicone hose to the M5 fitting.
 | `STEP/nest_chuck_copper.step` (+STL) | C101 copper, Ni plate | CNC + lap | pad island, vacuum holes, plenum, neck, stub tube, thermistor bore |
 | `STEP/nest_cage_semitron.step` (+STL) | Semitron ESd 480 | CNC | one piece: plate with the copper window, 4 corner blocks (stop pads, X guard, Y guards); 2 × M2 + 2 × Ø1.5 dowels to the riser |
 | `STEP/nest_riser_6061.step` | 6061 | CNC | T-riser: neck, 38 × 38 wide body with the TEC pocket, wire channel, vacuum-stub and thermistor clearances, 4 × M3 counterbored to the KXC04015 table |
-| `STEP/nest_adapter_kb_rpg.step`, `STEP/nest_adapter_rpg_kxc.step` | 6061 | CNC / waterjet | 3 mm adapter plates between the KB1X1, the RPG38 and the KXC04015 (bolt patterns to confirm on the parts) |
-| — | Suruga KXC04015-C X stage, Suruga RPG38 rotary, TEC 15 × 15 × 2.5, thermistor, KB1X1 (Thorlabs 2374-E0W) | buy | the X stage runs on the existing DS102 (controller #3's X axis) |
+| `STEP/nest_adapter_kb_rpg.step`, `STEP/nest_adapter_rpg_kxc.step` | 6061 | CNC / waterjet | 5 mm and 3 mm adapter plates between the KB1X1, the RMPG40W-N and the KXC04015 (both stage bolt patterns confirmed in the vendor STEP; the KB1X1 platform pattern still to confirm) |
+| — | Suruga KXC04015-C X stage, MISUMI RMPG40W-N rotary, TEC 15 × 15 × 2.5, thermistor, KB1X1 (Thorlabs 2374-E0W) | buy | both stages run on the existing DS102 controller #3 (today's centre-stage X and θ axes) |
 
 Assemblies: `STEP/nest_module_assembly.step` (die seated, jaws closed, fiber/holder envelopes, full
 stack) and `STEP/nest_module_setdown.step` (jaws open at the set-down position). `checks.txt` lists every
@@ -105,6 +110,6 @@ non-OK lines: the two stop pads TOUCH the seated die (by design).
 ## Open items (measure on the bench)
 
 - Real fiber-holder envelope (width, height below/above the fiber axis, front-face-to-tip): `common.FIBER`.
-- KXC04015-C and RPG38 vendor STEP (Suruga CAD download needs an account): replace the envelopes in `stack()` and confirm the adapter bolt patterns.
+- RMPG40W-N resolution and repeatability from the MISUMI datasheet (not in the STEP); the KB1X1 platform bolt pattern for the lower adapter.
 - TEC part number, heat load and whether the riser needs a water block.
 - Die backside finish (vacuum seal on a lapped pad needs it flat and clean).
