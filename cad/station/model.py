@@ -12,7 +12,7 @@ the envelope below otherwise (so a clone without the vendor files still builds a
   - Thorlabs NanoMax 300: 112 x 112 footprint, 62.5 deck height, 4 mm travel
   - Microscope: objective barrel dia 34, tube dia 40, column post dia 40 behind (+X)  (always an envelope)
 
-Transport layout (see station/README.md): the X actuator runs along X beside the input NanoMax at Y -140, on a
+Transport layout (see station/README.md): the X actuator runs along X beside the input NanoMax at Y -165, on a
 full-length riser, its 52 mm band outside the tray's Y sweep so no bridge is needed; the Z actuator stands on an
 angle bracket on the X block with its motor up; the 25 mm square arm leaves an adapter plate on the Z block along
 +Y to the gripper interface. The Y actuator sits under the tray on a riser that puts the pocket ledges 12 mm below
@@ -60,8 +60,10 @@ S = dict(
     column_x=80.0, column_dia=40.0, column_top=260.0,
     # transport: three MISUMI LX2005-B1-T2042 actuators (common.LX20), lead 5
     lx_L=dict(x=300, y=200, z=100),   # base lengths -> effective strokes 236.5 / 136.5 / 36.5 (common.LX20["stroke"])
-    x_axis_cy=-140.0,              # X actuator centre-line: its 52 mm band (Y -166..-114) lies beside the tray's Y sweep (deck to
-                                   # Y -108 at the extreme row) and beside the input NanoMax (X -51..61), so the riser is one bar
+    x_axis_cy=-165.0,              # X actuator centre-line: its 60 mm riser flange (Y -195..-135) lies beside the tray's Y sweep and
+                                   # beside the input NanoMax (X -51..61), so the riser is one bar. -165 (was -140, rev. 2.13) so the
+                                   # deck clears the flange by 11 mm even at the END of the Y actuator's physical stroke (19.5 mm
+                                   # beyond row 0): a lost soft limit cannot drive the deck into the riser; checks "@Y stroke end"
     nanomax_riser=C.NANOMAX_RISER, # plate under each NanoMax (the die-stage stack needs 100 mm under the die; the fiber axis stays at Z 0.5)
     tray_drop=12.0,                # pocket ledge top below the chuck pad top: Z uses 8 mm lift + 12 mm drop of its stroke
     push_x=1.7,                    # push-to-stop travel at the nest (docs/pick_and_place_design.md 3.3)
@@ -299,6 +301,8 @@ M = dict(
     flange_t=8.0, flange_w=60.0, y_flange_w=80.0,   # riser foot flanges: thickness, total width (X riser / Y riser)
     slot=(6.6, 14.0), slot_pitch=50.0,    # foot slots for M6 or 1/4-20 table bolts (25 mm or 1 in grid)
     deck_t=6.0,                           # tray deck: flat 6 mm plate (the tray bottom sits on its top face)
+    deck_margin=(8.0, 2.0),               # deck beyond the tray footprint in X / Y (the datum pins sit in the tray's X rims, so
+                                          # the Y margin is only edge cover; small so the deck stays clear of the X riser)
     tray_pin=(3.0, 10.0, 3.0),            # tray datum pins: dia 3 m6 dowel, 10 long, 3.0 proud of the deck top (below the tray's
                                           # 3.8 mm wall top); reamed dia 3 H7 through the deck; positions from tray.datum_pins()
     rib_len=40.0, rib_h=60.0, rib_t=10.0, # tower gusset rib on the -X side of the leg
@@ -541,8 +545,8 @@ def deck_part(tray_x0, tray_x1, ty0, ty1, cx, yc, z0):
     the table's 20 x 45 pattern, 2 dowels to the table, and two reamed dia 3 holes for the tray datum pins (round hole
     and slot in the tray's X rims, tray.datum_pins). The tray bottom sits on the deck top at z0 + 6; the pins stand 3 mm
     proud, inside the tray's 3.8 mm height, so nothing above the deck can meet them."""
-    t = M["deck_t"]
-    d = box(tray_x0 - 8, tray_x1 + 8, ty0 - 8, ty1 + 8, z0, z0 + t)
+    t = M["deck_t"]; mx, my = M["deck_margin"]
+    d = box(tray_x0 - mx, tray_x1 + mx, ty0 - my, ty1 + my, z0, z0 + t)
     al, ac = LX["table_holes"]
     for dy in (-al / 2, al / 2):
         for dx in (-ac / 2, ac / 2):
@@ -793,6 +797,13 @@ def main():
         ("tray_deck @row 0 (Y-48.75)", deck.translate((0, -48.75, 0)), "nanomax_riser_in", static["nanomax_riser_in"]),
         ("tray_deck @row 13 (Y+48.75)", deck.translate((0, 48.75, 0)), "nanomax300_out", static["nanomax300_out"]),
         ("tray_deck @row 13 (Y+48.75)", deck.translate((0, 48.75, 0)), "nanomax_riser_out", static["nanomax_riser_out"]),
+        # the physical stroke ends of the Y actuator (beyond the rows): a lost soft limit must not crash the deck
+        ("tray_deck @Y stroke -end", deck.translate((0, ylo - cy, 0)), "x_axis_riser", xax["riser"]),
+        ("tray_deck @Y stroke -end", deck.translate((0, ylo - cy, 0)), "x_axis_rail_lx20", xax["rail"]),
+        ("tray_deck @Y stroke -end", deck.translate((0, ylo - cy, 0)), "nanomax300_in", static["nanomax300_in"]),
+        ("tray_deck @Y stroke +end", deck.translate((0, yhi - cy, 0)), "nanomax300_out", static["nanomax300_out"]),
+        ("tray_deck @Y stroke +end", deck.translate((0, yhi - cy, 0)), "y_axis_motor", yparts["y_axis_motor"]),
+        ("wafer_tray @Y stroke -end", stick.translate((0, ylo - cy, 0)), "x_axis_riser", xax["riser"]),
         ("wafer_tray @row 13 (Y+48.75)", stick.translate((0, 48.75, 0)), "nanomax300_out", static["nanomax300_out"]),
         ("tower @far column (per member)", tower2_parts, "y_axis_rail_lx20", yparts["y_axis_rail_lx20"]),
         ("tower @far column (per member)", tower2_parts, "y_stage_riser", yparts["y_stage_riser"]),

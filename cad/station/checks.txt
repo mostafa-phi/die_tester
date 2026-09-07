@@ -4,10 +4,10 @@ NanoMax on 25 mm risers; X actuator riser 118.2 tall (rail bottom Z 7.2); Y actu
 die stage stack: KB1X1 top -98.3 / KXC04015-C -95.3..-65.3 / spacer / RMPG40W-N -57.3..-22.3 / riser to the cage plate at -4.5; X stage travel +/-7.5, stepping +/-4; exchange at stage HOME only (fence)
 wafer tray: 8 columns x 14 rows = 112 pockets, 144 x 108 mm; columns at die X -95 .. -207 (pitch 16.0); ledges 12.0 below the chuck pad
 transport: 3 x MISUMI LX2005CG-B1 (cover, low-particulate grease, lead 5, 5 um repeatability, 690 mm/s screw-rated; ~200 mm/s with a 42 sq stepper)
-  X: L 300 (stroke 236.5), rail X -385..-85 at Y -140, motor to X -544; block centre nest -121.0 (+1.7 push) -> far column -328.0: used 208.7; limits -353.3..-116.8 -> margins 25.3 / 2.5  OK 
+  X: L 300 (stroke 236.5), rail X -385..-85 at Y -165, motor to X -544; block centre nest -121.0 (+1.7 push) -> far column -328.0: used 208.7; limits -353.3..-116.8 -> margins 25.3 / 2.5  OK 
   Y: L 200 (stroke 136.5), rail Y -97..103 at X -146, motor toward +Y to Y 262; rows +/-48.75 about Y 3: used 97.5; limits -65.2..71.2 -> margin 19.5  OK 
   Z: L 100 (stroke 36.5), rail Z 44.2..144.2, motor up to Z 303; block centre nest 90.5, +8 lift, tray 78.5: used 20.0; limits 76.0..112.5 -> margins 2.5 / 14.0  OK 
-  X block moment: tower 1.8 kg at 56 mm above the block -> Ma 0.99 N.m of 27 allowable; arm + gripper 0.45 kg at 143 mm -> Mc 0.63 N.m of 93  OK 
+  X block moment: tower 1.8 kg at 56 mm above the block -> Ma 0.99 N.m of 27 allowable; arm + gripper 0.45 kg at 168 mm -> Mc 0.74 N.m of 93  OK 
   exchange time: X 207 mm at 200 mm/s with 25 mm ramps ~1.3 s each way; Z moves 8 / 20 mm at 50 mm/s
 
 clearances vs boxes (AABB separation, mm; negative = overlap):
@@ -19,8 +19,8 @@ clearances vs boxes (AABB separation, mm; negative = overlap):
   die stage stack (per member)     vs fiber_holder_out (per member):    39.1  OK 
   die stage stack (per member)     vs nanomax300_in             :    27.5  OK 
   die stage stack (per member)     vs nanomax300_out            :    20.2  OK 
-  die stage stack (per member)     vs x_axis_riser              :    93.0  OK 
-  die stage stack (per member)     vs x_axis_rail_lx20          :   103.0  OK 
+  die stage stack (per member)     vs x_axis_riser              :   118.0  OK 
+  die stage stack (per member)     vs x_axis_rail_lx20          :   128.0  OK 
   die stage stack (per member)     vs y_axis_rail_lx20          :    52.0  OK 
   die stage stack (per member)     vs y_axis_motor              :   141.2  OK 
   die stage stack (per member)     vs y_stage_riser             :    32.0  OK 
@@ -43,30 +43,30 @@ clearances vs boxes (AABB separation, mm; negative = overlap):
   gripper mhz2_body @nest          vs fiber_holder_in           :    20.7  OK 
   gripper mhz2_body @nest          vs fiber_holder_out          :    20.7  OK 
   arm @nest (per member)           vs nanomax300_in             :    85.0  OK 
-  arm @nest (per member)           vs fiber_holder_in           :    57.5  OK 
+  arm @nest (per member)           vs fiber_holder_in           :    61.0  OK 
   arm @nest (per member)           vs fiber_holder_out          :    65.5  OK 
   arm @nest (per member)           vs x_axis_rail_lx20          :    28.2  OK 
   arm @nest (per member)           vs z_axis_motor @nest        :    94.2  OK 
   arm @nest (per member)           vs z_axis_plate @nest        :    76.0  OK 
   arm @nest (per member)           vs tray_deck                 :    77.0  OK 
   tower @nest (per member)         vs nanomax300_in             :    57.2  OK 
-  tower @nest (per member)         vs fiber_holder_in           :    57.5  OK 
+  tower @nest (per member)         vs fiber_holder_in           :    80.0  OK 
   tower @nest (per member)         vs x_axis_rail_lx20          :     0.5  TIGHT
-  tower @nest (per member)         vs tray_deck                 :    51.2  OK 
-  tower @nest (per member)         vs wafer_tray                :    59.2  OK 
-  tower @nest (per member)         vs microscope_arm            :    98.0  OK 
+  tower @nest (per member)         vs tray_deck                 :    82.2  OK 
+  tower @nest (per member)         vs wafer_tray                :    84.2  OK 
+  tower @nest (per member)         vs microscope_arm            :   123.0  OK 
   x_axis_block @nest               vs nanomax300_in             :    41.5  OK 
   x_axis_rail_lx20                 vs nanomax300_in             :    34.1  OK 
   x_axis_rail_lx20                 vs nanomax_riser_in          :    93.2  OK 
-  x_axis_rail_lx20                 vs y_axis_rail_lx20          :    28.7  OK 
+  x_axis_rail_lx20                 vs y_axis_rail_lx20          :    48.0  OK 
   x_axis_rail_lx20                 vs y_stage_riser             :    55.2  OK 
-  x_axis_rail_lx20                 vs deck @row 0 (Y-48.75)     :    22.2  OK 
-  x_axis_rail_lx20                 vs tray @row 0 (Y-48.75)     :    20.5  OK 
+  x_axis_rail_lx20                 vs deck @row 0 (Y-48.75)     :    43.5  OK 
+  x_axis_rail_lx20                 vs tray @row 0 (Y-48.75)     :    45.5  OK 
   x_axis_riser                     vs nanomax300_in             :    34.1  OK 
   x_axis_riser                     vs nanomax_riser_in          :    34.0  OK 
-  x_axis_riser                     vs y_stage_riser             :    13.0  OK 
-  x_axis_riser                     vs y_axis_rail_lx20          :    13.0  OK 
-  x_axis_riser                     vs deck @row 0 (Y-48.75)     :     2.5  OK 
+  x_axis_riser                     vs y_stage_riser             :    38.0  OK 
+  x_axis_riser                     vs y_axis_rail_lx20          :    38.0  OK 
+  x_axis_riser                     vs deck @row 0 (Y-48.75)     :    33.5  OK 
   x_axis_motor                     vs y_stage_riser             :   268.0  OK 
   x_axis_plate                     vs optical_table             :   111.2  OK 
   y_axis_motor                     vs nanomax300_out            :    72.5  OK 
@@ -79,16 +79,22 @@ clearances vs boxes (AABB separation, mm; negative = overlap):
   tray_deck @row 0 (Y-48.75)       vs nanomax_riser_in          :    65.0  OK 
   tray_deck @row 13 (Y+48.75)      vs nanomax300_out            :    13.5  OK 
   tray_deck @row 13 (Y+48.75)      vs nanomax_riser_out         :    65.0  OK 
+  tray_deck @Y stroke -end         vs x_axis_riser              :    14.0  OK 
+  tray_deck @Y stroke -end         vs x_axis_rail_lx20          :    24.0  OK 
+  tray_deck @Y stroke -end         vs nanomax300_in             :    15.0  OK 
+  tray_deck @Y stroke +end         vs nanomax300_out            :    13.5  OK 
+  tray_deck @Y stroke +end         vs y_axis_motor              :    45.0  OK 
+  wafer_tray @Y stroke -end        vs x_axis_riser              :    16.0  OK 
   wafer_tray @row 13 (Y+48.75)     vs nanomax300_out            :    21.5  OK 
   tower @far column (per member)   vs y_axis_rail_lx20          :   105.0  OK 
   tower @far column (per member)   vs y_stage_riser             :    92.2  OK 
-  tower @far column (per member)   vs tray_deck                 :    61.2  OK 
-  tower @far column (per member)   vs wafer_tray                :    63.2  OK 
+  tower @far column (per member)   vs tray_deck                 :    82.2  OK 
+  tower @far column (per member)   vs wafer_tray                :    84.2  OK 
   tower @far column (per member)   vs x_axis_plate              :    77.8  OK 
   tower @far column (per member)   vs x_axis_motor              :    96.0  OK 
   x_axis_block @far column         vs x_axis_plate              :    79.3  OK 
-  arm @far column (per member)     vs wafer_tray                :    61.2  OK 
-  arm @far column (per member)     vs tray_deck                 :    65.0  OK 
+  arm @far column (per member)     vs wafer_tray                :    69.2  OK 
+  arm @far column (per member)     vs tray_deck                 :    67.2  OK 
   arm @far column (per member)     vs x_axis_rail_lx20          :    16.2  OK 
   arm @far column (per member)     vs x_axis_plate              :   134.8  OK 
   arm @far column (per member)     vs x_axis_motor              :   153.0  OK 
@@ -102,7 +108,7 @@ clearances vs boxes (AABB separation, mm; negative = overlap):
   gripper bracket @far col         vs wafer_tray                :    30.4  OK 
   gripper far_arm @far col         vs wafer_tray                :     4.7  OK 
   gripper near_arm @far col        vs wafer_tray                :     4.7  OK 
-  gripper mhz2_body @far col       vs x_axis_rail_lx20          :   118.0  OK 
+  gripper mhz2_body @far col       vs x_axis_rail_lx20          :   143.0  OK 
   gripper mhz2_body @far col       vs y_axis_motor              :   164.0  OK 
   gripper bracket @far col         vs y_axis_motor              :   152.0  OK 
   tray sensors @nest (per member)  vs gripper near_arm @nest    :    35.1  OK 
@@ -119,19 +125,19 @@ clearances vs boxes (AABB separation, mm; negative = overlap):
   tray sensors @nest (per member)  vs die stage stack (per member):   117.4  OK 
   tray sensors @nest (per member)  vs microscope_arm            :    66.5  OK 
   tray sensors @nest (per member)  vs arm bar @nest             :     5.5  OK 
-  tray sensors @nest (per member)  vs z_axis_motor @nest        :   121.3  OK 
+  tray sensors @nest (per member)  vs z_axis_motor @nest        :   132.5  OK 
   tray sensors @far col (per member) vs wafer_tray                :    58.0  OK 
   tray sensors @far col (per member) vs tray_deck                 :    50.0  OK 
   tray sensors @far col (per member) vs tray pins (per member)    :    60.0  OK 
-  tray sensors @far col (per member) vs tower @far column (per member):    98.5  OK 
-  tray sensors @far col (per member) vs x_axis_block @far column  :   102.5  OK 
+  tray sensors @far col (per member) vs tower @far column (per member):   123.5  OK 
+  tray sensors @far col (per member) vs x_axis_block @far column  :   127.5  OK 
   tray sensors @far col (per member) vs y_axis_rail_lx20          :   102.5  OK 
   tray sensors @far col (per member) vs y_axis_block              :    96.5  OK 
   tray sensors @far col (per member) vs y_axis_motor              :   154.5  OK 
   tray sensors @far col (per member) vs y_stage_riser             :    90.0  OK 
-  tray sensors @far col (per member) vs x_axis_rail_lx20          :   108.5  OK 
+  tray sensors @far col (per member) vs x_axis_rail_lx20          :   133.5  OK 
   tray sensors @far col (per member) vs x_axis_motor              :   146.4  OK 
-  arm end plate @far col           vs tower @far column (per member):    95.0  OK 
+  arm end plate @far col           vs tower @far column (per member):   120.0  OK 
   arm end plate @nest              vs nanomax300_in             :    93.0  OK 
 
 clearances vs microscope cylinders (radial or vertical, mm):
@@ -170,8 +176,8 @@ clearances vs microscope cylinders (radial or vertical, mm):
   arm end plate @nest      vs microscope_tube (dia 40)  :     7.0  OK 
   arm end plate @nest      vs microscope_column (dia 40):    82.0  OK 
   z_axis_motor @nest       vs objective (dia 34)        :   152.8  OK 
-  z_axis_motor @nest       vs microscope_tube (dia 40)  :   116.9  OK 
-  z_axis_motor @nest       vs microscope_column (dia 40):   163.4  OK 
+  z_axis_motor @nest       vs microscope_tube (dia 40)  :   139.5  OK 
+  z_axis_motor @nest       vs microscope_column (dia 40):   180.9  OK 
   camera_dart @nest        vs objective (dia 34)        :    49.5  OK 
   camera_dart @nest        vs microscope_tube (dia 40)  :    46.5  OK 
   camera_dart @nest        vs microscope_column (dia 40):   121.5  OK 
@@ -188,11 +194,11 @@ swept volumes nest <-> tray (after the 8 mm lift; per member) vs static objects:
   gripper band vs fiber_in              :     7.5  OK     arm band:    77.4  OK 
   gripper band vs nanomax300_out        :    43.2  OK     arm band:   101.0  OK 
   gripper band vs fiber_holder_out      :     6.5  OK     arm band:    73.5  OK 
-  gripper band vs nest_riser_6061       :    12.5  OK     arm band:    79.0  OK 
+  gripper band vs nest_riser_6061       :    12.5  OK     arm band:    82.5  OK 
   gripper band vs nest_kxc04015_motor   :    69.4  OK     arm band:   131.3  OK 
   gripper band vs nest_rmpg40w_motor    :    35.0  OK     arm band:    96.9  OK 
-  gripper band vs x_axis_rail_lx20      :   106.0  OK     arm band:    36.2  OK 
-  gripper band vs x_axis_riser          :    96.0  OK     arm band:    62.7  OK 
+  gripper band vs x_axis_rail_lx20      :   131.0  OK     arm band:    36.2  OK 
+  gripper band vs x_axis_riser          :   121.0  OK     arm band:    62.7  OK 
   gripper band vs x_axis_motor          :   146.4  OK     arm band:   153.0  OK 
   gripper band vs y_axis_motor          :   152.0  OK     arm band:   147.0  OK 
   gripper band vs y_axis_plate          :   133.8  OK     arm band:   128.8  OK 

@@ -436,11 +436,11 @@
   // =====================================================================
   const ST = {
     tableZ: -111, riser: 25, gapY: 45, nanoW: 112, nanoH: 62.5, platH: 4, protr: 5,   // NanoMax on 25 mm risers (die-stage stack needs 100 mm)
-    // transport: three MISUMI LX2005CG-B1 actuators (cad/station/checks.txt): X L300 along X at Y -140, rail X -385..-85 with its
+    // transport: three MISUMI LX2005CG-B1 actuators (cad/station/checks.txt): X L300 along X at Y -165, rail X -385..-85 with its
     // bottom at Z 7.25 on a 118 mm riser bar; Z L100 on an angle bracket on the X table (rail Z 44.25..144.25, table centre 90.5 at the
     // nest); Y L200 under the tray (rail bottom Z -48, ledges at Z -12). X table centre at the nest -121 (the arm bar starts at the
     // gripper interface's -X edge), tray column 0 at die X -95.
-    xAxisCy: -140, xRail: [-385, -85], xRailZ: 7.25, xcNest: -121, zRailZ0: 44.25, zcNest: 90.5, yRailZ: -48, trayDrop: 12,
+    xAxisCy: -165, xRail: [-385, -85], xRailZ: 7.25, xcNest: -121, zRailZ0: 44.25, zcNest: 90.5, yRailZ: -48, trayDrop: 12,
     cols: 8, rows: 14, colPitch: 16, rowPitch: 7.5, col0X: -95,
     gxPark: -60,                         // gripper die-origin X while a die is measured (far tip at X -44, outside the nest and keep-out)
     home: { c: 2, r: 5 }, next: { c: 3, r: 6 }   // pocket of the die under test, and of the next die
@@ -549,7 +549,7 @@
       this.keepRing = new THREE.Mesh(new THREE.RingGeometry(16.6, 17, 64), new THREE.MeshBasicMaterial({ color: COL.keepout, side: THREE.DoubleSide }));
       this.keepRing.rotation.x = -Math.PI / 2; this.keepRing.position.set(5, 0.52, 3); g.add(this.keepRing);
       // X actuator: MISUMI LX2005CG-B1 L300 (cover type: body 40 wide x 26.5 tall, table plate 52 x 57 to 27 above the rail bottom, screw
-      // axis at 13, bracket casting 56 beyond the rail, 40 sq adapter plate 13 thick, motor envelope 42 sq x 90) along X at Y -140 on a
+      // axis at 13, bracket casting 56 beyond the rail, 40 sq adapter plate 13 thick, motor envelope 42 sq x 90) along X at Y -165 on a
       // 118 mm riser bar with a 60 x 8 foot flange; rail X -385..-85 (nest end), motor toward -X
       const cyx = ST.xAxisCy, zr = ST.xRailZ, ax = zr + 13;
       const mLx = mat(0x2d3138), mLxTab = mat(0x3f5f80), mMot = mat(0x4d5058), mPlate = mat(0x3a3f47);
@@ -597,7 +597,7 @@
       this.yCar = new THREE.Group(); g.add(this.yCar);
       const yTab = yr + 27;                                                                             // Y table top (Z -21)
       this.yCar.add(cb(trayCx - 26, trayCx + 26, yc - 28.5, yc + 28.5, yr + 6, yTab, mLxTab));
-      this.yCar.add(cb(trayX0 - 8, trayX1 + 8, yc - trayLenY / 2 - 8, yc + trayLenY / 2 + 8, yTab, yTab + 6, mat(COL.deck)));   // deck to its pocket floor
+      this.yCar.add(cb(trayX0 - 8, trayX1 + 8, yc - trayLenY / 2 - 2, yc + trayLenY / 2 + 2, yTab, yTab + 6, mat(COL.deck)));   // deck to its pocket floor
       const rowsY0 = Array.from({ length: ST.rows }, (_, k) => yc + (k - (ST.rows - 1) / 2) * ST.rowPitch - 3);
       const mTray = mat(COL.tray);
       [trayX0 + 3.5, trayX1 - 3.5].forEach((px) => this.yCar.add(vcyl(px, yc, 1.5, yTab + 6 - 7, yTab + 6 + 3, mat(COL.rail))));   // tray datum pins
@@ -635,6 +635,7 @@
       addLabel('gripper module (SMC MHZ2-6D)', () => this.gr.localToWorld(new THREE.Vector3(-30, 72, 3)));
       addLabel('tray camera · Basler dart · 16 mm M12 · field 18.5 × 13.9 mm at the tray', () => this.zCar.localToWorld(new THREE.Vector3(camX, 94, camY)));
       addLabel('wafer tray · 8 × 14 = 112 pockets · Y actuator LX20 L200', () => this.yCar.localToWorld(new THREE.Vector3(trayCx, 0, yc + trayLenY / 2 + 4)));
+      addLabel('Y table plate under the deck (moves; the rail is fixed)', () => this.yCar.localToWorld(new THREE.Vector3(trayCx + 30, yTab - 8, yc)));
       this.objLabel = addLabel('', () => this.obj.localToWorld(new THREE.Vector3(0, 44, 0)));
       addLabel('keep-out under objective Ø34', () => new THREE.Vector3(22, 2.2, -8), 'warn');
       this.dieLabel = addLabel('die under test', () => this.die.position.clone().add(new THREE.Vector3(5, 0.8, -1)));

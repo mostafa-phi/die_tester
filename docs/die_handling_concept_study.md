@@ -1,6 +1,6 @@
 # System Redesign Study — Batch Edge-Coupled Testing of Hundreds of 10 × 6 mm Photonic Dies
 
-**Status:** concept study for review, rev. 2.12 (CAD of the gripper, the self-registering nest on its die stage, the wafer tray and the full station with its MISUMI LX20 transport in [`cad/`](../cad/README.md))
+**Status:** concept study for review, rev. 2.13 (CAD of the gripper, the self-registering nest on its die stage, the wafer tray and the full station with its MISUMI LX20 transport in [`cad/`](../cad/README.md))
 **Scope:** ground-up redesign of the die-tester stage and handling system. The current
 machine is architected around a single manually loaded die; this study treats the whole
 stage system as open for redesign and asks what a machine looks like when the unit of
@@ -48,7 +48,7 @@ references) and replaces the Velmex BiSlides with three **MISUMI LX20** actuator
 speed, Oriental Motor AZ closed-loop steppers with a brake on Z); the tray moves 55 mm closer to the nest and the X actuator's narrow band beside the tray
 sweep removes the bridge riser. The interactive model follows this layout and keeps only the two scenes that matter now: the
 test-station exchange and the place into a tray pocket.
-Rev. 2.12 finalizes the tray pocket as a **corner-post pocket**: the die is held in Y by four 0.7 mm posts at its corners and the walls are relieved to ≥ 1.0 mm from the facets everywhere else, so a facet can touch nothing along the waveguide region; the nose-slot channel now runs through every wall of a column (the earlier model only had it at the rims). The tray is located on the Y deck by **two Ø3 dowel pins** (round hole and slot in its X rims, ±0.05 mm) instead of a clearance pocket, and Z across the tray is a taught map, not a planarity requirement (`docs/pick_and_place_design.md` §3.5), a **Basler dart** camera on the arm end plate images every pocket before a pick (occupancy, orientation, chips, Y offset, die height from its apparent size), §3.6; a laser displacement sensor for a Z map was modelled and rejected for size (it is as large as the gripper actuator).
+Rev. 2.13 moves the X actuator from Y −140 to **Y −165** and trims the tray deck to 2 mm beyond the tray in Y: the deck now clears the X riser by 33.5 mm at the end row and by 14 mm at the physical end of the Y actuator's stroke (it was 2.5 mm at the end row and would have crashed on a 2.5 mm overtravel); the Y rail gets limit sensors at both ends. Rev. 2.12 finalizes the tray pocket as a **corner-post pocket**: the die is held in Y by four 0.7 mm posts at its corners and the walls are relieved to ≥ 1.0 mm from the facets everywhere else, so a facet can touch nothing along the waveguide region; the nose-slot channel now runs through every wall of a column (the earlier model only had it at the rims). The tray is located on the Y deck by **two Ø3 dowel pins** (round hole and slot in its X rims, ±0.05 mm) instead of a clearance pocket, and Z across the tray is a taught map, not a planarity requirement (`docs/pick_and_place_design.md` §3.5), a **Basler dart** camera on the arm end plate images every pocket before a pick (occupancy, orientation, chips, Y offset, die height from its apparent size), §3.6; a laser displacement sensor for a Z map was modelled and rejected for size (it is as large as the gripper actuator).
 
 Coordinate convention follows the brief: **X** = 10 mm die dimension, **Y** = 6 mm die
 dimension (optical propagation; fibers approach along ±Y), **Z** = vertical, **θ** =
@@ -538,9 +538,10 @@ can be drawn on the table and interlocked.
 | Electrostatic top chuck | Rejected: unpredictable on pyroelectric LN. |
 
 **Layout and operation.** X actuator at −X of the nest beside the input fiber stage
-(centre-line Y −140) on its own riser bar, decoupled from the nest base plate, so its
-motion never enters the metrology loop; its 52 mm band lies beside the tray's Y sweep, so
-nothing passes under it. The Z actuator stands on an angle bracket on the X table with
+(centre-line Y −165) on its own riser bar, decoupled from the nest base plate, so its
+motion never enters the metrology loop; its riser lies beside the tray's Y sweep with 14 mm
+to spare at the Y actuator's physical stroke end, so nothing passes under it and an
+overtravel cannot crash the deck. The Z actuator stands on an angle bracket on the X table with
 its brake motor up; one 25 mm square bar runs from the Z table along +Y to the gripper.
 The tray rides on the Y actuator under the arm, columns along X from die X −95 to −207,
 outside both fiber corridors (`cad/station/README.md`). The axes move **only while fibers are retracted** and is parked
