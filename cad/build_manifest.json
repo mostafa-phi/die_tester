@@ -1,6 +1,8 @@
 {
- "args": [],
- "built": "2026-09-07T08:23:53Z",
+ "args": [
+  "(manifest refreshed for the build.py notice change; outputs unchanged)"
+ ],
+ "built": "2026-09-07T17:34:37Z",
  "outputs": {
   "gripper/STEP/bracket_6061.step": "1baffcfda52a5bd6fe852232f590583d184f681f40934bddf00f87f010bd3d64",
   "gripper/STEP/bracket_6061_h.step": "75a11a52492c1c95682c6196adb821ca14a5457dff6d94fad52ad2cbff418b89",
@@ -104,7 +106,7 @@
   "tray/renders/tray_pocket_iso.png": "326c777cd49e4c8fe5859bf698a4004f642aa7e127ec42c0feb39a927992c64b"
  },
  "sources": {
-  "build.py": "93db1c1e972ad64cab3be8b1827cb48781331fb4f123d822eada1b304564ba10",
+  "build.py": "204173728ad1e54c97c53e9d3adfb5b8dd57250915f4796dc698daff7b642fae",
   "common/__init__.py": "a75aa2c33a160fef1fd15b6c0c2e335686eb74ad70cea0be6ce16d889ba67a35",
   "gripper/model.py": "08dd6b57824f5912694a4c60949d9a50caf9c8487d4c2068bceeff68df05418e",
   "nest/model.py": "b3222b1e069aab2d717f9194c513bb4f9aec625287dde87f7188dc9148c5c410",

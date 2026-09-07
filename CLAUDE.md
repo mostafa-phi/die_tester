@@ -110,7 +110,32 @@ Therefore:
   skips the PNGs when only the checks are needed; `--fast` renders small.
 - Commit messages: imperative subject, body says which component changed and which numbers moved.
 
-## 5. Still-open measurements (do not silently replace with guesses)
+## 5. Two agents on this branch: designer agent and 3D-viz agent
+
+Two agents commit to `claude/autoloader-design`. The **designer agent** owns the design: `cad/common`,
+`cad/gripper`, `cad/nest`, `cad/tray`, `cad/station`, `cad/vendor`, `cad/build.py`, `docs/` and this file.
+The **3D-viz agent** owns `cad/blender/` (Blender scene, materials, cameras, animation, renders) and edits
+nothing outside it except its own row in `cad/README.md` and its own block in `.gitignore`. The designer
+agent never edits `cad/blender/`.
+
+- **The interface between them is one file plus its member names.** The 3D-viz pipeline reads only
+  `cad/station/STEP/station_assembly.step.zip` (the transport at the nest) and, when it needs the worst-case
+  pose, `station_far_column.step`. The member names in those assemblies (`cad/station/README.md`, "Assembly
+  member names") are a stable interface: the 3D-viz scripts key materials and collections on the name
+  prefixes listed there, never on an exact list, and the designer agent does not rename a member or move a
+  part between the two files without updating that section and saying so in the commit message.
+- **Staleness is visible, not silent.** `build.py` prints a notice after every station rebuild. The 3D-viz
+  pipeline records the sha256 of the zip it consumed in `cad/blender/source.json`
+  (`{"station_assembly_zip_sha256": "<hex>", "built": "<ISO time>"}`); `build.py --check` compares it with
+  the manifest and reports, as information, when the Blender outputs come from an older station.
+- **Git.** Both agents `git pull --rebase origin claude/autoloader-design` before every push, and push only
+  a clean tree. The designer agent pushes only after a full build with `--check` passing, so the zip on the
+  branch always matches the model. The 3D-viz agent starts every run from a freshly pulled branch whose
+  `--check` passes, never from a working tree mid-build, and its commits touch only its own paths.
+- **Naming in messages and commits:** "designer agent" and "3D-viz agent", so the user and both agents can
+  tell whose work a commit is.
+
+## 6. Still-open measurements (do not silently replace with guesses)
 
 Real fiber-holder envelope, microscope working distance and tube diameter, TEC part number and
 heat load, die backside finish, the LX20 envelope against its STEP (and the stepper length), the KB1X1 platform bolt pattern for
