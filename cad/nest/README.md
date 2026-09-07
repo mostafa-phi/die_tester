@@ -98,10 +98,10 @@ riser); silicone hose to the M5 fitting.
 
 ## Parts
 
-| File | Material | Make | Notes |
+| File (STEP; the STL of every part is in `STL/`, see `docs/print_list.md`) | Material | Make | Notes |
 |---|---|---|---|
-| `STEP/nest_chuck_copper.step` (+STL) | C101 copper, Ni plate | CNC + lap | pad island, vacuum holes, plenum, neck, stub tube, thermistor bore |
-| `STEP/nest_cage_semitron.step` (+STL) | Semitron ESd 480 | CNC | one piece: plate with the copper window, 4 corner blocks (stop pads, X guard, Y guards); 2 × M2 + 2 × Ø1.5 dowels to the riser |
+| `STEP/nest_chuck_copper.step` | C101 copper, Ni plate | CNC + lap | pad island, vacuum holes, plenum, neck, stub tube, thermistor bore |
+| `STEP/nest_cage_semitron.step` | Semitron ESd 480 | CNC | one piece: plate with the copper window, 4 corner blocks (stop pads, X guard, Y guards); 2 × M2 + 2 × Ø1.5 dowels to the riser |
 | `STEP/nest_riser_6061.step` | 6061 | CNC | T-riser: neck, 38 × 38 wide body with the TEC pocket, wire channel, vacuum-stub and thermistor clearances, 4 × M3 counterbored to the KXC04015 table |
 | `STEP/nest_adapter_kb_kxc.step`, `STEP/nest_spacer_kxc_rot.step` | 6061 | CNC / waterjet | 3 mm adapter plate between the KB1X1 and the KXC04015-C base (the stage's pattern confirmed in the vendor STEP; the KB1X1 platform pattern still to confirm) and the 8 mm spacer with the centre dowel between the X-stage table and the rotary |
 | — | Suruga KXC04015-C X stage, MISUMI RMPG40W-N rotary, TEC 15 × 15 × 2.5, thermistor, KB1X1 (Thorlabs 2374-E0W) | buy | both stages run on the existing DS102 controller #3 (today's centre-stage X and θ axes) |

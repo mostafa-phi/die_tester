@@ -565,7 +565,7 @@ def main():
     parts = {"nest_chuck_copper": ch, "nest_cage_semitron": cg, "nest_riser_6061": rs,
              "nest_adapter_kb_kxc": stk["nest_adapter_kb_kxc"], "nest_spacer_kxc_rot": stk["nest_spacer_kxc_rot"]}
     for name, shape in parts.items():
-        C.export_part(shape, DIRS, name, stl=(name in ("nest_chuck_copper", "nest_cage_semitron")), tolerance=0.005)
+        C.export_part(shape, DIRS, name, stl=True, tolerance=0.005)        # STL for every custom part (print list: docs/print_list.md)
     col = {"nest_chuck_copper": (0.72, 0.45, 0.20), "nest_cage_semitron": (0.16, 0.16, 0.18), "nest_riser_6061": (0.60, 0.63, 0.68),
            "nest_adapter_kb_kxc": (0.60, 0.63, 0.68), "nest_spacer_kxc_rot": (0.60, 0.63, 0.68), "tec_15x15": (0.85, 0.85, 0.88)}
     vend = {n: v for n, v in stk.items() if not n.startswith("nest_")}

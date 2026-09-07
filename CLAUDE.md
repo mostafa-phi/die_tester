@@ -28,13 +28,17 @@ disagree with each other.
   envelope, the box/cylinder helpers and the AABB clearance functions live in `cad/common`. A number
   that two components share must not be typed twice; import it. Component-local parameters stay in
   the component's `P` / `N` / `TR` / `S` dict.
-- **Vendor geometry.** Bought parts are placed from manufacturer STEP in `cad/vendor/` (git-ignored,
-  licensed downloads; see `cad/vendor/README.md`) whenever the file is present; there is no separate
+- **Vendor geometry.** Bought parts are placed from manufacturer STEP in `cad/vendor/` (tracked since
+  2026-09-07 so the files can be used outside this checkout; they stay licensed downloads, see
+  `cad/vendor/README.md`) whenever the file is present; there is no separate
   envelope build. Envelopes are fallbacks, never the record where a vendor file exists. What we learned from vendor files (SMC finger gap, KXC table pattern,
   NanoMax micrometer protrusion) is written into the model comments, not just the chat. Catalog numbers typed into an
   envelope (`common.LX20`) say where they came from and are confirmed against the STEP when it arrives.
 - **Handling sequences.** How the jaws pick and place (heights, forces, interlocks, the friction-only
   decision, nose crown) is `docs/pick_and_place_design.md`; the gripper, tray and nest models quote it.
+- **Every custom part is a part.** Anything that joins two bought things (risers, brackets, adapter plates,
+  the arm, the deck) is modelled with its bolt pattern and exported as STEP + STL by the component that owns
+  it; a box placeholder is not a part. `docs/print_list.md` lists them all with material and finishing.
 - **Honesty of checks.** Clearance checks are per member (`gap_any`, `gap_parts`), never on the
   union bounding box of a compound part. Every non-OK line in a `checks*.txt` is either fixed or
   explained in the component README as intended (e.g. stop pads touching the seated die, the gripper
@@ -49,7 +53,7 @@ cad/
   nest/       model.py  README.md  STEP/  STL/  renders/  checks.txt
   tray/       model.py  README.md  STEP/  STL/  renders/  checks.txt
   station/    model.py  README.md  STEP/ (ignored)  renders/  checks[_h].txt
-  vendor/     manufacturer STEP (ignored) + fetch script + README
+  vendor/     manufacturer STEP (tracked) + fetch script + README
   build.py    builds everything in dependency order, renders, writes build_manifest.json
   README.md   index
 ```
@@ -79,7 +83,7 @@ Therefore:
    the changed numbers.
 4. **Do not track large derived files.** Full station assemblies, anything `*_vendor*`, and the
    full wafer-tray STEP are git-ignored (`.gitignore`); the checks and renders stand in for them.
-   Vendor files are never committed.
+   The manufacturer files in `cad/vendor` are tracked (they are inputs, not derived).
 5. **Docs quote, they do not define.** `docs/*.md` and `docs/die_handling_3d.html` describe the
    design and link to the component READMEs; when a number changes in a model, update the README
    of that component, then grep `docs/` and the viewer for the old value. The concept study keeps

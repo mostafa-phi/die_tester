@@ -90,8 +90,14 @@ LX20 = dict(
     motor_sq=42.0, motor_len=90.0,                   # motor envelope on the plate: 40 sq servo or 42 sq brake stepper, length assumed
     stroke={100: 36.5, 150: 86.5, 200: 136.5, 250: 186.5, 300: 236.5},   # effective stroke per base length L
     v_max=690.0, repeat=0.005, m_a=27.0, m_c=93.0,   # mm/s (screw-rated), mm, N.m, N.m
-    mount_pitch=60.0, mount_hole=3.4,                # N x dia 3.4 through / dia 6.5 counterbore along the rail, pitch 60
-    table_holes=(33.2, 20.0),                        # 4 x M4 through the table plate
+    # bolt patterns measured in the vendor STEP files (file frame, see above):
+    mount_pitch=60.0, mount_hole=3.4, mount_row=9.0, # base: N x dia 3.4 through / dia 6.5 counterbore from inside the rail channel,
+                                                     # two rows at z = +/-9, pitch 60 along the rail; the mounting surface gets M3
+    base_first={300: 40.0, 200: 50.0, 100: 30.0},    # first base hole measured from the rail's far (non-motor) end, per L ...
+    base_n={300: 5, 200: 3, 100: 2},                 # ... and the number of holes per row (the last one carries the dia 4 dowel,
+    base_dowel=4.0,                                  # the first one a 4 x 8 slot, both on the rail centre line)
+    table_holes=(20.0, 45.0),                        # 4 x M4 tapped in the table plate: 20 along the axis x 45 across, about its centre
+    table_dowel=(3.0, 45.0),                         # 2 x dia 3 dowel holes in the table plate at its centre, 45 apart across (one slotted)
     mass_per_100=0.22,                               # kg per 100 mm of rail (table included ~0.45 kg at L 100)
     file_rail_x0=56.0,                               # vendor file: rail starts at x 56 (x 0..56 is the bracket casting), motor plate x -13..0
 )

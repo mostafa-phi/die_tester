@@ -3,7 +3,7 @@
 `model.py` (CadQuery) → `STEP/station_assembly[_h].step` (git-ignored, ~100 MB), `checks[_h].txt`, `renders/`.
 Rebuild with `python cad/build.py` (builds the default and the `_h` horizontal-gripper variant). Manufacturer
 STEP from `cad/vendor` is placed wherever the file exists and the envelope is used otherwise, so a clone
-without the git-ignored vendor files still builds and checks; the first line of `checks.txt` lists the
+without the vendor files still builds and checks; the first line of `checks.txt` lists the
 vendor files that were placed. Imports `cad/gripper`, `cad/nest`, `cad/tray` and `cad/common`; this file
 only **places** the components and adds the transport axes, the two NanoMax fiber stages with holder
 envelopes, the microscope envelope and the table, then computes the clearances.
@@ -44,6 +44,27 @@ same side) and moved to the LX20 class for cost and speed; see `docs/bom_month1.
 
 `checks.txt` prints the derived numbers (rail positions, travel margins at both ends of every actuator, the
 static moment on the X table plate against the LX20's 27 N·m rating, the exchange time at 200 mm/s).
+
+## Custom mounting parts (`STEP/`, `STL/`)
+
+The pieces between the actuators and everything else are real parts with bolt patterns (measured in the
+LX20 STEP files: base holes Ø3.4 in two rows 18 mm apart on a 60 mm pitch, table plate 4 × M4 on 20 × 45 with
+two Ø3 dowels) and are exported per part; the printing and finishing instructions are in
+[`docs/print_list.md`](../../docs/print_list.md). Hole sizes are tap-drill / press-fit for printing.
+
+![tower bracket](renders/station_tower_bracket_iso.png)
+![arm](renders/station_arm_iso.png)
+![tray deck](renders/station_tray_deck_iso.png)
+![X riser](renders/station_x_riser_iso.png)
+
+| File | Part | Interfaces |
+|---|---|---|
+| `x_axis_riser_6061[_h]` | riser bar under the X actuator: 40 wide body from the table to the rail bottom, 60 × 8 foot flange with 6.6 × 14 slots on a 50 mm pitch | top: 10 × M3 tap-drill + 2 × Ø4 pin holes on the LX20 base pattern; foot: M6 or ¼-20 on a 25 mm / 1″ grid |
+| `y_axis_riser_6061` | same under the Y actuator (80 wide flange) | 6 × M3 + 2 × Ø4; foot slots |
+| `tower_bracket_6061` | 60 × 60 × 10 base on the X table plate, 10 mm leg carrying the Z rail, gusset rib | base: 4 × Ø4.5 counterbored + 2 × Ø3 dowels (table pattern); leg: 4 × M3 tap-drill + 2 × Ø4 pins (Z rail base pattern) |
+| `arm_6061[_h]` | one piece: 33-deep adapter block on the Z table plate, 25 sq bar along +Y, 8 mm end plate over the gripper bracket | block: 4 × Ø4.5 counterbored Ø8 from the outside + 2 × Ø3 dowels; end plate: 4 × M4 tap-drill + 2 × Ø3 dowels on `gripper.IFACE` |
+| `tray_deck_6061` | 8 mm deck on the Y table plate with a 2 mm locating pocket for the tray (0.2 mm clearance per side) | 4 × Ø4.5 counterbored from the pocket floor + 2 × Ø3 dowels |
+| `nanomax_riser_6061` (×2) | 25 mm plate under each NanoMax | 16 × Ø6.6 through on the 25 mm grid (M6 bolts through the stage slots into the table) |
 
 ## Movement pattern (one exchange)
 

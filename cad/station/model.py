@@ -69,7 +69,6 @@ S = dict(
     tower_w=60.0, tower_t=10.0,    # 6061 angle bracket on the X block: 60 x 60 x 10 base plate (block's 4 x M4), 10 mm vertical leg
     arm_sec=25.0,                  # square arm bar (6061) from the adapter plate on the Z block to the gripper interface
     arm_plate_t=8.0,               # adapter plate on the Z block face (block's 4 x M4)
-    deck_t=6.0, y_riser_w=60.0,    # tray deck on the Y block; riser bar under the Y rail
     tower_mass=1.7,                # kg: Z actuator 0.45 + brake motor 0.6 + bracket 0.3 + arm 0.25 + gripper 0.1 (moment check on the X block)
     # wafer tray: geometry and column positions live in cad/tray (TM.TR)
     tray_cols=TM.TR["cols"], tray_rows=TM.TR["rows"], tray_col_pitch=TM.TR["col_pitch"], tray_row_pitch=TM.TR["row_pitch"],
@@ -132,7 +131,7 @@ def nanomax(side):
         y0, y1 = G.P["die_wid"] + g, G.P["die_wid"] + g + S["nanomax_w"]
     x0, x1 = 5 - S["nanomax_w"] / 2, 5 + S["nanomax_w"] / 2
     zr = table_z + S["nanomax_riser"]                                          # NanoMax base sits on its riser plate
-    riser = box(x0, x1, y0, y1, table_z, zr)
+    riser = nanomax_riser_part(x0, x1, y0, y1, table_z, zr)
     stage = vendor_step("thorlabs_MAX313D_M.step")
     if stage is not None:
         # Thorlabs 22803-E0W (MAX313D/M): base plate X -114.5..-2.5, Y -14..98, Z 0; body Y face at -14 is the
@@ -288,41 +287,182 @@ def lx_z(L, z0, xl, cyx, zc):
 # ----------------------------------------------------------------------------
 # Transport
 # ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# Mounting parts: the custom pieces between the actuators and everything else. Real parts with bolt patterns,
+# exported as STEP + STL (printed in PPA-CF for the prototype, machined in 6061 after the trials; see
+# docs/print_list.md). Hole sizes are tap-drill / press-fit for printing; ream or tap after printing.
+# ----------------------------------------------------------------------------
+M = dict(
+    tap_m3=2.5, tap_m4=3.3,               # tap-drill holes for M3 / M4 (tap directly in PPA-CF, or open to 4.0 / 5.6 for heat-set inserts)
+    m4_clr=4.5, m4_cbore=(8.0, 4.5),      # M4 clearance and counterbore (dia, depth) for SHCS
+    dowel3=2.9, dowel4=3.9,               # press-fit dowel holes (ream to H7 after printing)
+    flange_t=8.0, flange_w=60.0, y_flange_w=80.0,   # riser foot flanges: thickness, total width (X riser / Y riser)
+    slot=(6.6, 14.0), slot_pitch=50.0,    # foot slots for M6 or 1/4-20 table bolts (25 mm or 1 in grid)
+    deck_t=8.0, deck_pocket=2.0, deck_clr=0.2,      # tray deck: thickness, tray locating pocket depth, clearance per side
+    rib_len=40.0, rib_h=60.0, rib_t=10.0, # tower gusset rib on the -X side of the leg
+    nanomax_grid=25.0, nanomax_hole=6.6,  # NanoMax riser plates: through holes on the 25 mm grid (M6 bolts through the stage slots)
+)
+
+
+def lx_base_along(L):
+    """Base-hole positions along the rail measured from its far (non-motor) end, from the vendor STEP."""
+    return [LX["base_first"][L] + k * LX["mount_pitch"] for k in range(LX["base_n"][L])]
+
+
+def slot_x(xc_, yc_, z0, z1, w, ln):
+    """Slot along X: width w (in Y), length ln (in X), centred at (xc_, yc_)."""
+    return box(xc_ - ln / 2 + w / 2, xc_ + ln / 2 - w / 2, yc_ - w / 2, yc_ + w / 2, z0, z1) \
+        .union(C.cyl_z(xc_ - ln / 2 + w / 2, yc_, z0, z1, w / 2)).union(C.cyl_z(xc_ + ln / 2 - w / 2, yc_, z0, z1, w / 2))
+
+
+def slot_y(xc_, yc_, z0, z1, w, ln):
+    return box(xc_ - w / 2, xc_ + w / 2, yc_ - ln / 2 + w / 2, yc_ + ln / 2 - w / 2, z0, z1) \
+        .union(C.cyl_z(xc_, yc_ - ln / 2 + w / 2, z0, z1, w / 2)).union(C.cyl_z(xc_, yc_ + ln / 2 - w / 2, z0, z1, w / 2))
+
+
+def x_riser_part(x0, x1, cyx, zr):
+    """X riser bar: 40 wide body under the base rail from the table to zr, 60 wide x 8 foot flange with slots for the
+    table bolts, M3 tap-drill holes on the LX20 base pattern and two dia 4 pin holes on the centre line."""
+    L = S["lx_L"]["x"]
+    w2, fw2, ft = LX["base_w"] / 2, M["flange_w"] / 2, M["flange_t"]
+    r = box(x0, x1, cyx - w2, cyx + w2, table_z, zr).union(box(x0, x1, cyx - fw2, cyx + fw2, table_z, table_z + ft))
+    for a in lx_base_along(L):
+        for dy in (-LX["mount_row"], LX["mount_row"]):
+            r = r.cut(C.cyl_z(x1 - a, cyx + dy, zr - 10.0, zr + 0.5, M["tap_m3"] / 2))
+    for a in (lx_base_along(L)[0], lx_base_along(L)[-1]):
+        r = r.cut(C.cyl_z(x1 - a, cyx, zr - 8.0, zr + 0.5, M["dowel4"] / 2))
+    xs = x0 + 25.0
+    while xs <= x1 - 25.0:
+        for dy in (-(w2 + 5.0), w2 + 5.0):
+            r = r.cut(slot_x(xs, cyx + dy, table_z - 0.5, table_z + ft + 0.5, *M["slot"]))
+        xs += M["slot_pitch"]
+    return r
+
+
+def y_riser_part(y0, y1, cx, zr):
+    """Y riser bar under the Y actuator: same construction along Y (foot flange 80 wide)."""
+    L = S["lx_L"]["y"]
+    w2, fw2, ft = LX["base_w"] / 2, M["y_flange_w"] / 2, M["flange_t"]
+    r = box(cx - w2, cx + w2, y0, y1, table_z, zr).union(box(cx - fw2, cx + fw2, y0, y1, table_z, table_z + ft))
+    for a in lx_base_along(L):
+        for dx in (-LX["mount_row"], LX["mount_row"]):
+            r = r.cut(C.cyl_z(cx + dx, y0 + a, zr - 10.0, zr + 0.5, M["tap_m3"] / 2))
+    for a in (lx_base_along(L)[0], lx_base_along(L)[-1]):
+        r = r.cut(C.cyl_z(cx, y0 + a, zr - 8.0, zr + 0.5, M["dowel4"] / 2))
+    ys = y0 + 25.0
+    while ys <= y1 - 25.0:
+        for dx in (-(w2 + 10.0), w2 + 10.0):
+            r = r.cut(slot_y(cx + dx, ys, table_z - 0.5, table_z + ft + 0.5, *M["slot"]))
+        ys += M["slot_pitch"]
+    return r
+
+
+def tower_bracket_part(xc):
+    """Angle bracket on the X table plate: 60 x 60 x 10 base (4 x M4 counterbored on the table's 20 x 45 pattern, 2 dowels),
+    10 mm vertical leg on the +X side carrying the Z rail (M3 tap-drill holes on the LX20 base pattern, 2 pin holes),
+    gusset rib behind the leg. Returns (solid, X of the leg's +X face)."""
+    cyx, t, hw = S["x_axis_cy"], S["tower_t"], S["tower_w"] / 2
+    xb_top = S["x_rail_z"] + LX["block_top"]
+    z0, Lz = S["z_rail_z0"], S["lx_L"]["z"]
+    xl = xc + hw
+    base = box(xc - hw, xc + hw, cyx - hw, cyx + hw, xb_top, xb_top + t)
+    leg = box(xl - t, xl, cyx - hw, cyx + hw, xb_top, z0 + Lz)
+    rib = (cq.Workplane("XZ").polyline([(xl - t, xb_top + t), (xl - t - M["rib_len"], xb_top + t), (xl - t, xb_top + t + M["rib_h"])]).close()
+           .extrude(M["rib_t"] / 2, both=True).translate((0, cyx, 0)))
+    br = base.union(leg).union(rib)
+    al, ac = LX["table_holes"]
+    for dx in (-al / 2, al / 2):
+        for dy in (-ac / 2, ac / 2):
+            br = br.cut(C.cyl_z(xc + dx, cyx + dy, xb_top - 0.5, xb_top + t + 0.5, M["m4_clr"] / 2))
+            br = br.cut(C.cyl_z(xc + dx, cyx + dy, xb_top + t - M["m4_cbore"][1], xb_top + t + 0.5, M["m4_cbore"][0] / 2))
+    for dy in (-LX["table_dowel"][1] / 2, LX["table_dowel"][1] / 2):
+        br = br.cut(C.cyl_z(xc, cyx + dy, xb_top - 0.5, xb_top + 6.0, M["dowel3"] / 2))
+    for a in lx_base_along(Lz):
+        for dy in (-LX["mount_row"], LX["mount_row"]):
+            br = br.cut(C.cyl_x(cyx + dy, z0 + a, xl - 8.0, xl + 0.5, M["tap_m3"] / 2))
+    for a in (lx_base_along(Lz)[0], lx_base_along(Lz)[-1]):
+        br = br.cut(C.cyl_x(cyx, z0 + a, xl - 6.0, xl + 0.5, M["dowel4"] / 2))
+    return br, xl
+
+
 def x_axis(xc):
     """X actuator on its riser bar (table to S['x_rail_z']); nest end of the rail at S['x_rail_x1']. Returns dict."""
     cyx = S["x_axis_cy"]
     ax = lx_x(S["lx_L"]["x"], S["x_rail_x1"], cyx, S["x_rail_z"], xc)
-    w2 = LX["base_w"] / 2
-    ax["riser"] = box(ax["x0"], ax["x1"], cyx - w2, cyx + w2, table_z, S["x_rail_z"])   # under the base rail only: the motor overhangs
+    ax["riser"] = x_riser_part(ax["x0"], ax["x1"], cyx, S["x_rail_z"])         # under the base rail only: the motor overhangs
     return ax
 
 
 def z_tower(xc, zc):
-    """Tower on the X block at xc: angle bracket (base plate on the block, vertical leg on its +X side) carrying the
-    Z actuator on the leg's +X face; Z block centred at zc. Returns (dict of parts, X of the Z block face)."""
-    cyx, t, hw = S["x_axis_cy"], S["tower_t"], S["tower_w"] / 2
-    xb_top = S["x_rail_z"] + LX["block_top"]
+    """Tower on the X table at xc: the angle bracket and the Z actuator on its leg's +X face; Z table centred at zc.
+    Returns (dict of parts, X of the Z table face)."""
+    cyx = S["x_axis_cy"]
     z0, Lz = S["z_rail_z0"], S["lx_L"]["z"]
-    base = box(xc - hw, xc + hw, cyx - hw, cyx + hw, xb_top, xb_top + t)
-    xl = xc + hw                                                       # leg's +X face = Z rail back face
-    leg = box(xl - t, xl, cyx - hw, cyx + hw, xb_top, z0 + Lz)
+    br, xl = tower_bracket_part(xc)
     zax = lx_z(Lz, z0, xl, cyx, zc)
-    parts = {"tower_base_6061": base, "tower_leg_6061": leg, "z_axis_rail_lx20": zax["rail"], "z_axis_block": zax["block"],
+    parts = {"tower_bracket_6061": br, "z_axis_rail_lx20": zax["rail"], "z_axis_block": zax["block"],
              "z_axis_plate": zax["plate"], "z_axis_motor": zax["motor"]}
     S["_z_top"] = zax["top"]
     return parts, xl + LX["block_top"]
 
 
 def arm(xf, zc, z_iface_top, gx):
-    """Adapter plate on the Z block face at X xf, 25 sq bar along +Y from the axis band to the die line at bar bottom
-    z_iface_top + 8, end plate (8 mm) over the gripper interface (gripper.IFACE) at die X gx. Returns (union, members)."""
+    """One-piece arm: adapter block on the Z table face at X xf (33 deep, 4 x M4 counterbored from the outside on the
+    table's 20 x 45 pattern, 2 dowels), 25 sq bar along +Y from the axis band to the die line with its bottom at
+    z_iface_top + 8, 8 mm end plate over the gripper interface (gripper.IFACE: 4 x M4 tap-drill + 2 dowels) at die X gx.
+    Returns (solid, members [block, bar, end plate])."""
     a, cyx, t = S["arm_sec"], S["x_axis_cy"], S["arm_plate_t"]
     ix0, ix1, iy0, iy1 = G.IFACE
     za = z_iface_top + 8
-    plate = box(xf, xf + t, cyx - LX["block_w"] / 2, cyx + 20 + a, zc - LX["block_len"] / 2, zc + LX["block_len"] / 2)
-    bar_y = box(xf + t, xf + t + a, cyx + 20, iy1, za, za + a)
+    bw = t + a                                                        # block depth = plate + bar, flush with the bar's +X face
+    hl = LX["block_len"] / 2
+    block = box(xf, xf + bw, cyx - LX["table_holes"][1] / 2 - 7.5, cyx + 20 + a, zc - hl, zc + hl)   # -Y wall 7.5 outside the counterbores
+    bar_y = box(xf + t, xf + bw, cyx + 20, iy1, za, za + a)
     ep = box(gx + ix0, gx + ix1, iy0, iy1, z_iface_top, z_iface_top + 8)
-    return plate.union(bar_y).union(ep), [plate, bar_y, ep]
+    al, ac = LX["table_holes"]
+    for dz in (-al / 2, al / 2):
+        for dy in (-ac / 2, ac / 2):
+            block = block.cut(C.cyl_x(cyx + dy, zc + dz, xf - 0.5, xf + bw + 0.5, M["m4_clr"] / 2))
+            block = block.cut(C.cyl_x(cyx + dy, zc + dz, xf + t, xf + bw + 0.5, M["m4_cbore"][0] / 2))
+    for dy in (-LX["table_dowel"][1] / 2, LX["table_dowel"][1] / 2):
+        block = block.cut(C.cyl_x(cyx + dy, zc, xf - 0.5, xf + 6.0, M["dowel3"] / 2))
+    if G.LAYOUT == "horizontal":
+        pcx, pcy = G.cx - 2 + gx, G.H["m3_y"]
+    else:
+        pcx, pcy = G.cx - 8 + gx, G.die_cy
+    pitch = G.P["iface_pitch"]
+    for dx in (-pitch / 2, pitch / 2):
+        for dy in (-pitch / 2, pitch / 2):
+            ep = ep.cut(C.cyl_z(pcx + dx, pcy + dy, z_iface_top - 0.5, z_iface_top + 8.5, M["tap_m4"] / 2))
+        ep = ep.cut(C.cyl_z(pcx + dx, pcy, z_iface_top - 0.5, z_iface_top + 8.5, M["dowel3"] / 2))
+    return block.union(bar_y).union(ep), [block, bar_y, ep]
+
+
+def deck_part(tray_x0, tray_x1, ty0, ty1, cx, yc, z0):
+    """Tray deck on the Y table plate: 8 mm plate, tray footprint + 8 per side, 2 mm locating pocket (0.2 clearance per
+    side), 4 x M4 counterbored from the top on the table's 20 x 45 pattern, 2 dowels. Tray bottom sits at z0 + 6."""
+    t, pk, cl = M["deck_t"], M["deck_pocket"], M["deck_clr"]
+    d = box(tray_x0 - 8, tray_x1 + 8, ty0 - 8, ty1 + 8, z0, z0 + t)
+    d = d.cut(box(tray_x0 - cl, tray_x1 + cl, ty0 - cl, ty1 + cl, z0 + t - pk, z0 + t + 0.5))
+    al, ac = LX["table_holes"]
+    for dy in (-al / 2, al / 2):
+        for dx in (-ac / 2, ac / 2):
+            d = d.cut(C.cyl_z(cx + dx, yc + dy, z0 - 0.5, z0 + t + 0.5, M["m4_clr"] / 2))
+            d = d.cut(C.cyl_z(cx + dx, yc + dy, z0 + t - pk - M["m4_cbore"][1], z0 + t + 0.5, M["m4_cbore"][0] / 2))
+    for dx in (-LX["table_dowel"][1] / 2, LX["table_dowel"][1] / 2):
+        d = d.cut(C.cyl_z(cx + dx, yc, z0 - 0.5, z0 + 5.0, M["dowel3"] / 2))
+    return d
+
+
+def nanomax_riser_part(x0, x1, y0, y1, z0, z1):
+    """25 mm riser plate under a NanoMax: dia 6.6 through holes on the 25 mm grid (M6 bolts pass through the stage's slots
+    and the plate into the table)."""
+    r = box(x0, x1, y0, y1, z0, z1)
+    g = M["nanomax_grid"]; cxm, cym = (x0 + x1) / 2, (y0 + y1) / 2
+    for i in (-1.5, -0.5, 0.5, 1.5):
+        for j in (-1.5, -0.5, 0.5, 1.5):
+            r = r.cut(C.cyl_z(cxm + i * g, cym + j * g, z0 - 0.5, z1 + 0.5, M["nanomax_hole"] / 2))
+    return r
 
 
 def y_stage_and_tray(active_col_x, active_row_y):
@@ -336,15 +476,13 @@ def y_stage_and_tray(active_col_x, active_row_y):
     Ly = S["lx_L"]["y"]
     zr = S["y_rail_z"]
     ay = lx_y(Ly, cy - Ly / 2, tray_cx, zr, active_row_y)              # rail centred on the pick line Y 3
-    w2 = S["y_riser_w"] / 2
-    riser = box(tray_cx - w2, tray_cx + w2, ay["y0"], ay["y1"], table_z, zr)
+    riser = y_riser_part(ay["y0"], ay["y1"], tray_cx, zr)
     deck_z0 = zr + LX["block_top"]
-    deck = box(tray_x0 - 8, tray_x1 + 8, active_row_y - tray_len_y / 2 - 8, active_row_y + tray_len_y / 2 + 8, deck_z0, deck_z0 + S["deck_t"])
-    tray, z_led, _ = TM.tray(x_first, active_row_y, deck_z0 + S["deck_t"])   # pockets and ledges: cad/tray
+    deck = deck_part(tray_x0, tray_x1, ty0, ty1, tray_cx, active_row_y, deck_z0)
+    tray, z_led, _ = TM.tray(x_first, active_row_y, deck_z0 + M["deck_t"] - M["deck_pocket"])   # tray bottom on the pocket floor
     parts = {"y_axis_rail_lx20": ay["rail"], "y_axis_block": ay["block"], "y_axis_plate": ay["plate"], "y_axis_motor": ay["motor"],
              "y_stage_riser": riser, "tray_deck": deck, "wafer_tray": tray}
-    S["_y_motor_y"] = ay["motor_y"]
-    S["_y_limits"] = (ay["c_lo"], ay["c_hi"])
+    S["_y_limits"] = (ay["c_lo"], ay["c_hi"]); S["_y_motor_y"] = ay["motor_y"]
     return parts, z_led, (tray_x0, tray_x1, tray_len_y)
 
 
@@ -375,7 +513,7 @@ def main():
     zc_nest = za + S["arm_sec"] / 2                                    # Z block centre at the nest: the bar is centred on the block
     S["z_rail_z0"] = zc_nest - S["tray_drop"] - S["end_margin"] - lo_c    # rail start so the tray set-down keeps the end margin
     S["x_rail_z"] = S["z_rail_z0"] - S["tower_t"] - LX["block_top"]    # X rail bottom: the Z rail starts on the tower base plate
-    S["y_rail_z"] = -S["tray_drop"] - (TM.TR["floor_t"] + TM.TR["ledge_h"]) - S["deck_t"] - LX["block_top"]   # ledge top at -tray_drop
+    S["y_rail_z"] = -S["tray_drop"] - (TM.TR["floor_t"] + TM.TR["ledge_h"]) - (M["deck_t"] - M["deck_pocket"]) - LX["block_top"]   # ledge top at -tray_drop
     xc_nest = G.IFACE[0] - (S["tower_w"] / 2 + LX["block_top"] + S["arm_plate_t"])   # arm bar starts at the adapter plate
     S["xc_nest"] = xc_nest
     S["x_rail_x1"] = xc_nest + S["push_x"] + lo_c + S["end_margin"]    # rail's nest end: push-to-stop stays inside the travel
@@ -400,7 +538,7 @@ def main():
     arm_u, arm_parts = arm(xf, zc_nest, z_iface_top, 0.0)
     moving_nest = {"x_axis_block": xax["block"]}
     moving_nest.update(tower)
-    moving_nest["arm_L_25sq"] = arm_u
+    moving_nest["arm_6061"] = arm_u
     tower_parts = list(tower.values())
     grip_nest = gripper_at(0.0, 0.0)
 
@@ -414,6 +552,16 @@ def main():
     arm2_u, arm2_parts = arm(xf2, zc_nest + gz2, z_iface_top + gz2, far_col_x)
     tower2_parts = list(tower2.values())
     grip_stick = gripper_at(far_col_x, gz2, open_mm=1.5)
+
+    # ---- custom mounting parts: STEP + STL per part (the print list is docs/print_list.md) ----
+    sfx = G.SFX
+    C.export_part(arm_u, DIRS, f"arm_6061{sfx}")                                  # depends on the gripper layout
+    C.export_part(xax["riser"], DIRS, f"x_axis_riser_6061{sfx}")                  # its height follows the arm level
+    if not sfx:
+        C.export_part(tower["tower_bracket_6061"], DIRS, "tower_bracket_6061")
+        C.export_part(yparts["y_stage_riser"], DIRS, "y_axis_riser_6061")
+        C.export_part(yparts["tray_deck"], DIRS, "tray_deck_6061")
+        C.export_part(static["nanomax_riser_in"], DIRS, "nanomax_riser_6061")
 
     # ---- checks ----
     Lx, Ly, Lz = S["lx_L"]["x"], S["lx_L"]["y"], S["lx_L"]["z"]
@@ -621,8 +769,8 @@ def main():
         "objective": (0.20, 0.23, 0.27), "microscope_tube": (0.25, 0.28, 0.32), "microscope_arm": (0.77, 0.79, 0.82), "microscope_column": (0.77, 0.79, 0.82),
         "x_axis_rail_lx20": dark, "x_axis_plate": dark, "x_axis_motor": (0.30, 0.30, 0.32), "x_axis_block": moving, "die_at_nest": (0.81, 0.89, 0.97),
         "y_axis_rail_lx20": dark, "y_axis_block": moving, "y_axis_plate": dark, "y_axis_motor": (0.30, 0.30, 0.32), "wafer_tray": amber,
-        "tower_base_6061": moving, "tower_leg_6061": moving, "z_axis_rail_lx20": dark, "z_axis_block": moving, "z_axis_plate": dark, "z_axis_motor": (0.30, 0.30, 0.32),
-        "arm_L_25sq": moving,
+        "tower_bracket_6061": moving, "z_axis_rail_lx20": dark, "z_axis_block": moving, "z_axis_plate": dark, "z_axis_motor": (0.30, 0.30, 0.32),
+        "arm_6061": moving,
     }
     for n, s in static.items(): assy.add(s, name=n, color=cq.Color(*col.get(n, al), 1.0))
     for n, s in moving_nest.items(): assy.add(s, name=n, color=cq.Color(*col.get(n, moving), 1.0))

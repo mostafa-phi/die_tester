@@ -62,6 +62,10 @@ RENDERS = [
     ("station", "station_assembly.step", "station_side.png", "90:20"),
     ("station", "station_assembly_h.step", "station_h_iso.png", "iso"),
     ("station", "station_assembly_h.step", "station_h_side.png", "90:20"),
+    ("station", "tower_bracket_6061.step", "station_tower_bracket_iso.png", "iso"),
+    ("station", "arm_6061.step", "station_arm_iso.png", "iso"),
+    ("station", "tray_deck_6061.step", "station_tray_deck_iso.png", "iso"),
+    ("station", "x_axis_riser_6061.step", "station_x_riser_iso.png", "iso"),
 ]
 # outputs of earlier build layouts that a rebuild must remove (so the tree only holds what build.py produces)
 STALE = ["station/checks_vendor.txt", "station/checks_vendor_h.txt", "station/renders/station_vendor_iso.png",
