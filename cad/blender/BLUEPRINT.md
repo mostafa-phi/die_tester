@@ -3,11 +3,21 @@
 Rules distilled from bugs that actually shipped here. Read before editing `build_scene.py` or
 `animate_exchange.py`. Longer explanations of what the folder does are in [README.md](README.md).
 
+## Scope
+
+This folder belongs to the 3D-viz agent (CLAUDE.md §5). Edit nothing outside it except this
+folder's row in `cad/README.md` and its block in `.gitignore`. The designer agent owns the models,
+`cad/build.py` and `docs/`; take renames and new members up with them rather than working around
+one here.
+
+Start every run from a freshly pulled branch, `git pull --rebase origin claude/autoloader-design`
+before every push, and push only a clean tree.
+
 ## The loop
 
 ```
-CAD change -> python cad/build.py            # regenerates station_assembly.step.zip
-           -> step_to_glb.py                 # 35 s
+CAD change -> python cad/build.py            # designer agent; regenerates station_assembly.step.zip
+           -> step_to_glb.py                 # 35 s; also writes source.json
            -> build_scene.py                 # 20 s
            -> animate_exchange.py            # 15 s
            -> verify_scene.py                # 30 s   <- MUST pass before rendering
@@ -38,7 +48,14 @@ script changes mid-render, the cameras disagree with each other.
 5. **Sign conventions bite.** "Park" is −X, towards the tray; +X drives the arm into the microscope
    column. Bringing tray row *r* to the die line is a −7.5·r stage move, not +7.5·r. Both were
    wrong once, and both look plausible until you check the endpoint.
-6. **Check what you changed against something independent.** The die-versus-jaws checks passed
+6. **Key on the documented name prefixes, never on an exact member list.** The prefixes in
+   `cad/station/README.md` ("Assembly member names") are the agreed interface. `attach()` exits
+   rather than warning when a name is missing, so a rename upstream stops the build instead of
+   quietly leaving a part behind while everything around it moves.
+7. **Every `step_to_glb.py` run writes `source.json`** — the sha256 of the zip it consumed.
+   `cad/build.py --check` compares it with the manifest and reports when these outputs are behind
+   the station. Do not hand-edit it, and do not skip the converter by reusing an old GLB.
+8. **Check what you changed against something independent.** The die-versus-jaws checks passed
    throughout the chuck bug, because both were on rigs and both were wrong together. Comparing
    against the *static* scene is what caught it.
 

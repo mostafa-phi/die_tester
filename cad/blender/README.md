@@ -2,11 +2,14 @@
 
 This folder turns the station assembly into a Blender scene and animates one die exchange on it.
 It is **downstream of the CAD, not a CAD component**: nothing here defines geometry, and
-`cad/build.py` does not know about it. **Before editing either script, read
-[BLUEPRINT.md](BLUEPRINT.md)** — the rules there come from bugs that already shipped here. The
-single input is
-[`../station/STEP/station_assembly.step.zip`](../station/STEP/), which `cad/station/model.py` writes
-and which is tracked in the repo.
+`cad/build.py` does not know about it. **Before editing anything here, read
+[BLUEPRINT.md](BLUEPRINT.md)** — the rules come from bugs that already shipped.
+
+Owned by the 3D-viz agent (CLAUDE.md §5). The inputs are
+[`../station/STEP/station_assembly.step.zip`](../station/STEP/) — the transport at the nest — and,
+for the worst-case pose, `station_far_column.step`. Nothing here reads the models themselves; the
+member-name prefixes in [`../station/README.md`](../station/README.md) ("Assembly member names") are
+the interface, and collections and materials key on those prefixes, never on an exact member list.
 
 ![station](renders/station_iso.png)
 ![the exchange region](renders/station_nest.png)
@@ -56,6 +59,7 @@ match for Cycles at this scale: use eevee to check motion, cycles for anything a
 | `step_to_glb.py` | tessellates the assembly STEP at 0.05 mm linear / 0.2 rad angular deflection and writes `station_assembly.glb`; prints part count and bounding box for checking |
 | `build_scene.py` | imports the GLB, sorts the parts into collections, assigns materials, adds lighting and five cameras, saves `die_tester_station.blend`, optionally renders stills |
 | `animate_exchange.py` | rigs the moving groups onto empties, keyframes the 14-step exchange, saves `die_tester_station_animated.blend`, optionally renders an mp4 |
+| `source.json` | the sha256 of the assembly zip the outputs were built from, plus a timestamp; `step_to_glb.py` writes it and `cad/build.py --check` reads it, so a scene left behind the station is visible rather than silent |
 | `verify_scene.py` | checks the animated scene against the static one — inventory, per-axis placement, die seating, contact band, loop closure — and exits non-zero if anything is off |
 
 `station_assembly.glb` and both `.blend` files are git-ignored (35 MB and 29 MB each); the scripts,
@@ -63,11 +67,15 @@ this README and `renders/` are tracked. Re-run the three steps to get them back.
 
 ## What ends up in the scene
 
-**64 parts.** The STEP carries the moving group twice: opaque at the nest, and a second copy of the
-X carriage, tower, arm, gripper and camera at the farthest tray column, which is the worst case for
-travel and for the tower. STEP has no reliable transparency, so both arrive solid. `build_scene.py`
-drops the 19 `*_at_far_col` members and the `objective_keepout` cylinder — the animation moves the
-real parts through the travel that ghost stands for.
+**64 parts, from 65 members.** The one dropped is `objective_keepout`, a clearance volume the
+station model draws as a render aid rather than a part of the machine (`camera_fov` is dropped the
+same way when present).
+
+The worst-case pose — the X carriage, tower, arm, gripper and camera at the farthest tray column —
+used to be a second solid copy inside this assembly and is now its own file,
+`station_far_column.step`. So the `*_at_far_col` strip in `build_scene.py` normally matches nothing.
+It is kept deliberately: that suffix is how those members are named, so converting the far-column
+file and pointing `--glb` at it still gives one machine instead of two overlaid.
 
 **Collections** follow the assembly member names: Table, Nest, Fibers, Microscope, Tray, X axis,
 Y axis, Z tower, Arm, Gripper, Tray camera.

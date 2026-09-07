@@ -121,7 +121,12 @@ def empty(name, parent=None):
 
 
 def attach(names, target):
-    """Parent objects to an empty without moving them."""
+    """Parent objects to an empty without moving them.
+
+    A missing name is fatal, not a warning: the member names are the interface with the station
+    model (CLAUDE.md section 5), and a part that quietly fails to join its axis would simply stand
+    still in the render while everything around it moved.
+    """
     missing = []
     for name in names:
         obj = bpy.data.objects.get(name)
@@ -133,7 +138,10 @@ def attach(names, target):
         obj.matrix_parent_inverse = target.matrix_world.inverted()
         obj.matrix_world = world
     if missing:
-        print("[rig] WARNING not found: %s" % ", ".join(missing))
+        sys.exit("[rig] not in the assembly: %s\n"
+                 "      the station's member names changed; check cad/station/README.md, "
+                 "\"Assembly member names\", and update the axis lists here."
+                 % ", ".join(missing))
 
 
 def build_rig():

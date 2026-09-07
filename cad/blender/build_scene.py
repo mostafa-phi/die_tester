@@ -42,14 +42,16 @@ COLLECTIONS = [
     ("Tray camera", ("camera_",)),
 ]
 
-# The station STEP carries the moving group twice: opaque at the nest, and a second translucent copy
-# of the X carriage, tower, arm, gripper and camera at the farthest tray column, as the worst case for
-# travel and for the tower.  STEP has no reliable transparency, so both arrive solid.  Only the copy
-# at the nest is wanted here - the animation moves it through the travel the ghost stands for.
-# The marker sits mid-name on the gripper and camera members (gripper_at_far_col_near_arm), so match
-# it anywhere, not just as a suffix.
+# The worst-case pose - the X carriage, tower, arm, gripper and camera at the farthest tray column -
+# now lives in its own file, station_far_column.step, so the main assembly carries no ghosts and
+# this marker normally matches nothing.  It is kept because the marker is how those members are
+# named (cad/station/README.md, "Assembly member names"), so pointing --glb at a conversion of the
+# far-column file still yields one machine rather than two overlaid.  The marker sits mid-name on
+# the gripper and camera members (gripper_at_far_col_near_arm), so match it anywhere.
 DROP_MARKER = "_at_far_col"
-DROP_NAMES = {"objective_keepout"}
+
+# Render aids: volumes the station model draws to show clearance, not parts of the machine.
+DROP_NAMES = {"objective_keepout", "camera_fov"}
 
 # One solid of the Suruga KXC04015-C die stage arrives from the STEP without a product name (the
 # vendor path aliases the knob onto the coupling solid, cad/nest/model.py:337, so a member is left
@@ -391,7 +393,8 @@ def main():
 
     made, dropped = sort_into_collections(objects)
     kept = [o for o in bpy.data.objects if o.type == "MESH"]
-    print("[scene] %d parts kept, %d clearance-study ghosts dropped" % (len(kept), dropped))
+    print("[scene] %d parts kept, %d render aids and far-column copies dropped"
+          % (len(kept), dropped))
     for name in sorted(made):
         print("[scene]   %-12s %3d" % (name, len(made[name].objects)))
     if "Other" in made:

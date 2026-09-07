@@ -19,6 +19,9 @@ assembly STEP it comes from.
 """
 
 import argparse
+import datetime
+import hashlib
+import json
 import os
 import sys
 import time
@@ -59,6 +62,29 @@ def step_from(path, workdir):
     return out
 
 
+def record_source(source_path, out_dir):
+    """Write cad/blender/source.json so staleness against the station is visible, not silent.
+
+    `cad/build.py --check` compares this sha256 with the station assembly in its manifest and says
+    when the Blender outputs come from an older station (CLAUDE.md section 5).
+    """
+    digest = hashlib.sha256()
+    with open(source_path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(chunk)
+    record = {
+        "station_assembly_zip_sha256": digest.hexdigest(),
+        "built": datetime.datetime.now(datetime.timezone.utc)
+                 .replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+    }
+    path = os.path.join(out_dir, "source.json")
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(record, handle, indent=2)
+        handle.write("\n")
+    print("[src] %s  %s" % (record["station_assembly_zip_sha256"][:16], path))
+    return record
+
+
 def report(glb_path):
     """Print the part count and bounding box so the conversion can be checked against the CAD."""
     import numpy as np
@@ -90,7 +116,8 @@ def main():
 
     import cascadio
 
-    src = step_from(os.path.abspath(args.source), args.workdir)
+    source = os.path.abspath(args.source)
+    src = step_from(source, args.workdir)
     print(f"[step] {src}  ({os.path.getsize(src) / 1e6:.0f} MB)")
     print(f"[mesh] linear {args.tol_linear} mm, angular {args.tol_angular} rad")
 
@@ -107,6 +134,11 @@ def main():
     print(f"[glb] {args.output}  ({os.path.getsize(args.output) / 1e6:.0f} MB) "
           f"in {time.time() - t0:.0f} s")
     report(os.path.abspath(args.output))
+    if source.lower().endswith(".zip"):
+        record_source(source, HERE)
+    else:
+        print("[src] source.json not written: the interface is the .zip on the branch, and %s "
+              "is not it" % os.path.basename(source))
 
 
 if __name__ == "__main__":
