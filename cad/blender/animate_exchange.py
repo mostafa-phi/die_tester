@@ -67,8 +67,12 @@ STAGE_X = ["nest_kxc04015_table", "nest_spacer_kxc_rot",
            "nest_rmpg40w_cable", "nest_rmpg40w_bolts"]
 STAGE_THETA = ["nest_rmpg40w_table", "nest_riser_6061", "nest_tec",
                "nest_chuck_copper", "nest_cage_semitron"]
-FIBER_IN = ["fiber_in", "fiber_holder_in"]
-FIBER_OUT = ["fiber_out", "fiber_holder_out"]
+# The fiber and everything that grips it retract together: HCS013 mount, HFR001 rotator, HFC005
+# chuck and the AMA010/M cleats.  The NanoMax bodies stay put - see BLUEPRINT.md, known
+# simplifications.
+FIBER_IN = ["fiber_in", "fiber_mount_in", "fiber_rotator_in", "fiber_chuck_in", "fiber_cleats_in"]
+FIBER_OUT = ["fiber_out", "fiber_mount_out", "fiber_rotator_out", "fiber_chuck_out",
+             "fiber_cleats_out"]
 
 # The RMPG40W-N yaw axis runs through the die (cad/station/README.md); the die centre is X 5, Y 3.
 THETA_AXIS = Vector((5.0, 3.0, 0.0))

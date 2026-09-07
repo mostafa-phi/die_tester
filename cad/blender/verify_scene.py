@@ -6,7 +6,7 @@
 Exits non-zero if any check fails, so it can gate a render.  Every check exists because something
 actually went wrong once; see BLUEPRINT.md.
 
-  inventory   64 parts in the static scene, 65 animated, and no far-column ghosts
+  inventory   the expected part counts, and no far-column ghosts
   rig         just after the homing step, every part is exactly where the static scene has it plus
               the offset its own axis should have, and nothing else.  This is the one that
               matters: a stale parent
@@ -35,8 +35,8 @@ from animate_exchange import (                            # noqa: E402
     STAGE_THETA, STAGE_X, TRAVERSE, X_CARRIAGE, Y_CARRIAGE, Z_CARRIAGE)
 
 TOL = 0.02            # mm; the tessellation itself is 0.05 mm, so this only catches real moves
-STATIC_PARTS = 64
-ANIMATED_PARTS = 65   # the same 64, plus the copy of the die that starts in a tray pocket
+STATIC_PARTS = 70     # 71 assembly members less objective_keepout, the one render aid
+ANIMATED_PARTS = 71   # the same 70, plus the copy of the die that starts in a tray pocket
 
 # CLAUDE.md: the die is held only on its end faces, inside the band Y 1.5..4.5.
 CONTACT_Y = (1.5, 4.5)

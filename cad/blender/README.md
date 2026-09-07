@@ -69,7 +69,7 @@ this README and `renders/` are tracked. Re-run the three steps to get them back.
 
 ## What ends up in the scene
 
-**64 parts, from 65 members.** The one dropped is `objective_keepout`, a clearance volume the
+**70 parts, from 71 members.** The one dropped is `objective_keepout`, a clearance volume the
 station model draws as a render aid rather than a part of the machine (`camera_fov` is dropped the
 same way when present).
 
@@ -85,7 +85,13 @@ Y axis, Z tower, Arm, Gripper, Tray camera.
 **Materials** are chosen from the part name, which already encodes the material by the repo's
 suffix convention (`_6061`, `_copper`, `_semitron`, `_steel`); the vendor parts get the finish they
 actually have (black-anodized bodies, stepper cans, the SLA tray, the copper chuck, the TFLN die
-and the fiber tips with a little transmission).
+and the fiber tips with a little transmission). Order matters in `MATERIAL_RULES`: `fiber_in` and
+`fiber_out` are the fiber tips and must be matched before the fiber *hardware* — the HCS013 mount,
+HFR001 rotator, HFC005 chuck and AMA010/M cleats — or the holders come out looking like glass.
+
+The optical table is the Thorlabs MB6090/M breadboard, 864 holes, which is most of the jump from
+1.1 M to 1.8 M triangles. It is worth it at these camera distances; if it ever costs too much,
+replace that one member with a slab rather than coarsening the whole tessellation.
 
 **Cameras.** `cam_iso`, `cam_plan`, `cam_side` (along +Y, the optical axis) and `cam_front` (along
 +X, the die long axis) match the `cadgen` renders in `cad/station/renders/`; `cam_nest` is the

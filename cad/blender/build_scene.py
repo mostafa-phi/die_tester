@@ -53,12 +53,6 @@ DROP_MARKER = "_at_far_col"
 # Render aids: volumes the station model draws to show clearance, not parts of the machine.
 DROP_NAMES = {"objective_keepout", "camera_fov"}
 
-# One solid of the Suruga KXC04015-C die stage arrives from the STEP without a product name (the
-# vendor path aliases the knob onto the coupling solid, cad/nest/model.py:337, so a member is left
-# carrying only its entity number).  It sits in the die-stage stack below the nest; give it a name so
-# it lands in the right collection instead of a stray "Other".
-NAME_FIXES = {"25": "nest_kxc04015_unnamed"}
-
 # --------------------------------------------------------------------------------------------
 # Materials: (base colour RGB, metallic, roughness).
 # The material of each custom part is already in its filename suffix (_6061, _copper, _semitron,
@@ -95,8 +89,12 @@ MATERIAL_RULES = [
     ("camera_dart", "pcb"),
     ("camera_lens", "anodized"),
     ("camera_usb", "anodized"),
-    ("fiber_holder", "aluminium"),
-    ("fiber_", "glass"),
+    ("fiber_in", "glass"),
+    ("fiber_out", "glass"),
+    ("fiber_rotator", "anodized"),
+    ("fiber_chuck", "anodized"),
+    ("fiber_cleats", "steel"),
+    ("fiber_mount", "aluminium"),
     ("nanomax300", "anodized"),
     ("objective", "anodized"),
     ("microscope_", "anodized"),
@@ -179,8 +177,6 @@ def sort_into_collections(objects):
     made = {}
     dropped = 0
     for obj in objects:
-        if obj.name in NAME_FIXES:
-            obj.name = NAME_FIXES[obj.name]
         name = obj.name
         if DROP_MARKER in name or name in DROP_NAMES:
             bpy.data.objects.remove(obj, do_unlink=True)
@@ -411,7 +407,7 @@ def main():
     # The close-up frames the exchange itself: the nest stack, the die, the jaws and both fiber
     # holders, which is where every contact rule in CLAUDE.md applies.
     close_up = [o for o in kept
-                if o.name.startswith(("nest_", "die_at_nest", "gripper_", "fiber_holder"))]
+                if o.name.startswith(("nest_", "die_at_nest", "gripper_", "fiber_"))]
 
     add_lighting(lo, hi)
     configure_render(args.engine, args.samples, tuple(args.resolution))
