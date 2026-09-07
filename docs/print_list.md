@@ -63,7 +63,7 @@ Bolt lengths assume 1 mm of washer; check each against the tapped depth before o
 
 | # | File | Part | Prototype | After printing | Final |
 |---|---|---|---|---|---|
-| T1 | `wafer_tray_8x14.stl` | 112-pocket wafer tray | print flat, 0.16 layers, 0.4 nozzle (ledges 1.0 × 0.8 mm) | measure the ledge plane with an indicator: flat within 0.1 mm over 132 mm, else skim or reprint; check surface resistance of a coupon | print (PPA-CF), or Semitron if flatness or ESD fail |
+| T1 | `wafer_tray_8x14.stl` | 112-pocket wafer tray (corner-post pockets) | print flat, 0.16 layers, 0.4 nozzle (ledges 1.0 × 0.8 mm; the 0.7 mm corner posts are under two nozzle widths, so print them as single-wall features and check a few with a pin gauge; 0.4 mm facet clearance at the posts) | measure the ledge plane with an indicator: flat within 0.1 mm over 132 mm, else skim or reprint; check surface resistance of a coupon | print (PPA-CF), or Semitron if flatness or ESD fail |
 
 ## 6. Order of printing
 

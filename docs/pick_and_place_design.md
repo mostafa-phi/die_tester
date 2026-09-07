@@ -68,7 +68,7 @@ the die slides rather than pivots.
 
 | Step | Motion | Why it is safe |
 |---|---|---|
-| 1 | Z down to ledge top + 0.05 mm (die bottom 0.05 above the ledges), Y row and X column already set | pocket walls ±1.0 / ±0.4 from the die, noses in the slots |
+| 1 | Z down to ledge top + 0.05 mm (die bottom 0.05 above the ledges), Y row and X column already set | end walls ±1.0 from the die ends, corner posts ±0.4 from the facets only within 0.5 mm of the corners (the walls are relieved to ≥ 1.0 mm elsewhere, so a facet cannot touch the tray along X 1–9), noses in the slot channel |
 | 2 | Jaws open at ≤ 10 mm/s; die drops 0.05 mm onto the ledges | landing energy 0.07 µJ; the noses never scrape a diced face, which an overdrive would risk |
 | 3 | Z +8 mm | |
 

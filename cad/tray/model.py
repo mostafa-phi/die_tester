@@ -43,10 +43,14 @@ TR = dict(
     ledge_w=1.0, ledge_h=0.8,      # ledges under the facet-edge strips; ledge top = die bottom
     wall_above_die=0.8,            # wall top above the die bottom
     cav_x=(-1.0, 11.0),            # cavity X relative to the die origin: +/-1.0 retention by the corners
-    cav_y=(-0.4, 6.4),             # cavity Y: +/-0.4 retention
+    cav_y=(-0.4, 6.4),             # cavity Y: +/-0.4 retention, by the four CORNER POSTS only (see post_len / relief_y)
+    post_len=1.5,                  # corner posts: the +/-Y walls stand 0.4 from the facets only over X -1..0.5 and 9.5..11 (the die
+                                   # corners, outside X 1..9 where waveguides and fibers are), like the nest's corner guards
+    relief_y=1.0,                  # between the posts the +/-Y walls are relieved to >= 1.0 from the facets; with the 7.5 mm row
+                                   # pitch (0.7 mm wall) that removes the wall between rows entirely: a facet can touch nothing
     slot_depth=2.8, slot_y=(1.2, 4.8),   # nose slot channel (3.6 wide) runs this far beyond the cavity into the rims
     rim_x=(5.0, 15.0),             # tray rim beyond the last pocket's die origin (-X side) and the first pocket's (+X side)
-    rim_y=0.75,                    # half of the extra length in Y
+    rim_y=1.25,                    # half of the extra length in Y: 1.0 mm of outer rim remains beyond the relief
     jaw_open=1.5,                  # per-side jaw opening at the tray (of the 2.0 available)
 )
 
@@ -78,13 +82,32 @@ def pocket_features(xd, yd, z_deck):
     z_led = z_floor + TR["ledge_h"]                       # die bottom
     z_top = z_led + TR["wall_above_die"] + 0.2            # cut through the wall top
     cx0, cx1 = TR["cav_x"]; cy0, cy1 = TR["cav_y"]; sy0, sy1 = TR["slot_y"]; sd = TR["slot_depth"]
-    cavities = [box(xd + cx0, xd + cx1, yd + cy0, yd + cy1, z_floor, z_top).val(),
-                box(xd + cx0 - sd, xd + cx0, yd + sy0, yd + sy1, z_floor, z_top).val(),
-                box(xd + cx1, xd + cx1 + sd, yd + sy0, yd + sy1, z_floor, z_top).val()]
+    cavities = [box(xd + cx0, xd + cx1, yd + cy0, yd + cy1, z_floor, z_top).val()]   # the nose slots: slot_channel()
     lw = TR["ledge_w"]
     ledges = [box(xd, xd + L, yd + cy0 + 0.8, yd + cy0 + 0.8 + lw, z_floor, z_led).val(),
               box(xd, xd + L, yd + cy1 - 0.8 - lw, yd + cy1 - 0.8, z_floor, z_led).val()]
     return cavities, ledges
+
+
+def slot_channel(x_last, x_first, yd, z_deck):
+    """The nose-slot channel of ONE ROW as a single box: from slot_depth beyond the last column's -X end wall to
+    slot_depth beyond the first column's +X end wall (die X x_last .. x_first), Y slot_y. With the 16 mm column pitch
+    (4 mm walls) the 2.8 mm slots of neighbouring pockets overlap, so the channel must be one solid: overlapping boxes
+    in one boolean tool are dropped by the kernel (that left the walls between columns uncut in earlier builds)."""
+    z_floor = z_deck + TR["floor_t"]
+    z_top = z_floor + TR["ledge_h"] + TR["wall_above_die"] + 0.2
+    cx0, cx1 = TR["cav_x"]; sy0, sy1 = TR["slot_y"]; sd = TR["slot_depth"]
+    return box(x_last + cx0 - sd, x_first + cx1 + sd, yd + sy0, yd + sy1, z_floor, z_top).val()
+
+
+def relief(xd, yd0, yd1, z_deck):
+    """The +/-Y relief between the corner posts as ONE strip per column, from the die origin yd0 of the first row to
+    yd1 of the last: the pocket side walls are cut back to relief_y from the facets over X 0.5..9.5, which with the
+    7.5 mm row pitch removes the wall between rows there. Cut in a separate boolean pass: it overlaps the cavities."""
+    z_floor = z_deck + TR["floor_t"]
+    z_top = z_floor + TR["ledge_h"] + TR["wall_above_die"] + 0.2
+    cx0, cx1 = TR["cav_x"]; pl, ry = TR["post_len"], TR["relief_y"]
+    return box(xd + cx0 + pl, xd + cx1 - pl, yd0 - ry, yd1 + W + ry, z_floor, z_top).val()
 
 
 def tray(x_first, yc, z_deck):
@@ -93,10 +116,17 @@ def tray(x_first, yc, z_deck):
     z_led = z_deck + TR["floor_t"] + TR["ledge_h"]
     slab = box(x0, x1, y0, y1, z_deck, z_led + TR["wall_above_die"])
     cavities, ledges = [], []
-    for _, _, xd, yd in pocket_origins(x_first, yc):
+    origins = pocket_origins(x_first, yc)
+    for _, _, xd, yd in origins:
         cv, ld = pocket_features(xd, yd, z_deck)
         cavities += cv; ledges += ld
-    slab = slab.cut(cq.Workplane().add(cq.Compound.makeCompound(cavities)))
+    ys = sorted(set(yd for _, _, _, yd in origins)); xs = sorted(set(xd for _, _, xd, _ in origins))
+    channels = [slot_channel(xs[0], xs[-1], yd, z_deck) for yd in ys]            # one per row (rows do not overlap)
+    reliefs = [relief(xd, ys[0], ys[-1], z_deck) for xd in xs]                    # one per column
+    slab = slab.cut(cq.Workplane().add(cq.Compound.makeCompound(cavities)))      # non-overlapping boxes: one boolean
+    slab = slab.cut(cq.Workplane().add(cq.Compound.makeCompound(channels)))      # non-overlapping boxes: one boolean
+    for r in reliefs:                                                             # one strip per column, cut one at a time
+        slab = slab.cut(cq.Workplane().add(r))                                   # (a compound of these leaves a broken shape)
     slab = slab.union(cq.Workplane().add(cq.Compound.makeCompound(ledges)))
     return slab, z_led, (x0, x1, y0, y1)
 
@@ -115,8 +145,13 @@ def pocket_walls(xd, yd, z_deck):
     m["+X wall (+Y of slot)"] = box(xd + cx1, xd + cx1 + sd, yd + sy1, yd + cy1, z_floor, z_top)
     m["-X rim (slot end)"] = box(xd - TR["rim_x"][0], xd + cx0 - sd, yd + sy0, yd + sy1, z_floor, z_top)
     m["+X rim (slot end)"] = box(xd + cx1 + sd, xd + TR["rim_x"][1], yd + sy0, yd + sy1, z_floor, z_top)
-    m["-Y side wall"] = box(xd + cx0, xd + cx1, yd + cy1 - pr, yd + cy0, z_floor, z_top)
-    m["+Y side wall"] = box(xd + cx0, xd + cx1, yd + cy1, yd + cy0 + pr, z_floor, z_top)
+    pl, ry = TR["post_len"], TR["relief_y"]
+    m["-X-Y corner post"] = box(xd + cx0, xd + cx0 + pl, yd + cy1 - pr, yd + cy0, z_floor, z_top)      # wall material between this cavity
+    m["+X-Y corner post"] = box(xd + cx1 - pl, xd + cx1, yd + cy1 - pr, yd + cy0, z_floor, z_top)      # and the neighbouring row's (0.7 thick)
+    m["-X+Y corner post"] = box(xd + cx0, xd + cx0 + pl, yd + cy1, yd + cy0 + pr, z_floor, z_top)
+    m["+X+Y corner post"] = box(xd + cx1 - pl, xd + cx1, yd + cy1, yd + cy0 + pr, z_floor, z_top)
+    m["-Y outer rim (relieved)"] = box(xd + cx0 + pl, xd + cx1 - pl, yd - ry - 1.0, yd - ry, z_floor, z_top)   # the tray's outer rim as seen
+    m["+Y outer rim (relieved)"] = box(xd + cx0 + pl, xd + cx1 - pl, yd + W + ry, yd + W + ry + 1.0, z_floor, z_top)   # by an edge-row facet
     m["floor"] = box(xd + cx0 - sd, xd + cx1 + sd, yd + cy0, yd + cy1, z_deck, z_floor)
     lw = TR["ledge_w"]
     m["-Y ledge"] = box(xd, xd + L, yd + cy0 + 0.8, yd + cy0 + 0.8 + lw, z_floor, z_led)
@@ -146,8 +181,11 @@ def main():
     rep = [
         f"Wafer tray {TR['cols']} x {TR['rows']} = {TR['cols'] * TR['rows']} pockets, {ext[1] - ext[0]:.0f} x {ext[3] - ext[2]:.0f} mm, "
         f"column pitch {TR['col_pitch']} (X), row pitch {TR['row_pitch']} (Y); walls {TR['floor_t'] + TR['ledge_h'] + TR['wall_above_die']:.1f} tall.",
-        f"Pocket cavity {cx1 - cx0:.1f} x {cy1 - cy0:.1f}: die retained to +/-{-cx0:.1f} mm in X (jaw capture +/-{o + 0.4:.1f}) "
-        f"and +/-{-cy0:.1f} mm in Y; nose slots {sy1 - sy0:.1f} wide (contact band {C.CONTACT_Y0}..{C.CONTACT_Y1}), "
+        f"Pocket cavity {cx1 - cx0:.1f} x {cy1 - cy0:.1f}: die retained to +/-{-cx0:.1f} mm in X by the end walls (jaw capture +/-{o + 0.4:.1f}) "
+        f"and +/-{-cy0:.1f} mm in Y by four corner posts {TR['post_len']} long at the die ends (X {cx0:.1f}..{cx0 + TR['post_len']:.1f} and "
+        f"{cx1 - TR['post_len']:.1f}..{cx1:.1f}); between the posts the +/-Y walls are relieved to {TR['relief_y']:.1f} from the facets "
+        f"(with the {TR['row_pitch']} row pitch the wall between rows is gone there), so a facet can only ever meet a post within "
+        f"{TR['post_len'] - (-cx0):.1f} mm of a die corner; nose slots {sy1 - sy0:.1f} wide (contact band {C.CONTACT_Y0}..{C.CONTACT_Y1}), "
 f"through between pockets and {TR['slot_depth']} into the rims; ledges {TR['ledge_w']} wide x {TR['ledge_h']} tall under the facet-edge strips.",
         f"Die on the ledges at Z {z_led:.1f} above the deck; wall top {TR['wall_above_die'] - T:.1f} mm above the die top.",
         "",
@@ -174,7 +212,9 @@ f"through between pockets and {TR['slot_depth']} into the rims; ledges {TR['ledg
     # one-pocket check assembly
     one = box(xd - TR["rim_x"][0], xd + TR["rim_x"][1], yd + cy1 - pr, yd + cy0 + pr, 0, z_led + TR["wall_above_die"])
     cv, ld = pocket_features(xd, yd, 0.0)
-    one = one.cut(cq.Workplane().add(cq.Compound.makeCompound(cv))).union(cq.Workplane().add(cq.Compound.makeCompound(ld)))
+    one = one.cut(cq.Workplane().add(cq.Compound.makeCompound(cv))).cut(cq.Workplane().add(slot_channel(xd, xd, yd, 0.0)))
+    one = one.cut(cq.Workplane().add(relief(xd, yd, yd, 0.0)))
+    one = one.union(cq.Workplane().add(cq.Compound.makeCompound(ld)))
     a = cq.Assembly(name="tray_pocket_check")
     a.add(one, name="pocket", color=cq.Color(0.85, 0.81, 0.68, 1.0))
     a.add(die_c, name="die", color=cq.Color(0.81, 0.89, 0.97, 1.0))

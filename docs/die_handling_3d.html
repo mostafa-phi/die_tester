@@ -300,25 +300,37 @@
   }
   function setGripperOpen(gr, open) { gr.userData.N.position.x = -open; gr.userData.F.position.x = open; }
 
-  // Wafer-tray pocket walls as one extruded shape with a hole per pocket (cavity 12.0 x 6.8 + two 3.6 mm nose slots).
+  // Wafer-tray pocket walls, the corner-post pocket of cad/tray drawn as positive members: cavity 12.0 x 6.8 per pocket;
+  // end walls between the columns (X ends of the die, +/-1.0 retention) with the 3.6 mm nose-slot channel of each row
+  // (Y 1.2..4.8 of the die) running through them and 2.8 mm into the outer rims; four 0.7 x 1.5 mm corner posts per
+  // pocket (X -1..0.5 and 9.5..11) giving the +/-0.4 Y retention; between the posts the +/-Y walls are relieved to
+  // 1.0 mm from the facets, which removes the wall between rows there (row pitch 7.5, wall 0.7); 1.0 mm outer rim.
   // cols: array of die X for each column; rows: array of die Y0 for each row. Wall from Z0 to Z1 (CAD).
   function trayWalls(X0, X1, Y0, Y1, cols, rows, Z0, Z1, m) {
-    const sh = new THREE.Shape();
-    sh.moveTo(X0, Y0); sh.lineTo(X1, Y0); sh.lineTo(X1, Y1); sh.lineTo(X0, Y1); sh.closePath();
-    cols.forEach((xd) => rows.forEach((y0) => {
-      const h = new THREE.Path();
-      const pts = [
-        [xd - 3.2, y0 + 1.2], [xd - 1.0, y0 + 1.2], [xd - 1.0, y0 - 0.4], [xd + 11.0, y0 - 0.4], [xd + 11.0, y0 + 1.2],
-        [xd + 13.2, y0 + 1.2], [xd + 13.2, y0 + 4.8], [xd + 11.0, y0 + 4.8], [xd + 11.0, y0 + 6.4], [xd - 1.0, y0 + 6.4],
-        [xd - 1.0, y0 + 4.8], [xd - 3.2, y0 + 4.8]];
-      h.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) h.lineTo(pts[i][0], pts[i][1]); h.closePath();
-      sh.holes.push(h);
-    }));
-    const geo = new THREE.ExtrudeGeometry(sh, { depth: Z1 - Z0, bevelEnabled: false });
-    const mesh = new THREE.Mesh(geo, m);
-    mesh.rotation.x = Math.PI / 2;      // shape (X, Y) -> viewer (x, z); extrude -> viewer -y
-    mesh.position.y = Z1;
-    return mesh;
+    const g = new THREE.Group();
+    const add = (x0, x1, y0, y1) => g.add(cb(x0, x1, y0, y1, Z0, Z1, m));
+    const xs = [...cols].sort((a, b) => a - b), ys = [...rows].sort((a, b) => a - b);
+    const nx = xs.length, ny = ys.length;
+    // end walls: [x0, x1, rim side] in X; between columns the wall spans from one cavity's +X face to the next one's -X face
+    const walls = [[X0, xs[0] - 1.0, -1]];
+    for (let i = 0; i < nx - 1; i++) walls.push([xs[i] + 11.0, xs[i + 1] - 1.0, 0]);
+    walls.push([xs[nx - 1] + 11.0, X1, +1]);
+    ys.forEach((y0, r) => {
+      const ya = r === 0 ? Y0 : y0 - 0.75, yb = r === ny - 1 ? Y1 : y0 + 6.75;      // this row's share of the wall in Y
+      walls.forEach(([w0, w1, rim]) => {
+        add(w0, w1, ya, y0 + 1.2); add(w0, w1, y0 + 4.8, yb);                        // either side of the nose-slot channel
+        if (rim < 0) add(X0, w1 - 2.8, y0 + 1.2, y0 + 4.8);                          // the channel ends 2.8 into the rim
+        if (rim > 0) add(w0 + 2.8, X1, y0 + 1.2, y0 + 4.8);
+      });
+    });
+    // corner posts (0.7 thick between rows) and the relieved outer rims
+    xs.forEach((xd) => {
+      const post = (ya, yb) => { add(xd - 1.0, xd + 0.5, ya, yb); add(xd + 9.5, xd + 11.0, ya, yb); };
+      for (let r = 0; r < ny - 1; r++) post(ys[r] + 6.4, ys[r + 1] - 0.4);
+      post(Y0, ys[0] - 0.4); add(xd + 0.5, xd + 9.5, Y0, ys[0] - 1.0);                // -Y rim: posts 0.4 from the facet, rim 1.0
+      post(ys[ny - 1] + 6.4, Y1); add(xd + 0.5, xd + 9.5, ys[ny - 1] + 7.0, Y1);      // +Y rim
+    });
+    return g;
   }
   function trayLedges(cols, rows, Z0, Z1, m) {
     const n = cols.length * rows.length * 2;
@@ -550,7 +562,7 @@
       this.gr = makeGripper(); this.gr.position.set(gxr, 0, 0); this.zCar.add(this.gr);
       // Y actuator (LX2005CG L200) under the wafer tray on a 63 mm riser bar, motor toward +Y; 8 mm deck with a 2 mm locating pocket;
       // tray ledges 12 mm below the chuck pad; 8 columns along X x 14 rows along Y = 112 pockets
-      const trayX0 = ST.colX[ST.cols - 1] - 5, trayX1 = ST.colX[0] + 15, trayCx = (trayX0 + trayX1) / 2, trayLenY = ST.rows * ST.rowPitch + 1.5;
+      const trayX0 = ST.colX[ST.cols - 1] - 5, trayX1 = ST.colX[0] + 15, trayCx = (trayX0 + trayX1) / 2, trayLenY = ST.rows * ST.rowPitch + 2.5;
       const yr = ST.yRailZ, ayx = yr + 13, yc = 3, yR0 = yc - 100, yR1 = yc + 100;                      // rail centred on the pick line
       g.add(cb(trayCx - 20, trayCx + 20, yR0, yR1, tz, yr, mat(COL.stage)));                            // riser bar
       g.add(cb(trayCx - 40, trayCx + 40, yR0, yR1, tz, tz + 8, mat(COL.stage)));                        // foot flange
@@ -698,15 +710,15 @@
     params: [],
     names: ['Arrive over the pocket', 'Descend', 'Jaws open', 'Rise'],
     descs: [
-      'Gripper arrives 20 mm above the ledges (nest height + 8; the ledges sit 12 mm below the chuck pad). Pocket: cavity 12.0 × 6.8 mm, two backside ledges under the facet-edge strips, 3.6 mm nose slots in both end walls.',
-      'The die is lowered onto the ledges; the noses (0.05 mm above the die bottom) drop into the slots, 0.85 mm above the pocket floor.',
-      'Jaws open 1.5 mm per side. The die is retained to ±1.0 mm in X by its corners against the end walls and ±0.4 mm in Y; both inside the noses\' ±1.9 mm capture on the next pick.',
+      'Gripper arrives 20 mm above the ledges (nest height + 8; the ledges sit 12 mm below the chuck pad). Corner-post pocket: cavity 12.0 × 6.8 mm, two backside ledges under the facet-edge strips, a 3.6 mm nose-slot channel through the end walls of every column, and four 0.7 mm corner posts at the die ends; between the posts the facets face open air.',
+      'The die is lowered onto the ledges; the noses (0.05 mm above the die bottom) drop into the slot channel, 0.85 mm above the pocket floor.',
+      'Jaws open 1.5 mm per side. The die is retained to ±1.0 mm in X by its corners against the end walls and ±0.4 mm in Y by the corner posts (within 0.5 mm of a corner, outside the fiber positions); both inside the noses\' ±1.9 mm capture on the next pick.',
       'Gripper rises. Column pitch 16 mm along X (the die\'s long axis), row pitch 7.5 mm along Y; 8 × 14 pockets = one 4″ wafer.'
     ],
     build() {
       const g = root;
       const cols = [0, -16], rows = [-7.5, 0, 7.5];
-      const X0 = cols[1] - 4, X1 = cols[0] + 14, Y0 = rows[0] - 0.75 - 3, Y1 = rows[2] + 6.75 + 3;
+      const X0 = cols[1] - 5, X1 = cols[0] + 15, Y0 = rows[0] - 2.0, Y1 = rows[2] + 8.0;      // rims as in cad/tray (rim_y 1.25)
       const mTray = mat(COL.tray);
       g.add(cb(X0, X1, Y0, Y1, -2.2, 0, mTray));                        // floor (top at Z 0 = ledge bottom)
       g.add(trayWalls(X0, X1, Y0, Y1, cols, rows, 0, 1.6, mTray));
@@ -715,8 +727,9 @@
       this.die = makeDie(); g.add(this.die);
       this.gr = makeGripper(); g.add(this.gr);
       addLabel('ledge under facet-edge strip', () => new THREE.Vector3(5, 1.2, 0.9));
-      addLabel('nose slot 3.6 wide', () => new THREE.Vector3(-2.1, 1.8, 3));
+      addLabel('nose-slot channel 3.6 wide, through every wall', () => new THREE.Vector3(-3, 1.8, 3));
       addLabel('end wall at ±1.0 mm (corner retention)', () => new THREE.Vector3(11.5, 1.8, 7));
+      addLabel('corner post 0.4 from the facet; relieved 1.0 between', () => new THREE.Vector3(10.2, 1.8, -0.75));
       addLabel('column pitch 16', () => new THREE.Vector3(-8, 0.5, -4));
       addLabel('row pitch 7.5', () => new THREE.Vector3(15, 0.5, 3.75));
       setGrid(80, 5);
@@ -724,8 +737,9 @@
         ['Nose bottom above pocket floor', '0.85 mm', 'good'],
         ['Die play in X (corner retention)', '±1.0 mm', 'good'],
         ['Nose capture on re-pick', '±1.9 mm', 'good'],
-        ['Y clearance to pocket wall', '±0.4 mm', ''],
-        ['Nose slot', '3.6 wide × 2.2 deep', ''],
+        ['Y clearance to the corner posts', '±0.4 mm', ''],
+        ['Facet clearance between the posts', '≥ 1.0 mm (open)', 'good'],
+        ['Nose-slot channel', '3.6 wide, 2.8 into the rims', ''],
         ['Ledge under facet-edge strip', '1.0 wide × 0.8 tall', '']
       ]);
     },

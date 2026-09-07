@@ -1,6 +1,6 @@
 # System Redesign Study — Batch Edge-Coupled Testing of Hundreds of 10 × 6 mm Photonic Dies
 
-**Status:** concept study for review, rev. 2.11 (CAD of the gripper, the self-registering nest on its die stage, the wafer tray and the full station with its MISUMI LX20 transport in [`cad/`](../cad/README.md))
+**Status:** concept study for review, rev. 2.12 (CAD of the gripper, the self-registering nest on its die stage, the wafer tray and the full station with its MISUMI LX20 transport in [`cad/`](../cad/README.md))
 **Scope:** ground-up redesign of the die-tester stage and handling system. The current
 machine is architected around a single manually loaded die; this study treats the whole
 stage system as open for redesign and asks what a machine looks like when the unit of
@@ -48,6 +48,7 @@ references) and replaces the Velmex BiSlides with three **MISUMI LX20** actuator
 speed, Oriental Motor AZ closed-loop steppers with a brake on Z); the tray moves 55 mm closer to the nest and the X actuator's narrow band beside the tray
 sweep removes the bridge riser. The interactive model follows this layout and keeps only the two scenes that matter now: the
 test-station exchange and the place into a tray pocket.
+Rev. 2.12 finalizes the tray pocket as a **corner-post pocket**: the die is held in Y by four 0.7 mm posts at its corners and the walls are relieved to ≥ 1.0 mm from the facets everywhere else, so a facet can touch nothing along the waveguide region; the nose-slot channel now runs through every wall of a column (the earlier model only had it at the rims).
 
 Coordinate convention follows the brief: **X** = 10 mm die dimension, **Y** = 6 mm die
 dimension (optical propagation; fibers approach along ±Y), **Z** = vertical, **θ** =
@@ -480,14 +481,18 @@ and bins them into sticks. Geometry in Figs. 2–4:
   from tape and needs a channel under every resting position. The rail gap is kept open
   so the fallback remains possible.
 
-**Storage carrier: wafer trays with jaw slots (Fig. 4 shows one pocket row; rev. 2.6 — one 100 mm wafer ≈ 112 dies = one tray of 8 × 14 pockets, 132 × 106 mm; the die returns to its own pocket after test and the map carries the result).** Standard waffle packs have closed
+**Storage carrier: wafer trays with jaw slots (Fig. 4 shows one pocket row; rev. 2.6 — one 100 mm wafer ≈ 112 dies = one tray of 8 × 14 pockets, 132 × 108 mm; the die returns to its own pocket after test and the map carries the result).** Standard waffle packs have closed
 pocket floors and pocket walls hard against the die ends, so they are replaced by a
 machined (PEEK/Delrin) or SLA-printed **wafer tray** whose pockets have: two backside
 **ledges** under the die's facet-edge strips, a 12.0 × 6.8 mm cavity that retains the die
-by its corners to ±1.0 mm in X (inside the jaws' ±1.9 mm capture) and ±0.4 mm in Y,
-3.6 mm **nose slots** in both end walls (a through channel along each column at the 16 mm pitch; floor 0.85 mm below the nose bottoms), lead-in
-chamfers, and a lid for transport. Pockets sit 8 columns × 14 rows (16 mm pitch along
-die X, 7.5 mm along Y), so one tray is ≈ 132 × 106 mm and holds one 4″ wafer; trays carry
+by its corners to ±1.0 mm in X (inside the jaws' ±1.9 mm capture) against the end walls and
+±0.4 mm in Y by **four corner posts** (0.7 mm thick, 1.5 mm long at the die ends; rev. 2.12),
+with the ±Y walls relieved to ≥ 1.0 mm from the facets between the posts so that nothing can
+touch a facet along the waveguide region (the wall between rows disappears there at the 7.5 mm
+pitch), 3.6 mm **nose slots** in both end walls (a through channel along each column at the
+16 mm pitch; floor 0.85 mm below the nose bottoms), lead-in chamfers, and a lid for transport.
+Pockets sit 8 columns × 14 rows (16 mm pitch along
+die X, 7.5 mm along Y), so one tray is ≈ 132 × 108 mm and holds one 4″ wafer; trays carry
 a DataMatrix ID and pocket (row, column) mirrors the wafer map. *Rev. 2.7: the tray
 supersedes the 14-pocket "stick" used in the figures and in the text below — read
 "stick" as "tray" wherever it appears; the geometry of record is

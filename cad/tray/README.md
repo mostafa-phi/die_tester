@@ -8,28 +8,50 @@
 ![pocket with the open jaws](renders/tray_pocket_iso.png)
 ![tray](renders/tray_iso.png)
 
+Presentation renders of a 3 × 3 patch (die stage frame, made with the scratch script kept out of the build; the
+build renders above are the record): [empty pockets](../../docs/images/tray_pocket_empty.png),
+[loaded](../../docs/images/tray_pocket_loaded.png), [release close-up](../../docs/images/tray_pocket_release_closeup.png)
+and the release pose with the whole gripper module, [iso](../../docs/images/tray_pocket_release_gripper_iso.png) and
+[along Y](../../docs/images/tray_pocket_release_gripper_front.png).
+
 ## Container assumption
 
 One 4″ wafer (~100–112 dies of 10 × 6 mm, all in one orientation) = one tray of **8 columns × 14 rows
-= 112 pockets** (132 × 106 × 3.8 mm). Pocket indices mirror the wafer map, so a die's identity is its
+= 112 pockets** (132 × 108 × 3.8 mm). Pocket indices mirror the wafer map, so a die's identity is its
 pocket and every die returns to its own pocket after test. Physical pass/fail binning is not done at the
 tester; it is a map operation at the sorting station if ever needed. SLA printed (Formlabs Rigid 10K or
 Protolabs Accura), lidded, DataMatrix on the rim; fits a Form 3 bed and a 5″ wafer box. A second tray
 position along X would need +130 mm X travel (Month-2 option).
 
-## Pocket geometry
+## Pocket geometry (corner-post pocket)
 
-Cavity 12.0 × 6.8 mm: the die is retained to ±1.0 mm in X by its four corners against the end walls and
-±0.4 mm in Y, inside the open jaws' ±1.9 mm capture. Each end wall carries a 3.6 mm wide nose slot
-(Y 1.2–4.8, the contact band ±0.3) for the open jaw tip blocks; with the 16 mm column pitch the slots of
-neighbouring pockets meet, so the slot is a **through channel along each column** closed only by the tray
-rims, into which it runs 2.8 mm (the open tip blocks reach 3.44 mm beyond the die origin; 0.37 mm clear).
-Ledges 1.0 mm wide × 0.8 mm tall under the facet-edge strips carry the die; the walls end 0.3 mm above
-the die top. Nothing touches the facets or the top surface.
+Cavity 12.0 × 6.8 mm. In X the die is retained to ±1.0 mm by its four corners against the **end walls**
+(inside the open jaws' ±1.9 mm capture). In Y it is retained to ±0.4 mm by **four corner posts** only:
+0.7 mm thick wall stubs 1.5 mm long at the die ends (X −1.0…0.5 and 9.5…11.0), the same idea as the
+nest's corner guards. Between the posts the ±Y walls are **relieved to 1.0 mm from the facets** over
+X 0.5…9.5; with the 7.5 mm row pitch the 0.7 mm wall between rows vanishes there, so along the whole
+waveguide region (X 1…9) a facet faces open air and can touch nothing. A facet can only ever meet a post
+within 0.5 mm of a die corner, outside the fiber positions. The edge rows keep a 1.0 mm outer rim beyond
+the relief (`rim_y` 1.25).
+
+Each end wall carries a 3.6 mm wide nose slot (Y 1.2–4.8, the contact band ±0.3) for the open jaw tip
+blocks. With the 16 mm column pitch the slots of neighbouring pockets meet, so the slot is modelled as
+**one through channel per row** (`slot_channel()`), closed only by the tray rims, into which it runs 2.8 mm
+(the open tip blocks reach 3.44 mm beyond the die origin; 0.36 mm clear). It is one box per row on purpose:
+cutting the per-pocket slot boxes as a single compound tool made OpenCascade silently drop the overlapping
+members, and the earlier trays only had the notch at the two outer rims. The reliefs are cut one column at
+a time for the same reason. Ledges 1.0 mm wide × 0.8 mm tall under the facet-edge strips carry the die; the
+walls end 0.3 mm above the die top. Nothing touches the facets or the top surface.
+
+**X play.** ±1.0 mm is kept for the printed (PPA-CF / SLA) trays, where a pocket can vary by a few tenths
+and a tighter cavity risks a die wedging on an end wall during set-down; the jaws re-centre the die on
+every pick. For a machined tray the cavity can go to 11.0 mm (±0.5 mm) by changing `cav_x` alone, together
+with a tighter deck locating pocket.
 
 `checks.txt` checks one end pocket (worst case, rims on both sides) against the die and against every
-open-jaw part at the set-down height; the only non-OK lines are the two ledges at exactly 0 (they carry
-the die).
+open-jaw part at the set-down height, with the corner posts and the relieved outer rims as separate
+members. The only non-OK lines are the two ledges at exactly 0 (they carry the die) and the end walls
+0.30 mm from the open tip blocks and blade (the nose slot's designed side clearance).
 
 ## Station placement
 
