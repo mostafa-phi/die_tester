@@ -243,6 +243,24 @@ def write_manifest(args):
     print(f"manifest: {len(m['sources'])} sources, {len(m['outputs'])} tracked outputs -> {rel(MANIFEST)}")
 
 
+def blender_staleness(m):
+    """Information only: cad/blender (3D-viz agent) records the sha256 of the station zip it consumed in source.json."""
+    src = os.path.join(ROOT, "blender", "source.json")
+    if not os.path.exists(src):
+        return
+    try:
+        rec = json.load(open(src))
+    except (OSError, ValueError):
+        print("cad/blender/source.json is unreadable"); return
+    cur = m["outputs"].get("station/STEP/station_assembly.step.zip")
+    got = rec.get("station_assembly_zip_sha256")
+    if cur and got and got != cur:
+        print(f"info: cad/blender outputs were built from an older station assembly (zip sha {got[:12]}, "
+              f"current {cur[:12]}; built {rec.get('built', '?')}) - ask the 3D-viz agent to rerun its pipeline")
+    elif cur and got:
+        print(f"cad/blender outputs match the current station assembly (built {rec.get('built', '?')})")
+
+
 def check():
     m = load_manifest()
     if m is None:
@@ -273,6 +291,7 @@ def check():
             print("  - " + b)
         return 1
     print(f"cad: in sync with build_manifest.json (built {m['built']})")
+    blender_staleness(m)
     return 0
 
 
@@ -320,6 +339,8 @@ def main():
         return
     write_manifest([x for x in sys.argv[1:]])
     print(f"full build in {time.time() - t0:.0f} s ({', '.join(built) if built else 'nothing rebuilt'})")
+    if "station" in built:
+        print("note: station_assembly.step.zip changed - cad/blender (3D-viz agent) is downstream and must rerun its pipeline")
 
 
 if __name__ == "__main__":

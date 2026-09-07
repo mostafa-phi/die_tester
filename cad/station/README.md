@@ -130,6 +130,28 @@ Fibers are only ever moved by their own NanoMax stages.
 Exchange time budget: ~8 s; the two X moves of 207 mm at 200 mm/s take ~1.3 s each, the rest is Z, the
 jaw cycles and the vacuum settling.
 
+## Assembly member names (interface for `cad/blender`)
+
+`station_assembly[_h].step` is one flat assembly whose members are named and coloured in `main()`; the 3D-viz
+pipeline keys its collections and materials on these prefixes. Material suffixes follow the repo convention
+(`_6061`, `_copper`, `_semitron`, `_steel`).
+
+| Prefix | Members |
+|---|---|
+| `optical_table` | the table plate |
+| `nest_*` | KB1X1, adapter, KXC04015 (`nest_kxc04015_base/table/coupling/motor/knob`), spacer, rotary (`nest_rmpg40w_body/table/worm/motor/cable/bolts`), `nest_riser_6061`, `nest_tec`, `nest_chuck_copper`, `nest_cage_semitron` |
+| `nanomax300_in/out`, `nanomax_riser_in/out`, `fiber_holder_in/out`, `fiber_in/out` | fiber stages, risers, holders and fiber tips |
+| `objective`, `microscope_tube/arm/column`, `objective_keepout` | microscope (the keep-out is a render aid) |
+| `x_axis_rail_lx20/plate/motor/block`, `x_axis_riser` | X actuator (`block` is the moving table) and its riser bar |
+| `y_axis_rail_lx20/plate/motor/block`, `y_stage_riser`, `tray_deck`, `tray_pin_xm/xp`, `wafer_tray` | Y actuator, deck, pins and tray |
+| `tower_bracket_6061`, `z_axis_rail_lx20/plate/motor/block`, `arm_6061` | Z tower on the X table and the arm |
+| `gripper_*` | gripper module at the nest (`gripper_far_arm/near_arm/far_tip/near_tip/blade/bracket/mhz2_body/finger_near/finger_far`) |
+| `camera_dart`, `camera_lens`, `camera_usb_plug` (+ `camera_fov`, render aid) | tray camera |
+| `die_at_nest` | the die on the chuck |
+
+`station_far_column[_h].step` holds the same moving members at the farthest tray column with the suffix
+`_at_far_col` (and `gripper_at_far_col_*`), plus `wafer_tray`, `tray_deck`, `y_axis_block`, `y_axis_plate`.
+
 ## Compatibility results (`checks.txt`, vendor files placed)
 
 All pairs are OK or TIGHT-by-design. Intended non-OK lines: the gripper band sweep passes under the
