@@ -45,7 +45,7 @@ under the microscope; the gripper meets the nest at stage home only. The stack n
 fiber stages sit on 25 mm risers. Rev. 2.11 writes down what the transfer axes actually need
 (±0.15 mm at the nest, ±0.3 mm at the tray, ±0.05 mm in Z, since the die is placed by hard
 references) and replaces the Velmex BiSlides with three **MISUMI LX20** actuators (lead 5 for
-speed); the tray moves 55 mm closer to the nest and the X actuator's narrow band beside the tray
+speed, Oriental Motor AZ closed-loop steppers with a brake on Z); the tray moves 55 mm closer to the nest and the X actuator's narrow band beside the tray
 sweep removes the bridge riser. The interactive model still shows the rev. 2.10 layout.
 
 Coordinate convention follows the brief: **X** = 10 mm die dimension, **Y** = 6 mm die

@@ -19,8 +19,8 @@ curl -sSL -A "$UA" -o thorlabs_KB1X1.step \
 #   https://us.misumi-ec.com/vona2/detail/110300075020/   configure LX2005CG-B1-A2040-<L>, "CAD" -> STEP AP214
 #            -> save as misumi_LX2005CG-B1-A2040-300.step / -200.step / -100.step (X / Y / Z), then strip CRLF:
 #               sed -i 's/\r$//' misumi_LX2005CG-B1-A2040-*.step
-#   Order LX2005CG-B1-<adapter>-300 / -200 / -100 (high grade, 1 long block, lead 5, cover, low-particulate grease);
-#   adapter T2042 for a 42 sq stepper (AZM46), A2040 for a 40 sq servo. Same outline, so the CAD serves both.
+#   Order LX2005CG-B1-T2042-300 / -200 / -100 (high grade, 1 long block, lead 5, cover, low-particulate grease,
+#   T2042 plate for the Oriental Motor AZM46 steppers). The A2040 plate in the CAD has the same outline, so the files serve.
 #   The Velmex BiSlide files of the earlier layout (velmex_MN10-*.step) are no longer placed.
 
 # --- SMC MHZ2-6D-M9N: CAD needs a (free) SMC account since March 2026 -------------------------------
