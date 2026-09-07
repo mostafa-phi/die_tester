@@ -1,6 +1,6 @@
 # Full station assembly: layout, movement pattern, compatibility
 
-`model.py` (CadQuery) → `STEP/station_assembly[_h].step` (git-ignored, ~100 MB), `checks[_h].txt`, `renders/`.
+`model.py` (CadQuery) → `STEP/station_assembly[_h].step` (120-140 MB; tracked as `station_assembly[_h].step.zip`, unzip to open), `checks[_h].txt`, `renders/`.
 Rebuild with `python cad/build.py` (builds the default and the `_h` horizontal-gripper variant). Manufacturer
 STEP from `cad/vendor` is placed wherever the file exists and the envelope is used otherwise, so a clone
 without the vendor files still builds and checks; the first line of `checks.txt` lists the

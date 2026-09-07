@@ -45,7 +45,12 @@ COMPONENTS = ["gripper", "nest", "tray", "station"]
 SOURCES = ["common/__init__.py", "build.py"] + [f"{c}/model.py" for c in COMPONENTS]
 
 # git-ignored outputs (large or vendor-derived): built, rendered from, but not hashed into the manifest
-IGNORED_OUTPUT_PATTERNS = ("_vendor", "station/STEP/station_assembly", "tray/STEP/wafer_tray_8x14.step")
+# every output is tracked (decision 2026-09-07) except the raw full station assemblies (120-140 MB, over GitHub's
+# 100 MB limit): those are zipped by finish_outputs() and the .zip is tracked and hashed instead; the raw .step stays on
+# disk for the renders and is git-ignored
+ZIPPED_OUTPUTS = ("station/STEP/station_assembly.step", "station/STEP/station_assembly_h.step")
+IGNORED_OUTPUT_PATTERNS = ZIPPED_OUTPUTS
+STEP_DATE = "2026-01-01T00:00:00"     # fixed FILE_NAME timestamp so unchanged geometry gives byte-identical STEP files
 # note: the station and nest checks depend on which vendor files are present; the checks header says which were placed
 
 # renders: (component, STEP file relative to the component's STEP/, output name, camera)
@@ -107,7 +112,36 @@ def rel(p):
 
 
 def is_ignored(relpath):
-    return any(pat in relpath for pat in IGNORED_OUTPUT_PATTERNS)
+    return relpath in IGNORED_OUTPUT_PATTERNS
+
+
+def normalize_step(path):
+    """Overwrite the FILE_NAME timestamp in a STEP header in place (same length, so no rewrite of the body)."""
+    import re
+    with open(path, "r+b") as f:
+        head = f.read(2048)
+        m = re.search(rb"FILE_NAME\('[^']*',\s*'(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})'", head)
+        if m and m.group(1) != STEP_DATE.encode():
+            f.seek(m.start(1)); f.write(STEP_DATE.encode())
+
+
+def finish_outputs(comp):
+    """After a component build: fixed STEP timestamps, and a deterministic .zip beside each output in ZIPPED_OUTPUTS."""
+    import zipfile
+    sd = os.path.join(ROOT, comp, "STEP")
+    if not os.path.isdir(sd):
+        return
+    for f in sorted(os.listdir(sd)):
+        p = os.path.join(sd, f)
+        if f.endswith(".step"):
+            normalize_step(p)
+        if rel(p) in ZIPPED_OUTPUTS:
+            zp = p + ".zip"
+            with zipfile.ZipFile(zp, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
+                zi = zipfile.ZipInfo(f, date_time=(1980, 1, 1, 0, 0, 0)); zi.compress_type = zipfile.ZIP_DEFLATED
+                with open(p, "rb") as src:
+                    zf.writestr(zi, src.read())
+            print(f"    zipped {rel(p)} -> {os.path.getsize(zp) / 1048576:.1f} MB")
 
 
 def outputs_of(comp):
@@ -265,6 +299,7 @@ def main():
             print(f"[{comp}] unchanged (sources and outputs match the manifest): skipped")
             continue
         run_passes(comp, [[]] + TWO_PASS.get(comp, []))
+        finish_outputs(comp)
         built.append(comp)
     if not a.no_render and built:
         print("[renders]" + (" (fast: simple profile, 1200 px)" if a.fast else ""))

@@ -10,7 +10,7 @@ interface `IFACE`).
 Open `STEP/gripper_module_assembly.step` in Fusion / SolidWorks / Onshape to review; send the per-part
 STEP files to the shop. The assembly includes a dimensionally faithful stand-in for the SMC MHZ2-6D
 (from the SMC catalog drawing), the die and a translucent 20 mm objective keep-out cylinder.
-`STEP/gripper_module_assembly_vendor.step` (git-ignored, built when `cad/vendor/smc_MHZ2-6D.step` is present)
+`STEP/gripper_module_assembly_vendor.step` (built when `cad/vendor/smc_MHZ2-6D.step` is present)
 has the real SMC body and fingers.
 
 ![iso](renders/gripper_iso.png)

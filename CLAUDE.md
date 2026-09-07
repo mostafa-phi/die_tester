@@ -85,8 +85,10 @@ Therefore:
 3. **Commit sources and tracked outputs together** in the same commit: `model.py`, `checks*.txt`,
    `renders/*.png`, the per-part STEP/STL, `build_manifest.json`, and the README lines that quote
    the changed numbers.
-4. **Do not track large derived files.** Full station assemblies, anything `*_vendor*`, and the
-   full wafer-tray STEP are git-ignored (`.gitignore`); the checks and renders stand in for them.
+4. **Every output is tracked** (decision 2026-09-07, so the files can be used from a clone without
+   rebuilding), with one exception: the two raw full station assemblies (120-140 MB, over GitHub's 100 MB
+   limit) are tracked as the `.step.zip` that `build.py` writes beside them (deterministic zip; unzip to open).
+   `build.py` also fixes the STEP header timestamp so unchanged geometry gives byte-identical files.
    The manufacturer files in `cad/vendor` are tracked (they are inputs, not derived).
 5. **Docs quote, they do not define.** `docs/*.md` and `docs/die_handling_3d.html` describe the
    design and link to the component READMEs; when a number changes in a model, update the README
