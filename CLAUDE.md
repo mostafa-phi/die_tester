@@ -70,11 +70,15 @@ A change in `cad/common` or in any `model.py` silently invalidates the STEP, STL
 renders of every component downstream, and the numbers quoted in the READMEs and in `docs/`.
 Therefore:
 
-1. **After any change to `cad/common` or a `model.py`, run `python cad/build.py`**. It builds every
-   component, the horizontal-gripper `_h` variant included, and places manufacturer STEP wherever the
-   file exists in `cad/vendor` (envelope otherwise; the checks header says which). Run it with the
-   vendor files present before committing, so the committed checks are the vendor ones.
-   Running a single `model.py` is for iteration only; never commit after a partial build.
+1. **After any change to `cad/common` or a `model.py`, run `python cad/build.py`**. It is incremental:
+   a component is skipped when its own source, everything upstream of it, `cad/common` and `build.py`
+   are unchanged and its tracked outputs still match the manifest, so a station-only change rebuilds
+   only the station (the two layout passes run in parallel, the renders four at a time). It places
+   manufacturer STEP wherever the file exists in `cad/vendor` (envelope otherwise; the checks header
+   says which); after adding a vendor file run `--all` once. `--fast` is the iteration mode (same
+   build, 1200 px "simple" renders, manifest not written); a plain build before committing re-renders
+   only what changed. Running a single `model.py` is for iteration only; never commit after a partial
+   or `--fast` build.
 2. `build.py` writes `cad/build_manifest.json` with the sha256 of every source and every tracked
    output. **`python cad/build.py --check` must pass before committing** (exit 0). The
    `SessionStart` hook (`.claude/setup_cad_skills.sh`) runs it and prints what is out of sync.
@@ -99,13 +103,16 @@ Therefore:
   (the vendored text-to-cad skills in `.claude/skills`) pulls a `novtk` OCP build that breaks
   CadQuery; the session hook repairs this. Renders use `cadgen step snapshot` (headless Chromium;
   the hook aliases the preinstalled Playwright browser revision).
-- Building everything takes about 15 minutes (the 112-pocket tray and the two station passes
-  dominate); `--no-render` skips the PNGs when only the checks are needed.
+- Building everything (`--all`) takes about 20 minutes (the 112-pocket tray, the two station passes
+  and the presentation renders dominate); an incremental station-only build about 10; `--no-render`
+  skips the PNGs when only the checks are needed; `--fast` renders small.
 - Commit messages: imperative subject, body says which component changed and which numbers moved.
 
 ## 5. Still-open measurements (do not silently replace with guesses)
 
 Real fiber-holder envelope, microscope working distance and tube diameter, TEC part number and
 heat load, die backside finish, the LX20 envelope against its STEP (and the stepper length), the KB1X1 platform bolt pattern for
-the adapter plate under the X stage, RMPG40W-N resolution and repeatability. Until measured they stay as the
+the adapter plate under the X stage, RMPG40W-N resolution and repeatability, and the tray camera's lens (the 16 mm M12
+lens and its spacer are an envelope in `common.SENSORS` until the lens is chosen and its STEP placed; the dart housing
+is the vendor STEP). Until measured they stay as the
 named parameters above with their assumed values stated in the component READMEs.

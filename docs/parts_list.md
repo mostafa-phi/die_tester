@@ -22,10 +22,11 @@ the hand-cycling and sequence trials.
 | | micro-TEC 15 × 15 × 2.5 (Laird OptoTEC OT08 class or TE Technology TE-63-1.0-1.3) | 1 (+1) | |
 | | 10 kΩ glass-bead thermistor | 2 | |
 | Gripper and pneumatics | SMC MHZ2-6D-M9N with 2 × D-M9N switches | 2 | one spare |
+| Tray camera | Basler dart daA1440-220um S-mount (USB3, global shutter) + 12 mm M12 lens (Edmund μ-Video 12 mm, Commonlands CIL120 class or Basler S-mount 12 mm) + 3 mm M12 spacer ring + USB3 micro-B cable 3 m | 1 | pypylon; ≈ $300 + $80. A laser displacement sensor (Panasonic HG-C1030) was modelled and rejected for size, `cad/station/README.md` |
 | | SMC SY3120-5LZ-M5 (gripper valve) | 2 | one spare |
 | | SMC VQ110-5L-M5 (chuck vacuum, blow-off) | 2 | |
 | | SMC AS1201F-M3-04 class meter-out speed controllers | 2 | ≤ 10 mm/s finger speed |
-| | SMC IR1000-01 precision regulator (+ IR1000 class for the few-kPa blow-off) | 1 + 1 | |
+| | SMC IR1000-01 precision regulator (+ IR1000 class for the ≤ 0.5 kPa seal-break pressure, applied only with the die gripped) | 1 + 1 | |
 | | SMC ZSE30A-01-N-L vacuum switch | 1 | seat sensing |
 | | KQ2H04-M5 ×10, KQ2H04-01S ×4, KQ2T04-00A ×4, TU0425 Ø4 tubing 20 m | — | |
 | | Mean Well LRS-50-24, 2 × 24 V relay/isolator modules, 24→5 V optocoupler inputs | 1 set | valves and switches to the NI USB-6363 |

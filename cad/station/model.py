@@ -69,7 +69,7 @@ S = dict(
     tower_w=60.0, tower_t=10.0,    # 6061 angle bracket on the X block: 60 x 60 x 10 base plate (block's 4 x M4), 10 mm vertical leg
     arm_sec=25.0,                  # square arm bar (6061) from the adapter plate on the Z block to the gripper interface
     arm_plate_t=8.0,               # adapter plate on the Z block face (block's 4 x M4)
-    tower_mass=1.7,                # kg: Z actuator 0.45 + brake motor 0.6 + bracket 0.3 + arm 0.25 + gripper 0.1 (moment check on the X block)
+    tower_mass=1.8,                # kg: Z actuator 0.45 + brake motor 0.6 + bracket 0.3 + arm 0.25 + gripper 0.1 + tray sensors 0.1 (moment check)
     # wafer tray: geometry and column positions live in cad/tray (TM.TR)
     tray_cols=TM.TR["cols"], tray_rows=TM.TR["rows"], tray_col_pitch=TM.TR["col_pitch"], tray_row_pitch=TM.TR["row_pitch"],
     tray_col0_x=TM.TR["col0_x"],   # die X of the first (nearest) column; last column at -95 - 7*16 = -207
@@ -293,7 +293,7 @@ def lx_z(L, z0, xl, cyx, zc):
 # docs/print_list.md). Hole sizes are tap-drill / press-fit for printing; ream or tap after printing.
 # ----------------------------------------------------------------------------
 M = dict(
-    tap_m3=2.5, tap_m4=3.3,               # tap-drill holes for M3 / M4 (tap directly in PPA-CF, or open to 4.0 / 5.6 for heat-set inserts)
+    tap_m2=1.6, tap_m3=2.5, tap_m4=3.3,   # tap-drill holes for M2 / M3 / M4 (tap directly in PPA-CF, or open to 4.0 / 5.6 for heat-set inserts)
     m4_clr=4.5, m4_cbore=(8.0, 4.5),      # M4 clearance and counterbore (dia, depth) for SHCS
     dowel3=2.9, dowel4=3.9,               # press-fit dowel holes (ream to H7 after printing)
     flange_t=8.0, flange_w=60.0, y_flange_w=80.0,   # riser foot flanges: thickness, total width (X riser / Y riser)
@@ -408,6 +408,91 @@ def z_tower(xc, zc):
     return parts, xl + LX["block_top"]
 
 
+# tray sensors on the arm end plate (vertical gripper layout only): a down-looking camera and a laser displacement sensor
+# behind the jaws on the pick line, so the tray survey (docs/pick_and_place_design.md 3.5) is an X-Y raster at the +8 mm
+# traverse height with the same axes. Positions are in the gripper frame (die origin, die bottom Z 0).
+SN = dict(
+    laser=False,                   # the HG-C1030 laser displacement sensor (20 x 44 x 25 + drop bracket) was modelled and REJECTED for
+                                   # size next to the jaws (rev. 2.12); Z across the tray comes from a machined deck, an SLA/machined
+                                   # tray, a touch-off per tray type and a +/-0.15 pick window instead (pick-and-place note 3.5).
+                                   # True re-adds it with the numbers below for comparison.
+    plate_x0=-94.0,                # the arm end plate is extended from the gripper interface (X -56) to here to carry the camera
+    cam_c=(-76.0, 3.0),            # camera optical axis: 76 behind the die origin, on the pick line -> column 0 (die X -95) is imaged
+                                   # with the jaws at die X -19, at the traverse height, i.e. inside the exchange envelope
+    cam_lens_z=None,               # lens front above the jaws' die-bottom plane, derived in sensor_cluster(): the camera stands on
+                                   # TOP of the end plate with its ring through the plate, lens front 16 below the ring: 56.1, i.e.
+                                   # 75.6 to a tray die top at the +8 traverse height (8 lift + 12 drop); the lens is focused there
+    laser_c=(-61.0, 3.0),          # beam: 61 behind the die origin -> the tray's +X rim (X -74) is scanned with the jaws at die X -13
+    laser_z0=10.0,                 # emitting face above the jaws' die-bottom plane: 30 mm (reference) to the tray ledge plane at the
+                                   # +8 traverse height; +/-5 range covers the wall tops (0.8 up) and any tray-to-tray variation
+    drop_t=3.0,                    # drop bracket: 3 mm leg on the -X side of the sensor (the sensor's M3 screws go along X into it)
+    drop_tab=(-74.0, -60.0),       # its top tab X extent under the end plate (2 x M3 up into the plate); clear of the camera body
+    heads_x=3.0,                   # M3 screw heads proud of the sensor's +X face (kept 5 mm from the open near root plate at X -43)
+)
+
+
+def dart_vendor():
+    """Basler dart S-mount housing from the manufacturer STEP (cad/vendor), or None. File frame: ring toward -z (front at z -13.9,
+    housing front face z -8.0), board back z ~1.5, USB shell to z 5.9 on the +x side; 4 x dia 2.2 through holes on 22.4 sq."""
+    path = C.vendor_path(C.SENSORS["dart"]["file"])
+    if not os.path.exists(path):
+        return None
+    if C.SENSORS["dart"]["file"] not in VENDOR_PLACED:
+        VENDOR_PLACED.append(C.SENSORS["dart"]["file"])
+    return cq.importers.importStep(path).val()
+
+
+def sensor_cluster(gx, gz, z_plate, with_aids=False):
+    """Camera on TOP of the arm end plate (plate bottom face at z_plate, 8 thick), front face on the plate top, lens ring down
+    through the plate, plus the optional laser + drop bracket under the plate, for the gripper at (gx, gz).
+    Returns dict name -> solid; the drop bracket is the custom part. with_aids adds the beam and the camera field of view
+    (render aids, not checked)."""
+    d, h = C.SENSORS["dart"], C.SENSORS["hgc1030"]
+    cx, cyc = SN["cam_c"]; lx, ly = SN["laser_c"]
+    P = {}
+    z_top = z_plate + S["arm_plate_t"]                                       # plate top = camera front face
+    ring_front = z_top - d["ring_len"]
+    SN["cam_lens_z"] = ring_front - d["lens_out"]
+    v = dart_vendor()
+    if v is not None:                                                        # USB side (+x file) turned toward -X, away from the arm bar
+        P["camera_dart"] = cq.Workplane().add(v.rotate((0, 0, 0), (0, 0, 1), 180).translate((cx, cyc, z_top - d["file_front_z"])))
+    else:
+        body = box(cx - d["w"] / 2, cx + d["w"] / 2, cyc - d["l"] / 2, cyc + d["l"] / 2, z_top, z_top + d["body_h"])
+        ring = C.cyl_z(cx, cyc, ring_front, z_top + 0.01, d["ring_d"] / 2)
+        sx, sy, sh, ox, oy = d["stub"]
+        stub = box(cx - ox - sx / 2, cx - ox + sx / 2, cyc - oy - sy / 2, cyc - oy + sy / 2, z_top + d["body_h"], z_top + d["body_h"] + sh)
+        P["camera_dart"] = body.union(ring).union(stub)
+    P["camera_lens"] = C.cyl_z(cx, cyc, SN["cam_lens_z"], ring_front + 0.01, d["lens_d"] / 2)
+    P["camera_usb_plug"] = box(cx - d["w"] / 2 - 10.0, cx - d["w"] / 2 + 0.01, cyc - d["stub"][4] - 4.0, cyc - d["stub"][4] + 4.0,
+                               z_top + d["body_h"], z_top + d["body_h"] + d["stub"][2])   # micro-B plug envelope leaving toward -X
+    if with_aids:
+        fw, fh, _ = C.sensor_fov(SN["cam_lens_z"] - C.DIE_THK)
+        P["camera_fov"] = (cq.Workplane("XY").workplane(offset=C.DIE_THK).center(cx, cyc).rect(fw, fh)
+                           .workplane(offset=SN["cam_lens_z"] - C.DIE_THK).circle(3.0).loft())
+    if not SN["laser"]:
+        return {k: v.translate((gx, 0, gz)) for k, v in P.items()}
+    # laser: 20 (X) x 44 (Y) x 25 (Z) body, emitting face down at laser_z0, beam beam_from_end from the -Y end, M3 heads on +X
+    lx0, lx1 = lx - h["w"] / 2, lx + h["w"] / 2
+    ly0 = ly - h["beam_from_end"]; ly1 = ly0 + h["l"]
+    lz0 = SN["laser_z0"]; lz1 = lz0 + h["h"]
+    P["laser_hgc1030"] = box(lx0, lx1, ly0, ly1, lz0, lz1)
+    hd, hp, hz = h["holes"]
+    yh = ((ly0 + ly1) / 2 - hp / 2, (ly0 + ly1) / 2 + hp / 2)
+    P["laser_screws"] = box(lx1, lx1 + SN["heads_x"], yh[0] - 3, yh[1] + 3, lz0 + hz - 3, lz0 + hz + 3)
+    # drop bracket: leg on the -X face of the sensor from the emitting-face level to the tab, tab under the plate
+    t = SN["drop_t"]; tx0, tx1 = SN["drop_tab"]
+    leg = box(lx0 - t, lx0, ly0, ly1, lz0, z_plate - 6.0 + 0.01)
+    tab = box(tx0, tx1, ly0, ly1, z_plate - 6.0, z_plate)
+    for y in yh:                                                             # M3 tap-drill for the sensor screws (along X)
+        leg = leg.cut(C.cyl_x(y, lz0 + hz, lx0 - t - 0.5, lx0 + 0.5, M["tap_m3"] / 2))
+    for y in (ly0 + 6.0, ly1 - 6.0):                                         # M3 clearance up into the plate
+        tab = tab.cut(C.cyl_z((tx0 + tx1) / 2, y, z_plate - 6.5, z_plate + 0.5, 1.7))
+    P["laser_drop_bracket_6061"] = leg.union(tab)
+    if with_aids:
+        P["laser_beam"] = C.cyl_z(lx, ly, lz0 - h["ref"], lz0, 0.3)
+    return {k: v.translate((gx, 0, gz)) for k, v in P.items()}
+
+
 def arm(xf, zc, z_iface_top, gx):
     """One-piece arm: adapter block on the Z table face at X xf (33 deep, 4 x M4 counterbored from the outside on the
     table's 20 x 45 pattern, 2 dowels), 25 sq bar along +Y from the axis band to the die line with its bottom at
@@ -420,7 +505,18 @@ def arm(xf, zc, z_iface_top, gx):
     hl = LX["block_len"] / 2
     block = box(xf, xf + bw, cyx - LX["table_holes"][1] / 2 - 7.5, cyx + 20 + a, zc - hl, zc + hl)   # -Y wall 7.5 outside the counterbores
     bar_y = box(xf + t, xf + bw, cyx + 20, iy1, za, za + a)
-    ep = box(gx + ix0, gx + ix1, iy0, iy1, z_iface_top, z_iface_top + 8)
+    epx0 = min(ix0, SN["plate_x0"]) if G.LAYOUT == "vertical" else ix0       # extended to carry the tray sensors
+    ep = box(gx + epx0, gx + ix1, iy0, iy1, z_iface_top, z_iface_top + 8)
+    if G.LAYOUT == "vertical":
+        d, h = C.SENSORS["dart"], C.SENSORS["hgc1030"]
+        cx_, cy_ = SN["cam_c"]; hd_, hp_ = d["holes"]
+        ep = ep.cut(C.cyl_z(gx + cx_, cy_, z_iface_top - 0.5, z_iface_top + 8.5, 8.5))            # dia 17 for the lens ring
+        for dx in (-hp_ / 2, hp_ / 2):                                       # camera: 4 x M2 tap-drill through the plate (screws from the top)
+            for dy in (-hp_ / 2, hp_ / 2):
+                ep = ep.cut(C.cyl_z(gx + cx_ + dx, cy_ + dy, z_iface_top - 0.5, z_iface_top + 8.5, M["tap_m2"] / 2))
+        ly0_ = SN["laser_c"][1] - h["beam_from_end"]; ly1_ = ly0_ + h["l"]
+        for y in ((ly0_ + 6.0, ly1_ - 6.0) if SN["laser"] else ()):         # drop bracket: 2 x M3 tap-drill (laser option only)
+            ep = ep.cut(C.cyl_z(gx + (SN["drop_tab"][0] + SN["drop_tab"][1]) / 2, y, z_iface_top - 0.5, z_iface_top + 6.0, M["tap_m3"] / 2))
     al, ac = LX["table_holes"]
     for dz in (-al / 2, al / 2):
         for dy in (-ac / 2, ac / 2):
@@ -560,6 +656,9 @@ def main():
     arm2_u, arm2_parts = arm(xf2, zc_nest + gz2, z_iface_top + gz2, far_col_x)
     tower2_parts = list(tower2.values())
     grip_stick = gripper_at(far_col_x, gz2, open_mm=1.5)
+    sens_nest = sensor_cluster(0.0, 0.0, z_iface_top) if G.LAYOUT == "vertical" else {}
+    sens_far = sensor_cluster(far_col_x, gz2, z_iface_top + gz2) if G.LAYOUT == "vertical" else {}
+    sens_nest_parts, sens_far_parts = list(sens_nest.values()), list(sens_far.values())
 
     # ---- custom mounting parts: STEP + STL per part (the print list is docs/print_list.md) ----
     sfx = G.SFX
@@ -570,6 +669,19 @@ def main():
         C.export_part(yparts["y_stage_riser"], DIRS, "y_axis_riser_6061")
         C.export_part(yparts["tray_deck"], DIRS, "tray_deck_6061")
         C.export_part(static["nanomax_riser_in"], DIRS, "nanomax_riser_6061")
+        if SN["laser"]:
+            C.export_part(sens_nest["laser_drop_bracket_6061"], DIRS, "laser_drop_bracket_6061")
+        # gripper + arm end + tray sensors close-up (render): jaws holding a die, beam and field of view shown
+        gs = cq.Assembly(name="gripper_with_sensors")
+        gs.add(arm_parts[2], name="arm_end_plate", color=cq.Color(0.18, 0.31, 0.44, 1.0))
+        for n, s in grip_nest.items(): gs.add(s, name=f"gripper_{n}", color=cq.Color(0.25, 0.25, 0.27, 1.0))
+        gs.add(static["die_at_nest"], name="die", color=cq.Color(0.81, 0.89, 0.97, 1.0))
+        scol = {"camera_dart": (0.20, 0.22, 0.25), "camera_lens": (0.10, 0.10, 0.12), "camera_usb_plug": (0.35, 0.35, 0.38),
+                "laser_hgc1030": (0.55, 0.58, 0.62), "laser_screws": (0.45, 0.48, 0.52), "laser_drop_bracket_6061": (0.60, 0.63, 0.68)}
+        for n, s in sensor_cluster(0.0, 0.0, z_iface_top, with_aids=True).items():
+            a_ = 0.35 if n in ("laser_beam", "camera_fov") else 1.0
+            gs.add(s, name=n, color=cq.Color(*scol.get(n, (0.85, 0.64, 0.25)), a_))
+        gs.save(os.path.join(DIRS["STEP"], "gripper_with_sensors.step"))
 
     # ---- checks ----
     Lx, Ly, Lz = S["lx_L"]["x"], S["lx_L"]["y"], S["lx_L"]["z"]
@@ -708,6 +820,38 @@ def main():
         ("gripper mhz2_body @far col", grip_stick["mhz2_body"], "y_axis_motor", yparts["y_axis_motor"]),
         ("gripper bracket @far col", grip_stick["bracket"], "y_axis_motor", yparts["y_axis_motor"]),
     ]
+    if sens_nest:
+        pairs += [
+            ("tray sensors @nest (per member)", sens_nest_parts, "gripper near_arm @nest", grip_nest["near_arm"]),
+            ("tray sensors @nest (per member)", sens_nest_parts, "gripper mhz2_fing_near @nest", grip_nest["mhz2_fing_near"]),
+            ("tray sensors @nest (per member)", sens_nest_parts, "gripper mhz2_body @nest", grip_nest["mhz2_body"]),
+            # the gripper bracket is one solid (vertical plate + top plate); check its two members, not its union box
+            ("tray sensors @nest (per member)", sens_nest_parts, "gripper bracket top plate @nest", grip_nest["bracket"].intersect(box(-200, 200, -100, 100, G.body_z1 - 0.01, 300))),
+            ("tray sensors @nest (per member)", sens_nest_parts, "gripper bracket vert. plate @nest", grip_nest["bracket"].intersect(box(-200, 200, -100, 100, -50, G.body_z1 - 0.01))),
+            ("tray sensors @nest (per member)", sens_nest_parts, "nanomax300_in", static["nanomax300_in"]),
+            ("tray sensors @nest (per member)", sens_nest_parts, "nanomax300_out", static["nanomax300_out"]),
+            ("tray sensors @nest (per member)", sens_nest_parts, "fiber_holder_in", static["fiber_holder_in"]),
+            ("tray sensors @nest (per member)", sens_nest_parts, "fiber_holder_out", static["fiber_holder_out"]),
+            ("tray sensors @nest (per member)", sens_nest_parts, "fiber_in", static["fiber_in"]),
+            ("tray sensors @nest (per member)", sens_nest_parts, "fiber_out", static["fiber_out"]),
+            ("tray sensors @nest (per member)", sens_nest_parts, "die stage stack (per member)", S["_nest_stack_parts"]),
+            ("tray sensors @nest (per member)", sens_nest_parts, "microscope_arm", static["microscope_arm"]),
+            ("tray sensors @nest (per member)", sens_nest_parts, "arm bar @nest", arm_parts[1]),
+            ("tray sensors @nest (per member)", sens_nest_parts, "z_axis_motor @nest", tower["z_axis_motor"]),
+            ("tray sensors @far col (per member)", sens_far_parts, "wafer_tray", stick),
+            ("tray sensors @far col (per member)", sens_far_parts, "tray_deck", deck),
+            ("tray sensors @far col (per member)", sens_far_parts, "tray pins (per member)", [yparts["tray_pin_xm"], yparts["tray_pin_xp"]]),
+            ("tray sensors @far col (per member)", sens_far_parts, "tower @far column (per member)", tower2_parts),
+            ("tray sensors @far col (per member)", sens_far_parts, "x_axis_block @far column", xblock2),
+            ("tray sensors @far col (per member)", sens_far_parts, "y_axis_rail_lx20", yparts["y_axis_rail_lx20"]),
+            ("tray sensors @far col (per member)", sens_far_parts, "y_axis_block", yparts["y_axis_block"]),
+            ("tray sensors @far col (per member)", sens_far_parts, "y_axis_motor", yparts["y_axis_motor"]),
+            ("tray sensors @far col (per member)", sens_far_parts, "y_stage_riser", yparts["y_stage_riser"]),
+            ("tray sensors @far col (per member)", sens_far_parts, "x_axis_rail_lx20", xax["rail"]),
+            ("tray sensors @far col (per member)", sens_far_parts, "x_axis_motor", xax["motor"]),
+            ("arm end plate @far col", arm2_parts[2], "tower @far column (per member)", tower2_parts),
+            ("arm end plate @nest", arm_parts[2], "nanomax300_in", static["nanomax300_in"]),
+        ]
     rep.append("")
     rep.append("clearances vs boxes (AABB separation, mm; negative = overlap):")
     for an, a, bn, b in pairs:
@@ -736,7 +880,8 @@ def main():
                      ("near_arm root @nest", grip_nest["near_arm"].intersect(outcut)),
                      ("far_tip @nest", grip_nest["far_tip"]),
                      ("bracket @nest", grip_nest["bracket"]), ("mhz2_body @nest", grip_nest["mhz2_body"]), ("arm bar @nest", arm_parts[1]),
-                     ("arm end plate @nest", arm_parts[2]), ("z_axis_motor @nest", tower["z_axis_motor"])]:
+                     ("arm end plate @nest", arm_parts[2]), ("z_axis_motor @nest", tower["z_axis_motor"])] + \
+                    [(f"{n} @nest", s) for n, s in sens_nest.items()]:
         for cn, (axy, r, z0, z1) in cyls.items():
             gp = gap_cyl(bb(part), axy, r, z0, z1)
             flag = "  OK " if gp > 2 else ("  TIGHT" if gp > 0 else "  ** OVERLAP **")
@@ -745,7 +890,7 @@ def main():
     lift = 8.0
     def sweep(b):                                                     # AABB swept from the nest to the farthest column, lifted
         return (S["stick_x"] + b[0], b[1], b[2], b[3], b[4] + lift, b[5] + lift)
-    g_sweeps = [sweep(bb(v)) for v in grip_nest.values()]              # per part (no union-box conservatism)
+    g_sweeps = [sweep(bb(v)) for v in grip_nest.values()] + [sweep(bb(v)) for v in sens_nest_parts]   # per part (no union-box conservatism)
     a_sweeps = [sweep(bb(pp)) for pp in arm_parts]
     rep.append("")
     rep.append("swept volumes nest <-> tray (after the 8 mm lift; per member) vs static objects:")
@@ -758,6 +903,25 @@ def main():
         g1 = min(gap_cyl(g, axy, r, z0, z1) for g in g_sweeps); g2 = min(gap_cyl(g, axy, r, z0, z1) for g in a_sweeps)
         rep.append(f"  gripper band vs {cn:22s}: {g1:7.1f}{'  OK ' if g1 > 2 else '  ** CHECK **'}    arm band: {g2:7.1f}{'  OK ' if g2 > 2 else '  ** CHECK **'}")
     rep.append("")
+    if sens_nest:
+        fw, fh, upx = C.sensor_fov(SN["cam_lens_z"] + 8.0 + S["tray_drop"] - C.DIE_THK)
+        rep.append("")
+        dd = C.SENSORS["dart"]
+        rep.append(f"tray camera on the arm end plate (vertical layout): Basler dart daA1440 S-mount standing on the plate top, ring through a dia 17 hole, "
+                   f"axis at die X {SN['cam_c'][0]:.0f} / Y {SN['cam_c'][1]:.0f}, {dd['f']:.0f} mm M12 lens on a {dd['spacer']:.0f} mm spacer, lens front "
+                   f"{SN['cam_lens_z']:.1f} above the jaws' die-bottom plane -> {SN['cam_lens_z'] + 8 + S['tray_drop'] - C.DIE_THK:.1f} to a tray die top "
+                   f"at the +8 traverse height: field {fw:.1f} x {fh:.1f} mm, {upx:.0f} um/px; column 0 imaged with the jaws at die X "
+                   f"{S['tray_col0_x'] - SN['cam_c'][0]:.0f} (inside the exchange envelope), far column at {far_col_x - SN['cam_c'][0]:.0f}"
+                   f"{'; housing from the vendor STEP' if dd['file'] in VENDOR_PLACED else '; housing envelope (vendor STEP missing)'}")
+        if SN["laser"]: rep.append(f"  HG-C1030 beam at die X {SN['laser_c'][0]:.0f} / Y {SN['laser_c'][1]:.0f}, emitting face {SN['laser_z0']:.0f} above the die-bottom plane -> "
+                   f"{SN['laser_z0'] + 8 + S['tray_drop']:.0f} mm to the ledge plane at the traverse height (reference {C.SENSORS['hgc1030']['ref']:.0f} +/- "
+                   f"{C.SENSORS['hgc1030']['span']:.0f}); +X rim (X {tray_ext[1]:.0f}) scanned with the jaws at die X {tray_ext[1] - SN['laser_c'][0]:.0f}, "
+                   f"-X rim (X {tray_ext[0]:.0f}) at {tray_ext[0] - SN['laser_c'][0]:.0f} (X limit {xax['c_lo'] - xc_nest:.0f})"
+                   f"{'  OK ' if tray_ext[0] - SN['laser_c'][0] >= xax['c_lo'] - xc_nest else '  ** OUT OF TRAVEL **'}; envelopes: hole patterns and window "
+                   f"positions ASSUMED until the vendor STEP is placed (cad/common.SENSORS)")
+        if not SN["laser"]:
+            rep.append("  laser displacement sensor: not fitted (rejected for size, SN['laser']); Z across the tray by touch-off per tray type, "
+                       "the camera's size-based height check and the +/-0.15 pick window (docs/pick_and_place_design.md 3.5)")
     rep.append("the gripper band sweep necessarily passes under the objective (that is the exchange); its clearance there is the")
     rep.append("bar height check in cad/gripper/checks.txt (tallest part 9.0 mm above die top vs WD).")
     suffix = G.SFX
@@ -788,11 +952,13 @@ def main():
     for n, s in static.items(): assy.add(s, name=n, color=cq.Color(*col.get(n, al), 1.0))
     for n, s in moving_nest.items(): assy.add(s, name=n, color=cq.Color(*col.get(n, moving), 1.0))
     for n, s in grip_nest.items(): assy.add(s, name=f"gripper_{n}", color=cq.Color(0.25, 0.25, 0.27, 1.0))
+    for n, s in sens_nest.items(): assy.add(s, name=n, color=cq.Color(0.20, 0.22, 0.25, 1.0) if "camera" in n else cq.Color(0.55, 0.58, 0.62, 1.0))
     ghost = {"x_axis_block_at_far_col": xblock2, "arm_at_far_col": arm2_u}
     ghost.update({f"{n}_at_far_col": s for n, s in tower2.items()})
     for n, s in ghost.items():
         assy.add(s, name=n, color=cq.Color(0.18, 0.31, 0.44, 0.25))
     for n, s in grip_stick.items(): assy.add(s, name=f"gripper_at_far_col_{n}", color=cq.Color(0.25, 0.25, 0.27, 0.25))
+    for n, s in sens_far.items(): assy.add(s, name=f"{n}_at_far_col", color=cq.Color(0.25, 0.25, 0.27, 0.25))
     assy.add(keepout(), name="objective_keepout", color=cq.Color(0.85, 0.64, 0.25, 0.25))
     assy.save(os.path.join(DIRS["STEP"], f"station_assembly{suffix}.step"))
     print("wrote station files to", DIRS["comp"])

@@ -90,15 +90,18 @@ friction, and the backside takes 0.19 N), but the 0.05 mm drop is the nominal.
 
 A lapped pad and a flat backside stick: residual vacuum, moisture, van der Waals. Adhesion above the
 0.19 N friction capacity is only 4 kPa over the 45 mm² pad, and if it happens the noses slip up the
-end faces and scrape them. Therefore:
+end faces and scrape them. The release is therefore done **with the die already held in the jaws**, and
+any positive pressure is small enough that the grip dominates it (rev. 2 of this section; the earlier
+"blow-off pulse of a few kPa before gripping" would have put 0.1–0.2 N under a 1.4 mN die that was
+free inside the cage, i.e. it would have launched it):
 
 | Step | Motion | Interlock |
 |---|---|---|
-| 1 | Die stage home; fibers retracted 1 mm | flags |
-| 2 | Chuck line vented to atmosphere, then a blow-off pulse of a few kPa through the same holes (3/2 valve on the vacuum line, second valve to the air side) | vacuum switch reads atmosphere before any Z motion |
-| 3 | Jaws open, Z down to pad top + 0.05 mm, close at ≤ 10 mm/s | |
-| 4 | Z +8 mm | |
-| 5 | Die-present check (section 4) before the X move | a die left on the pad is seen by the camera; a die missing from the jaws stops the sequence |
+| 1 | Die stage home; fibers retracted 1 mm; chuck vacuum still on | flags |
+| 2 | Jaws open, Z down to pad top + 0.05 mm, close at ≤ 10 mm/s on the vacuum-held die | the die cannot move: the noses meet it where the push-to-stop left it (within the ±0.03 mm the blade absorbs) |
+| 3 | Vent the chuck line to atmosphere; then, optionally, a positive pressure of ≤ 0.5 kPa through the same holes (≤ 22 mN on the pad, a tenth of the friction capacity) to break the seal | vacuum switch reads atmosphere before any Z motion |
+| 4 | Z +8 mm at ≤ 5 mm/s | if adhesion still exceeds the grip the noses slip and the die stays: caught by step 5, no scraping beyond one slow slip |
+| 5 | Die-present check (section 4) before the X move | a die left on the pad is seen by the microscope; a die missing from the jaws stops the sequence |
 
 ### 3.5 Z across the tray: a taught map, not a planarity requirement
 
@@ -108,12 +111,47 @@ point. Across the tray the ledge plane wanders by the LX20 running parallelism (
 travel), the deck flatness (0.05 called out), the printed tray's ledge plane (0.1 called out; a PPA-CF print can bow
 more), the ledge height and the die thickness: 0.1–0.2 mm stacked, more than the +0.05 pick window. So Z is commanded
 **per pocket** from a plane (or 3 × 3 grid) fitted to measured ledge heights, and the Z actuator's ±5 µm repeatability
-does the rest. The measurement is a laser displacement sensor on the Z carriage (Panasonic HG-C1030 class, ±10 µm,
-30 ± 5 mm range) scanning nine points after every tray load, about 10 s; it also reports an empty pocket, a die
-sitting proud and a warped tray before any pick. Without the sensor, the closed jaws on a gauge die touch off the
-corner pockets once per tray type, and the pick height is lowered 0.1 mm (band Z −0.05…0.30 on the end face) to widen
-the window to ±0.15 mm. X, Y and yaw of the tray come from the two deck pins (`cad/tray/README.md`), so the map is
-only Z.
+does the rest. How the map is obtained, in order of preference:
+
+1. **Make the stack small.** Machined 6061 deck (top flat within 0.02 after a fly cut), tray on the two pins, SLA tray
+   whose ledge plane was measured flat within 0.1 mm on a surface plate (print list T1), or a machined tray (0.02). With
+   the LX20 running parallelism of 0.025 per axis and ±0.025 on the die thickness the stack is 0.10–0.17 mm worst case.
+2. **Widen the window.** The pick at the tray is 0.10 mm lower than nominal (contact band Z −0.05…0.30 on the end face,
+   nose top 0.20 below the die top; the noses sit in the slot channel beside the ledges, 0.75 above the pocket floor), so
+   the pick tolerates +0.15 / −0.20 and the place ±0.10.
+3. **Teach per tray type with the jaws themselves.** A gauge die in the four corner pockets and the centre; the jaws
+   are lowered in 0.02 mm steps until the die on the ledges lifts the closed jaws' contact (the MHZ2 switch reads
+   "closed empty" as the noses ride up), or simply until the picked die's height at the nest microscope stops changing.
+   Five points, once per tray type (not per tray), fitted to a plane and stored. Because the jaws measure their own
+   height, the rail-pitch error between a sensor position and the jaws does not enter.
+4. **Check every die with the camera.** The dart on the arm (§3.6) sees each die's apparent length: at 55.5 mm and
+   12.5 µm per pixel a 10.000 mm die spans 800 px and a 0.1 mm height change scales it by 1.4 px, so with sub-pixel edge
+   fitting and a one-time lens calibration each die's height is known to about ±0.02 mm before the pick, and a die
+   sitting on a wall (0.8 mm proud, tilted 4.6°) is unmistakable.
+
+**Why not a laser displacement sensor.** A Panasonic HG-C1030 (30 ± 5 mm, 10 µm) on the arm was modelled
+(`cad/station/README.md`): it is 20 × 44 × 25 mm on a 60 mm drop bracket, as big as the gripper actuator, and no
+10 µm-class sensor is much smaller because the triangulation baseline sets the size. It would map the wall tops at nine
+points in about 10 s; the stage repeatability (±5 µm) is far better than needed for that, but the sensor rides the same
+rails 61 mm from the jaws, so the rail-pitch component of the jaw height (up to the 0.025 mm parallelism) is not seen
+by it, while the jaw touch-off above sees everything. It stays as an option in the model (`SN["laser"]`).
+X, Y and yaw of the tray come from the two deck pins (`cad/tray/README.md`), so the map is only Z.
+
+### 3.6 Seeing the pocket before the pick: the camera on the arm
+
+The gripper itself is blind; the pocket play is removed mechanically (X and yaw by the closing noses, X and yaw again by
+the push-to-stop at the nest) except for **Y**, which the jaws do not define, and the discrete errors of hand loading
+(die rotated 180°, upside down, missing, doubled, chipped). The **Basler dart daA1440-220um** camera on the arm end
+plate looks down 76 mm behind the jaws (X −76, Y 3 in the gripper frame): at the traverse height a tray die is 55.5 mm
+from the lens, field 18 × 14 mm at 12.5 µm per pixel, so one pocket fills the frame. The lens is a 12 mm M12 board
+lens on a 3 mm spacer ring: board lenses are sold focused near infinity with a 100–200 mm minimum object distance, and
+the extension that focuses one at distance d is f²/(d − f), 3.3 mm here (depth of field about 1 mm at f/4). Before
+each pick the software checks occupancy, reads the orientation fiducial (ask the layout for an asymmetric mark in the
+metal layer), flags chipped corners, and measures the die's Y offset in the pocket to ±0.05 mm; the pick then lands the
+die centred in the nest cage instead of up to 0.4 mm off. A 180° die is either mapped mirrored or skipped and logged; an
+upside-down or missing die is skipped. The nest microscope re-checks every die after the place (fiducials, seat against
+the pads). Lighting: a small white LED ring around the lens (to be added to the bracket) or the bench light; the die's
+metal fiducials read well in dark field.
 
 ## 4. Sensing the die in the jaws
 
@@ -144,3 +182,52 @@ the same). Options, in order of preference:
    dies; inspect end faces and facet edges under the microscope after every 50.
 3. Release from the lapped pad with and without the blow-off pulse; record any slip.
 4. Set-down scatter on the pad: X against the pads (should be mechanical), Y and yaw by camera.
+
+## 7. Design rationale: review questions and where the design gives
+
+Answers to the questions a reviewer asked about the sequences above (rev. 2.12). Each says what the
+number is, why it is what it is, and what would change it.
+
+**Why is the pick height window so narrow (+0.05 / −0.30 mm)?** The window is only narrow at the top.
+The nose band is Z 0.05–0.40 on the 0.5 mm end face because the top edge of a diced face is the
+chip-prone line and sits at the waveguide layer, so the nose top is kept 0.10 below it; the bottom
+margin is 0.05 so the backside lands before a nose could. Downward the window is generous: a nose that
+sits lower still contacts the end face (the noses stand in the slot channel beside the ledges, 0.85 mm
+above the pocket floor, and 0.5 mm inboard of the chuck pad). Two design changes open it without any
+sensor, and both are now the plan (§3.5): pick 0.10 mm lower than nominal at the tray (band Z −0.05…
+0.30 on the face, window +0.15 / −0.20), and, if the hand-cycling rig shows that a shorter band holds
+the die just as well, shorten the band to 0.25 mm (Z 0.10–0.35), which makes it ±0.20. The band was
+0.35 for friction area and squaring, not because 0.25 fails: the contact pressure is 0.3 MPa and the
+crown line contact 2 MPa, orders below any limit. A compliant Z approach was considered and rejected:
+the flexure is in X, and adding Z compliance to the tips means the noses find the die by touch, which
+is what the top edge must never feel. Tolerance analysis first, sensor second, was the order followed:
+the laser was dropped once the stack (0.10–0.17 mm) fitted the widened window.
+
+**Why push the die against stops after release?** For a deterministic X and yaw without vision. The
+jaws centre the die to ±0.03 mm in X and square it, but the transfer adds the X axis (±5 µm repeat,
+absolute worse), the arm's thermal drift and the seating of the die in the jaws, so a placed die is at
+±0.05–0.1 mm and ±0.1°. The fixed fibers then step device to device along X on the die stage: at ±0.1
+mm the first-light search per device is a ±100 µm raster (minutes), at ±5 µm it is ±10 µm (seconds).
+The pads give ±5 µm in X and ±0.03° yaw for the cost of a 0.2 mm slide of the backside on the lapped
+pad under 0.25 N. The alternative is measure-and-correct: the nest microscope already images the
+fiducials for the rotary's yaw null, the die stage (15 mm travel) can absorb an X offset and the fibers
+absorb Y, so the push is not needed for accuracy if the fiducial measurement is reliable. It is kept as
+the default because it is cheap, needs no image processing to work, and gives a hard "seated" signal;
+it becomes a configurable step, and the hand-cycling rig decides (backside inspection after 1000
+pushes on a lapped pad).
+
+**Why 0.32 N of grip?** It is not a specification, it is what the flexure produces: 2.46 N/mm × 0.13 mm
+preload, ±0.06 N over the ±25 µm die length tolerance. It was chosen from the friction margin: at
+µ 0.1–0.3 the two contacts carry 64–190 mN against a 1.4 mN die weight, 0.7 mN of transfer inertia and
+up to 0.19 N of pad adhesion at release. The upper side of the window is far away: 0.3 MPa on the band,
+2 MPa Hertz at the R30 crown (PEEK on LN), no measurable bending of the die. So the acceptable window
+is roughly 0.1–1 N, the blade is a starting point inside it, and the knobs are blade thickness and the
+preload shim. The rig measures what matters: pull-off force with a gauge die, the slip force on the
+chuck with residual adhesion, and end-face inspection after 1000 cycles for marks.
+
+**Why blow off before capture?** The earlier sequence was wrong and is corrected above (§3.4): a
+"few kPa" through the pad holes under a free die is 0.1–0.2 N against 1.4 mN of weight. The die is
+now gripped while the vacuum still holds it, then the line is vented, then an optional ≤ 0.5 kPa
+(≤ 22 mN, a tenth of the grip's friction capacity) breaks the seal, and the lift is slow. If adhesion
+still wins, the noses slip once and the die-present check stops the sequence; nothing can lift or
+rotate the die while the jaws and the pads bound it.

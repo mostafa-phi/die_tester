@@ -66,6 +66,44 @@ two Ø3 dowels) and are exported per part; the printing and finishing instructio
 | `tray_deck_6061` | flat 6 mm deck on the Y table plate; two Ø3 m6 dowel pins 3.0 mm proud locate the tray (round hole in the −X rim, 4.5 mm slot along X in the +X rim, 0.05 mm clearance per side; `tray.datum_pins()`), gravity holds it | 4 × Ø4.5 counterbored from the top + 2 × Ø3 dowels (table pattern); 2 × Ø3 H7 pin holes |
 | `nanomax_riser_6061` (×2) | 25 mm plate under each NanoMax | 16 × Ø6.6 through on the 25 mm grid (M6 bolts through the stage slots into the table) |
 
+The arm end plate is extended from the gripper interface (X −56) to X −94 in the vertical layout to carry the tray
+camera (next section); the `_h` layout keeps the short plate and has no camera yet.
+
+## Tray camera on the arm (`SN` in `model.py`, envelopes in `common.SENSORS`)
+
+![gripper with sensors](renders/station_sensors_iso.png)
+![along Y](renders/station_sensors_front.png)
+
+The gripper is blind by itself; a small camera on the arm end plate makes the tray survey an X-Y raster with the
+transport axes at the +8 mm traverse height (`docs/pick_and_place_design.md` §3.5, §3.6):
+
+| Sensor | Part | Where (gripper frame) | What it gives |
+|---|---|---|---|
+| Camera | **Basler dart daA1440-220um S-mount** (IMX273 global shutter 1440 × 1080, 3.45 µm, USB3, pypylon, 15 g) + 12 mm M12 lens on a 3 mm spacer ring (a board lens is sold focused near infinity with a 100–200 mm minimum object distance; 3.3 mm of extension focuses it at 56 mm, magnification 0.28, depth of field ≈ 1 mm at f/4) | hung under the end plate by its four board holes, optical axis 76 mm behind the die origin on the pick line (X −76, Y 3), lens front 36 above the jaws' die-bottom plane | at the traverse height a tray die top is 55.5 mm away: field 18 × 14 mm, 12.5 µm/px, one pocket per frame. Pocket occupied / empty, die orientation from a fiducial, chipped corners, the die's Y offset in the pocket to ±0.05 mm so the pick can be corrected, and the die's height from its apparent size (a 0.1 mm Z change scales the 800-pixel die image by 1.4 px; ±0.02 mm with sub-pixel edges after a one-time lens calibration). Column 0 is imaged with the jaws at die X −19 (inside the exchange envelope), the far column at −131 |
+
+The camera body (X −91…−61, Y −12…18, Z 50…70, lens to Z 36) sits between the arm bar and the actuator, 7.4 mm from the gripper
+bracket's top plate and 21 mm from the actuator body; nothing is added near the jaws. At the nest it is 63 mm above the
+input NanoMax and clear of the holders and the objective; at the far column it is beside the tower (no Y overlap) and
+50 mm above the deck (`checks.txt`, "tray sensors" lines). Added mass ≈ 0.05 kg. The USB3 micro-B cable runs along the
+arm bar to the tower.
+
+**Laser displacement sensor: modelled and rejected.** A Panasonic HG-C1030 (30 ± 5 mm, 10 µm; 20 × 44 × 25 mm, 35 g)
+on a 60 mm drop bracket was placed beside the actuator (`SN["laser"] = True` re-creates it: beam 61 mm behind the jaws,
+emitting face 10 mm above the die-bottom plane so the ledge plane is at its reference at the traverse height). It
+cleared everything (5.7 mm to the gripper bracket) but is as large as the actuator itself, hangs 60 mm below the plate
+beside the jaws, and would ride 61 mm from the jaws on the same rails, so it cannot see the rail-pitch part of the jaw
+height error anyway. Z across the tray is handled instead by a machined deck, an SLA or machined tray, the pins, a
+touch-off per tray type with the jaws, the camera's size-based height check and a ±0.15 mm pick window
+(`docs/pick_and_place_design.md` §3.5). Alternatives looked at: Keyence IL-030 + IL-1000 (1 µm, ~3× the price,
+separate amplifier, same size head), Micro-Epsilon optoNCDT 1220-10 (3.7 µm, €470+, 46 × 40 mm body); no
+displacement sensor in the 10 µm class is much smaller than 20 × 40 mm, because the triangulation baseline sets the size.
+
+**Envelopes, not vendor geometry yet.** The dart body is the manufacturer's outline (29.3 × 29 × 19.9); its
+mounting-hole pattern (assumed 4 × M2 on 22 × 22) and USB plug position are **assumptions** flagged in
+`common.SENSORS`; place the Basler STEP in `cad/vendor` and re-check before the plate holes are made. Camera
+alternatives: FLIR Blackfly S board-level (29 × 29 × 30, $371), Arducam IMX296 UVC module (~$120, no SDK); the dart has
+the smallest housing and a Python SDK.
+
 ## Movement pattern (one exchange)
 
 Coordinates are X-table centre / Z-table height of the arm bar / Y-stage pocket position.

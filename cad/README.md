@@ -15,7 +15,10 @@ Frame, die, contact rules and shared helpers are in `common/`; the rules for wor
 ## Build
 
 ```bash
-python cad/build.py            # gripper (+ _h) -> nest -> tray -> station (+ _h) + renders, writes build_manifest.json
+python cad/build.py            # incremental: gripper (+ _h) -> nest -> tray -> station (+ _h) + renders; unchanged
+                               # components are skipped; writes build_manifest.json
+python cad/build.py --all      # rebuild everything (after adding a vendor STEP)
+python cad/build.py --fast     # iteration: small "simple" renders, manifest not written
 python cad/build.py --check    # exit 1 if any source changed since the last build or a tracked output is missing / edited
 ```
 

@@ -53,6 +53,46 @@ FIBER = dict(
 OBJ_WD, OBJ_DIA, TUBE_DIA = 20.0, 34.0, 40.0
 
 # ----------------------------------------------------------------------------
+# Tray sensors carried on the arm end plate (cad/station places them; docs/pick_and_place_design.md 3.5 says what they do).
+# Envelopes from the manufacturers' published outlines; hole patterns and window positions are ASSUMED where the drawing
+# was not available and must be confirmed against the vendor STEP (cad/vendor) before the bracket is made.
+# ----------------------------------------------------------------------------
+SENSORS = dict(
+    # Panasonic HG-C1030 CMOS laser displacement sensor: 30 mm reference, +/-5 mm range, 10 um repeatability, spot dia 50 um,
+    # 0-5 V analog + NPN, 12-24 V, 35 g, die-cast body 20 x 44 x 25, two M3 through holes, 5-core cable (2 m).
+    hgc1030=dict(w=20.0, l=44.0, h=25.0,          # width (X here), length along the emitting face (Y here), height along the beam (Z)
+                 beam_from_end=12.0,               # ASSUMED: beam exits the 20 x 44 face 12 mm from one end (laser window); confirm
+                 holes=(3.2, 18.0, 12.5),          # ASSUMED: 2 x dia 3.2 through the 20 mm width, 18 apart along the length, 12.5 above the
+                                                   # emitting face (the manual gives the M3 screws and the 18 mm); confirm
+                 ref=30.0, span=5.0, repeat=0.010, mass=35.0),
+    # Basler dart daA1440-220um S-mount: 1/2.9" IMX273 global shutter 1440 x 1080, 3.45 um pixels, USB3 micro-B, 15 g.
+    # Geometry MEASURED on the manufacturer STEP (cad/vendor/basler_dart_daA1440_smount.step, drawing IB102744 rev 02): housing
+    # 29 x 29 (29.3 with the USB shell peeking out one side), lens ring dia 16.3 protruding 5.9 in front of the housing front face
+    # (M12 x 0.5 thread 7.4 deep), housing 9.5 deep behind the front face, USB micro-B socket on the back near one edge (plug inserts
+    # sideways), 4 x dia 2.2 through holes on a 22.4 square (M2 screws). Mounted as Basler intends: front face against the bracket
+    # (here the TOP of the arm end plate, ring down through a dia 17 hole). Lens: 16 mm M12 for 1/2.5" sensors on a 4 mm M12 spacer
+    # ring: a board lens is sold focused near infinity (100-200 mm minimum object distance) and the extension that focuses it at
+    # distance d is f^2 / (d - f) = 4.3 mm at 75 mm. Magnification 0.27, field 19 x 14 mm, 13 um/px, depth of field ~1.5 mm at f/4.
+    dart=dict(file="basler_dart_daA1440_smount.step",
+              w=29.3, l=29.0, body_h=9.5,          # housing behind its front face (X, Y, Z here)
+              ring_d=16.3, ring_len=5.9,           # lens ring in front of the front face (goes through the plate)
+              stub=(4.1, 3.2, 4.4, 6.3, 10.1),     # USB socket shell on the back: X size, Y size, height above the back, offsets of its
+                                                   # centre from the housing centre (+x, +y in the file frame; the plug inserts along +x)
+              holes=(2.2, 22.4),                   # 4 x dia 2.2 through on 22.4 x 22.4 (drawing) -> M2 tap-drill 1.6 in the plate
+              file_front_z=-8.0, file_usb_side="+x",   # file frame: front face plane, ring toward -z, USB toward +x
+              lens_d=14.0, lens_out=16.0,          # 16 mm M12 lens + 4 mm spacer: dia 14 envelope, front 16 beyond the ring front
+              px=0.00345, sensor=(4.97, 3.73), f=16.0, spacer=4.0, mass=15.0 + 20.0),
+)
+
+
+def sensor_fov(wd, f=None, sensor=None, px=None):
+    """(field width, field height, um per pixel) of the dart + lens at working distance wd (thin lens; lens front ~ f from the pupil)."""
+    d = SENSORS["dart"]
+    f = f or d["f"]; sensor = sensor or d["sensor"]; px = px or d["px"]
+    m = f / max(wd - f, 0.1)                        # magnification for an object wd from the front principal plane (thin lens)
+    return sensor[0] / m, sensor[1] / m, px / m * 1000.0
+
+# ----------------------------------------------------------------------------
 # Bench levels: the optical-table plane follows from the fiber stages (NanoMax 300 deck + platform + holder)
 # putting the fiber axis at the die-top height. Everything under the die (nest stack) is built up from TABLE_Z.
 # ----------------------------------------------------------------------------

@@ -15,6 +15,7 @@ for redistribution) and are **tracked in this repository** since 2026-09-07 so t
 | `smc_MHZ2-6D.step` | SMC MHZ2-6D parallel gripper (drawn open) | smcworld.com CAD library (SMC account), export STEP AP214 from the SolidWorks file |
 | `suruga_KXC04015-C.step` | Suruga KXC04015-C X stage under the nest (4 solids: base, table, motor, coupling+cable) | Suruga CAD download (account; user-supplied). Placed by `cad/nest` `kxc04015_vendor()` when present |
 | `misumi_RMPG40W-N.step` | MISUMI RMPG40W-N motorized worm-gear rotary, horizontal table (5 solids: body with worm housing, motor and straight cable; table plate; three M3 fixing bolts). Placed by `cad/nest` `rmpg40w_vendor()` under the X stage; the cable is cut after a 40 mm lead-out | MISUMI CAD download (CADENAS export, user-supplied) |
+| `basler_dart_daA1440_smount.step` | Basler dart USB3 S-mount Gen2 housing (daA1440-220um; drawing IB102744 rev 02, one solid: housing + lens ring + USB shell) | baslerweb.com product page, CAD download (user-supplied Sept 2026) |
 | `misumi_RMPG60ZC-N.step` | MISUMI RMPG60ZC-N, the vertical-table ("ZC") type: rotation axis horizontal. **Not used** (superseded by the RMPG40W-N) | MISUMI CAD download |
 
 Frames and the split into fixed / moving solids are handled in `cad/station/model.py` (`nanomax()`,

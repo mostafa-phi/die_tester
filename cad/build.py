@@ -2,9 +2,16 @@
 """
 Build every CAD component in dependency order and keep the folders synchronized.
 
-    python cad/build.py                 gripper (vertical + horizontal) -> nest -> tray -> station (default + horizontal), then renders.
-                                        Manufacturer STEP from cad/vendor (git-ignored) is placed wherever the file exists; a clone
-                                        without the files gets the envelope build and the same checks.
+    python cad/build.py                 incremental: gripper (vertical + horizontal) -> nest -> tray -> station (default +
+                                        horizontal), then renders. A component whose sources (its model.py, everything
+                                        upstream of it, cad/common, build.py) are unchanged since the last full build and
+                                        whose tracked outputs still match the manifest is skipped. Manufacturer STEP from
+                                        cad/vendor is placed wherever the file exists (a clone without the files gets the
+                                        envelope build and the same checks); after adding a vendor file run --all once.
+    python cad/build.py --all           rebuild everything regardless
+    python cad/build.py --fast          iteration mode: same incremental build, renders at the "simple" profile (1200 px).
+                                        The manifest is NOT updated: run a normal build before committing (it re-renders
+                                        only what changed).
     python cad/build.py --no-render     skip the PNG renders (cadgen step snapshot)
     python cad/build.py --only nest     one component (its dependencies are NOT rebuilt; use for quick iteration only)
     python cad/build.py --check         no build: exit 1 if any model source changed since the last full build or a
@@ -13,8 +20,10 @@ Build every CAD component in dependency order and keep the folders synchronized.
 Why one entry point: the nest imports the gripper (its checks use the jaws), the tray imports the gripper,
 the station imports all three. A change in cad/common or in one model.py silently invalidates the STEP,
 checks and renders of every component downstream, so partial rebuilds are the way folders drift apart.
-This script rebuilds everything and records the sha256 of every source and output in build_manifest.json;
---check compares the tree with that manifest.
+This script rebuilds what is stale in dependency order and records the sha256 of every source and output in
+build_manifest.json; --check compares the tree with that manifest. The two layout passes of the gripper and the
+station always run in parallel (they write disjoint files), the renders four at a time except the big station assembly
+views, which run one at a time (each holds about 2 GB).
 """
 from __future__ import annotations
 import argparse
@@ -25,6 +34,7 @@ import shutil
 import subprocess
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 MANIFEST = os.path.join(ROOT, "build_manifest.json")
@@ -69,13 +79,19 @@ RENDERS = [
     ("station", "arm_6061.step", "station_arm_iso.png", "iso"),
     ("station", "tray_deck_6061.step", "station_tray_deck_iso.png", "iso"),
     ("station", "x_axis_riser_6061.step", "station_x_riser_iso.png", "iso"),
+    ("station", "gripper_with_sensors.step", "station_sensors_iso.png", "iso"),
+    ("station", "gripper_with_sensors.step", "station_sensors_front.png", "front"),
+    ("station", "gripper_with_sensors.step", "station_sensors_side.png", "90:20"),
 ]
 # outputs of earlier build layouts that a rebuild must remove (so the tree only holds what build.py produces)
 STALE = ["station/checks_vendor.txt", "station/checks_vendor_h.txt", "station/renders/station_vendor_iso.png",
          "station/renders/station_vendor_plan.png", "station/renders/station_vendor_front.png", "station/renders/station_vendor_side.png",
          "station/renders/station_vendor_h_iso.png", "station/renders/station_vendor_h_side.png", "station/STEP/station_assembly_vendor.step",
          "station/STEP/station_assembly_vendor_h.step", "nest/STEP/nest_module_assembly_vendor.step",
-         "nest/STEP/nest_adapter_kb_rpg.step", "nest/STEP/nest_adapter_rpg_kxc.step"]
+         "nest/STEP/nest_adapter_kb_rpg.step", "nest/STEP/nest_adapter_rpg_kxc.step",
+         "station/STEP/laser_drop_bracket_6061.step", "station/STL/laser_drop_bracket_6061.stl", "station/renders/station_laser_bracket_iso.png"]
+# the two layout passes of these components write disjoint files and run in parallel
+TWO_PASS = {"gripper": [["--horizontal"]], "station": [["--horizontal"]]}
 
 
 def sha(path):
@@ -106,35 +122,72 @@ def outputs_of(comp):
     return out
 
 
-def run(cmd, cwd=None, quiet=False):
+def load_manifest():
+    return json.load(open(MANIFEST)) if os.path.exists(MANIFEST) else None
+
+
+def upstream_sources(comp):
+    """Sources whose change invalidates comp's model outputs: common, its own model.py and every model.py before it.
+    (build.py itself is hashed into the manifest for --check but does not stale the models; a changed RENDERS list shows
+    up as a missing or untracked render.)"""
+    idx = COMPONENTS.index(comp)
+    return ["common/__init__.py"] + [f"{c}/model.py" for c in COMPONENTS[:idx + 1]]
+
+
+def is_current(comp, m):
+    """True if comp's sources are unchanged since the manifest and all its tracked outputs match it."""
+    if m is None:
+        return False
+    for s in upstream_sources(comp):
+        p = os.path.join(ROOT, s)
+        if not os.path.exists(p) or m["sources"].get(s) != sha(p):
+            return False
+    tracked = {rp: h for rp, h in m["outputs"].items() if rp.startswith(comp + "/")}
+    if not tracked:
+        return False
+    for rp, h in tracked.items():
+        p = os.path.join(ROOT, rp)
+        if not os.path.exists(p) or sha(p) != h:
+            return False
+    for p in outputs_of(comp):
+        rp = rel(p)
+        if not is_ignored(rp) and rp not in tracked:
+            return False
+    return True
+
+
+def run_passes(comp, extras):
+    """Run model.py once per argument list, in parallel; print the interesting lines of each; raise on failure."""
     t0 = time.time()
-    r = subprocess.run(cmd, cwd=cwd, text=True, capture_output=True)
-    if r.returncode != 0:
-        print(r.stdout[-4000:]); print(r.stderr[-4000:])
-        raise SystemExit(f"FAILED ({r.returncode}): {' '.join(cmd)}")
-    if not quiet:
-        tail = [ln for ln in r.stdout.splitlines() if "OVERLAP" in ln or "CHECK" in ln or ln.startswith("wrote")]
-        for ln in tail:
-            print("    " + ln)
-    print(f"    {time.time() - t0:5.1f} s")
-    return r
+    procs = []
+    for extra in extras:
+        print(f"[{comp}] {' '.join(extra)}")
+        procs.append((extra, subprocess.Popen([PY, os.path.join(ROOT, comp, "model.py")] + extra, text=True,
+                                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)))
+    failed = False
+    for extra, pr in procs:
+        out, err = pr.communicate()
+        if pr.returncode != 0:
+            print(out[-4000:]); print(err[-4000:]); failed = True
+            continue
+        for ln in out.splitlines():
+            if "OVERLAP" in ln or "CHECK" in ln or ln.startswith("wrote"):
+                print(f"    [{comp} {' '.join(extra)}] {ln}")
+    print(f"    {comp}: {time.time() - t0:5.1f} s")
+    if failed:
+        raise SystemExit(f"FAILED: {comp}")
 
 
-def build(comp, extra):
-    print(f"[{comp}] {' '.join(extra) or ''}")
-    run([PY, os.path.join(ROOT, comp, "model.py")] + extra)
-
-
-def render(comp, step, png, camera):
+def render(comp, step, png, camera, fast=False):
     src = os.path.join(ROOT, comp, "STEP", step)
     dst = os.path.join(ROOT, comp, "renders", png)
     if not os.path.exists(src):
         return False
     if shutil.which("cadgen") is None:
         print("    cadgen not on PATH: skipping renders"); return False
-    profile = "presentation"
-    r = subprocess.run(["cadgen", "step", "snapshot", src, dst, "--camera", camera, "--size-profile", profile, "--json"],
-                       text=True, capture_output=True, cwd=os.path.dirname(src))
+    cmd = ["cadgen", "step", "snapshot", src, dst, "--camera", camera, "--json"]
+    cmd += ["--size-profile", "simple", "--width", "1200"] if fast else ["--size-profile", "presentation"]
+    r = subprocess.run(cmd, text=True, capture_output=True, cwd=os.path.dirname(src))
     ok = r.returncode == 0 and os.path.exists(dst)
     print(f"    {'ok ' if ok else 'FAILED'} {comp}/renders/{png}")
     if not ok:
@@ -156,9 +209,9 @@ def write_manifest(args):
 
 
 def check():
-    if not os.path.exists(MANIFEST):
+    m = load_manifest()
+    if m is None:
         print("cad: no build_manifest.json - run `python cad/build.py`"); return 1
-    m = json.load(open(MANIFEST))
     bad = []
     for s in SOURCES:
         p = os.path.join(ROOT, s)
@@ -193,30 +246,44 @@ def main():
     ap.add_argument("--no-render", action="store_true")
     ap.add_argument("--only", choices=COMPONENTS)
     ap.add_argument("--check", action="store_true")
+    ap.add_argument("--all", action="store_true", help="rebuild every component even if unchanged")
+    ap.add_argument("--fast", action="store_true", help="iteration: simple 1200 px renders, manifest not updated")
     a = ap.parse_args()
     if a.check:
         raise SystemExit(check())
-    comps = [a.only] if a.only else COMPONENTS
     t0 = time.time()
     for rel_ in STALE:
         try:
             os.remove(os.path.join(ROOT, rel_))
         except OSError:
             pass
+    m = load_manifest()
+    comps = [a.only] if a.only else COMPONENTS
+    built = []
     for comp in comps:
-        build(comp, [])
-        if comp in ("gripper", "station"):
-            build(comp, ["--horizontal"])
-    if not a.no_render:
-        print("[renders]")
-        for comp, step, png, cam in RENDERS:
-            if comp in comps:
-                render(comp, step, png, cam)
-    if a.only:
-        print(f"partial build ({a.only}) in {time.time() - t0:.0f} s - manifest NOT updated; run a full build before committing")
+        if not a.all and not a.only and is_current(comp, m):
+            print(f"[{comp}] unchanged (sources and outputs match the manifest): skipped")
+            continue
+        run_passes(comp, [[]] + TWO_PASS.get(comp, []))
+        built.append(comp)
+    if not a.no_render and built:
+        print("[renders]" + (" (fast: simple profile, 1200 px)" if a.fast else ""))
+        jobs = [(c, s, p, cam) for c, s, p, cam in RENDERS if c in built]
+        # a snapshot of the 100 MB station assembly holds ~2 GB (cadgen + Chromium); those run one at a time, the rest four abreast
+        def heavy(j):
+            src = os.path.join(ROOT, j[0], "STEP", j[1])
+            return os.path.exists(src) and os.path.getsize(src) > 20 * 1024 * 1024
+        light, big = [j for j in jobs if not heavy(j)], [j for j in jobs if heavy(j)]
+        with ThreadPoolExecutor(max_workers=4) as ex:
+            list(ex.map(lambda j: render(*j, fast=a.fast), light))
+        for j in big:
+            render(*j, fast=a.fast)
+    if a.only or a.fast:
+        why = f"partial build ({a.only})" if a.only else "fast build"
+        print(f"{why} in {time.time() - t0:.0f} s - manifest NOT updated; run `python cad/build.py` before committing")
         return
     write_manifest([x for x in sys.argv[1:]])
-    print(f"full build in {time.time() - t0:.0f} s")
+    print(f"full build in {time.time() - t0:.0f} s ({', '.join(built) if built else 'nothing rebuilt'})")
 
 
 if __name__ == "__main__":

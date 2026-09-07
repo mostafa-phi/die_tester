@@ -23,6 +23,8 @@ curl -sSL -A "$UA" -o thorlabs_KB1X1.step \
 #   T2042 plate for the Oriental Motor AZM46 steppers). The A2040 plate in the CAD has the same outline, so the files serve.
 #   The Velmex BiSlide files of the earlier layout (velmex_MN10-*.step) are no longer placed.
 
+# --- Basler dart daA1440-220um S-mount: STEP from the product page "Downloads" (Basler account) ---------
+#   save as: basler_dart_daA1440_smount.step   (downloaded by the user, Sept 2026; "Basler dart USB3 S-Mount Gen2 v02")
 # --- SMC MHZ2-6D-M9N: CAD needs a (free) SMC account since March 2026 -------------------------------
 #   https://www.smcworld.com/cadlib/en/   or   https://www.smc.eu/en-gb/products/engineering-tools/3d-product-libraries
 #   save as: smc_MHZ2-6D.step   (downloaded by the user, Sept 2026; SolidWorks 2022 export, fingers drawn open)
