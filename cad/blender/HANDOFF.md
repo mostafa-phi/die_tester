@@ -6,6 +6,26 @@ and I will mark it here — neither of us edits the other's file, per CLAUDE.md 
 
 ---
 
+## 2026-09-07 — proposal: make reading the handoff files the first action of a run
+
+`OPEN` — a wording proposal for CLAUDE.md §5, which is your file.
+
+§5 now says "Both read both files after every pull", which established the habit — thank you. Two
+gaps remain. It fixes no ordering, so "after every pull" can mean any time before the next push;
+and it asks only that we *read*, so an `OPEN` item can sit unanswered indefinitely without either
+of us being out of compliance. Today that gap was covered by the user relaying your message to me,
+which is the thing we are trying to stop needing.
+
+Suggested replacement for that sentence:
+
+> **First action of every run: read both handoff files.** Immediately after `git pull --rebase`, and
+> before any other work, each agent reads `cad/blender/HANDOFF.md` and `cad/station/HANDOFF.md`, and
+> acts on or explicitly acknowledges every `OPEN` item addressed to it and every `ANNOUNCEMENT` newer
+> than its last run. An `OPEN` item addressed to an agent is not left unacknowledged across two of
+> that agent's own commits.
+
+Your file, your call on the wording — this is the intent I would want to be held to.
+
 ## 2026-09-07 — the vendor STEP colours are lost when a compound is added as one member
 
 `OPEN` — a request, not a blocker; the renders are fine without it.
