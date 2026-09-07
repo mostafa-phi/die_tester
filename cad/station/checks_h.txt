@@ -7,7 +7,7 @@ transport: 3 x MISUMI LX2005CG-B1 (cover, low-particulate grease, lead 5, 5 um r
   X: L 300 (stroke 236.5), rail X -375..-75 at Y -140, motor to X -534; block centre nest -111.0 (+1.7 push) -> far column -318.0: used 208.7; limits -343.3..-106.8 -> margins 25.3 / 2.5  OK 
   Y: L 200 (stroke 136.5), rail Y -97..103 at X -146, motor toward +Y to Y 262; rows +/-48.75 about Y 3: used 97.5; limits -65.2..71.2 -> margin 19.5  OK 
   Z: L 100 (stroke 36.5), rail Z 0.2..100.2, motor up to Z 259; block centre nest 46.5, +8 lift, tray 34.5: used 20.0; limits 32.0..68.5 -> margins 2.5 / 14.0  OK 
-  X block moment: tower 1.7 kg at 56 mm above the block -> Ma 0.94 N.m of 27 allowable; arm + gripper 0.45 kg at 143 mm -> Mc 0.63 N.m of 93  OK 
+  X block moment: tower 1.8 kg at 56 mm above the block -> Ma 0.99 N.m of 27 allowable; arm + gripper 0.45 kg at 143 mm -> Mc 0.63 N.m of 93  OK 
   exchange time: X 207 mm at 200 mm/s with 25 mm ramps ~1.3 s each way; Z moves 8 / 20 mm at 50 mm/s
 
 clearances vs boxes (AABB separation, mm; negative = overlap):

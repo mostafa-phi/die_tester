@@ -83,8 +83,9 @@ friction, and the backside takes 0.19 N), but the 0.05 mm drop is the nominal.
 | 1 | Z down to pad top + 0.05 mm with the die's +X end face 0.2 mm short of the stop pads | corner guards 0.6 mm outside the facets, X guard 0.4 mm behind the near end |
 | 2 | Jaws open; die drops 0.05 mm onto the lapped pad | |
 | 3 | Gripper X +1.7 mm: the open near nose meets the −X end face, slides the die 0.2 mm onto the two +X pads and overtravels 0.10 mm; the blade limits the push to 0.25 N | the two pads (Y 0.6–1.2 and 4.8–5.4) square a yawed die: one pad touches first and the push rotates the die onto both, with ledge-level friction on the pad |
-| 4 | Chuck vacuum on; vacuum switch must read "seated" | seat detection; a die that stuck on the pad short of the pads is caught here |
-| 5 | Gripper X −1.7 mm, Z +8 mm, X out to park; camera confirms X against the pads, reads Y | |
+| 4 | Chuck vacuum on; vacuum switch must read "sealed" | flatness and presence only: a die 0.2 mm short of the pads seals just as well (the pad is 0.5 inboard of the ends), so this is not the registration check |
+| 5 | Gripper X −1.7 mm, Z +8 mm, X out to park | |
+| 6 | Registration check: the nest microscope images the +X die edge against a pad face (die stage +5 mm in X brings it under the objective) and reads the gap, nominal 0; with the blade-deflection sensor of §4 the check is also made during step 3, where the deflection must start at the pad position ±0.02 mm of X-axis travel (a die that resists anywhere else is stuck, not seated) | the "seated" signal is the microscope, or the deflection-at-position signal; the vacuum switch alone never is |
 
 ### 3.4 Pick from the chuck: the release must be positive and verified
 
@@ -224,6 +225,50 @@ up to 0.19 N of pad adhesion at release. The upper side of the window is far awa
 is roughly 0.1–1 N, the blade is a starting point inside it, and the knobs are blade thickness and the
 preload shim. The rig measures what matters: pull-off force with a gauge die, the slip force on the
 chuck with residual adhesion, and end-face inspection after 1000 cycles for marks.
+
+**How is contact with both pads detected?** Not by the vacuum: a die that stops 0.2 mm short of the pads
+is still fully on the pad island and seals. The vacuum switch reports flatness and presence only. Two
+signals give registration (§3.3 step 6). The definitive one is the nest microscope, which images the +X
+die edge against a pad face after the die stage moves the die 5 mm under the objective and reads the gap
+(nominal 0, resolution well under 1 µm at the objective's magnification). The fast one, once the
+blade-deflection sensor of §4 exists, is the push itself: the X axis reports where the blade started to
+deflect, which must be the pad position ±0.02 mm; a die that resists earlier is stuck on the pad, one
+that never resists was never in the jaws. Both are logged per exchange; the first is the acceptance
+criterion, the second the interlock that stops the sequence before the vacuum is applied.
+
+**Temperature requirements.** Not yet specified by the test plan, and they set the chuck, the sensing,
+the nearby materials and the exchange sequence, so they are listed here as the proposed default until the
+user confirms or changes them: set point 25 °C (lab ambient) for functional tests, range 15–60 °C for
+thermal characterisation; stability ±0.05 K at the thermistor over a test (TFLN resonances move by a few
+pm per K; ±0.01 K only if ring-resonator spectra are the product); settling criterion, thermistor within
+±0.05 K of the set point for 10 s before the fiber alignment starts (a 10 K step settles in about 20 s
+with a 15 × 15 mm TEC and the 0.14 g die). Handling temperature: the die's thermal mass is negligible,
+the jaws and the tray are PEEK and PPA-CF, so unloading at any set point in the range is allowed, with
+two rules: never below the dew point plus 2 K without a dry-nitrogen purge, and ramp at ≤ 2 K/s because
+LiNbO₃ is pyroelectric and charges with every temperature swing (the reason the cage and the noses are
+static-dissipative). The cage's PEEK pads expand 50 ppm/K, so a 35 K excursion moves the pad faces about
+5 µm over their 3 mm height, within the ±5 µm budget; the copper chuck and its thermistor bore, the TEC
+pocket and the wire channel in the riser are already modelled (`cad/nest`). The thermistor should be
+within 3 mm of the pad island (it is, in the neck below it) and the die-to-thermistor offset calibrated
+once with a thermocouple on a dummy die.
+
+**What establishes a successful release before a damaging slip?** The numbers as stated do not close at
+the pessimistic corner: at µ 0.1 the grip carries 64 mN and the worst adhesion case cited is 190 mN, so
+the grip alone cannot be relied on. The design closes it in three steps. First, the seal-break: venting
+plus ≤ 0.5 kPa of positive pressure through the pad holes removes the residual-vacuum term, which is the
+only adhesion mechanism of that size on a lapped, Ni-plated pad under a ground backside (capillary and
+van der Waals forces on a surface with 0.1–0.5 µm roughness are of order millinewtons); the 22 mN also
+acts upward on the die, i.e. it helps. Second, an incremental lift with verification: the Z axis lifts
+0.05 mm and the nest microscope, whose depth of field at the alignment objective is a few micrometres,
+must see the die leave focus (or its edge move); if it does not, motion stops with at most 0.05 mm of
+nose travel on the end faces, the seal-break repeats once, and the exchange aborts with the die still on
+the pad and the vacuum re-applied. That makes "one limited slip" a bounded event of 0.05 mm at 5 mm/s,
+not an accepted failure: for the prototype rig on silicon blanks it is tolerated and counted; for
+production dies the abort path is the requirement. Third, the grip window allows raising the preload:
+a 0.6 N blade doubles the capacity to 130 mN at µ 0.1, and the rig measures µ for PEEK on diced LiNbO₃
+first; if it measures below 0.2 the blade is changed before any real die is handled. The thru-beam sensor
+through the tip blocks (§4 option 3) is the on-gripper backstop: a die that slips more than 0.25 mm
+relative to the noses clears the beam and stops Z within a few milliseconds.
 
 **Why blow off before capture?** The earlier sequence was wrong and is corrected above (§3.4): a
 "few kPa" through the pad holes under a free die is 0.1–0.2 N against 1.4 mN of weight. The die is

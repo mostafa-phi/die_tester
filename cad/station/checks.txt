@@ -1,4 +1,4 @@
-VENDOR MODELS placed: misumi_LX2005CG-B1-A2040-100.step, misumi_LX2005CG-B1-A2040-200.step, misumi_LX2005CG-B1-A2040-300.step, misumi_RMPG40W-N.step, smc_MHZ2-6D.step, suruga_KXC04015-C.step, thorlabs_KB1X1.step, thorlabs_MAX313D_M.step; envelopes for everything else (the microscope and the three LX20 actuators until their STEP is supplied). AABBs include micrometers, motors, cables and switches.
+VENDOR MODELS placed: basler_dart_daA1440_smount.step, misumi_LX2005CG-B1-A2040-100.step, misumi_LX2005CG-B1-A2040-200.step, misumi_LX2005CG-B1-A2040-300.step, misumi_RMPG40W-N.step, smc_MHZ2-6D.step, suruga_KXC04015-C.step, thorlabs_KB1X1.step, thorlabs_MAX313D_M.step; envelopes for everything else (the microscope and the three LX20 actuators until their STEP is supplied). AABBs include micrometers, motors, cables and switches.
 table plane Z = -111.0 (die bottom = 0). Nest die top at 0.5; fiber axis at 0.5 via holder 20.0 above NanoMax deck
 NanoMax on 25 mm risers; X actuator riser 118.2 tall (rail bottom Z 7.2); Y actuator riser 63.0 tall (rail bottom Z -48.0)
 die stage stack: KB1X1 top -98.3 / KXC04015-C -95.3..-65.3 / spacer / RMPG40W-N -57.3..-22.3 / riser to the cage plate at -4.5; X stage travel +/-7.5, stepping +/-4; exchange at stage HOME only (fence)
@@ -7,7 +7,7 @@ transport: 3 x MISUMI LX2005CG-B1 (cover, low-particulate grease, lead 5, 5 um r
   X: L 300 (stroke 236.5), rail X -385..-85 at Y -140, motor to X -544; block centre nest -121.0 (+1.7 push) -> far column -328.0: used 208.7; limits -353.3..-116.8 -> margins 25.3 / 2.5  OK 
   Y: L 200 (stroke 136.5), rail Y -97..103 at X -146, motor toward +Y to Y 262; rows +/-48.75 about Y 3: used 97.5; limits -65.2..71.2 -> margin 19.5  OK 
   Z: L 100 (stroke 36.5), rail Z 44.2..144.2, motor up to Z 303; block centre nest 90.5, +8 lift, tray 78.5: used 20.0; limits 76.0..112.5 -> margins 2.5 / 14.0  OK 
-  X block moment: tower 1.7 kg at 56 mm above the block -> Ma 0.94 N.m of 27 allowable; arm + gripper 0.45 kg at 143 mm -> Mc 0.63 N.m of 93  OK 
+  X block moment: tower 1.8 kg at 56 mm above the block -> Ma 0.99 N.m of 27 allowable; arm + gripper 0.45 kg at 143 mm -> Mc 0.63 N.m of 93  OK 
   exchange time: X 207 mm at 200 mm/s with 25 mm ramps ~1.3 s each way; Z moves 8 / 20 mm at 50 mm/s
 
 clearances vs boxes (AABB separation, mm; negative = overlap):
@@ -90,8 +90,8 @@ clearances vs boxes (AABB separation, mm; negative = overlap):
   arm @far column (per member)     vs wafer_tray                :    61.2  OK 
   arm @far column (per member)     vs tray_deck                 :    65.0  OK 
   arm @far column (per member)     vs x_axis_rail_lx20          :    16.2  OK 
-  arm @far column (per member)     vs x_axis_plate              :   164.8  OK 
-  arm @far column (per member)     vs x_axis_motor              :   183.0  OK 
+  arm @far column (per member)     vs x_axis_plate              :   134.8  OK 
+  arm @far column (per member)     vs x_axis_motor              :   153.0  OK 
   arm @far column (per member)     vs y_axis_motor              :   147.0  OK 
   gripper mhz2_body @far col       vs wafer_tray                :    24.4  OK 
   tray pins (per member)           vs gripper near_arm @far col :     5.5  OK 
@@ -105,6 +105,34 @@ clearances vs boxes (AABB separation, mm; negative = overlap):
   gripper mhz2_body @far col       vs x_axis_rail_lx20          :   118.0  OK 
   gripper mhz2_body @far col       vs y_axis_motor              :   164.0  OK 
   gripper bracket @far col         vs y_axis_motor              :   152.0  OK 
+  tray sensors @nest (per member)  vs gripper near_arm @nest    :    35.1  OK 
+  tray sensors @nest (per member)  vs gripper mhz2_fing_near @nest:    30.5  OK 
+  tray sensors @nest (per member)  vs gripper mhz2_body @nest   :    21.4  OK 
+  tray sensors @nest (per member)  vs gripper bracket top plate @nest:     7.5  OK 
+  tray sensors @nest (per member)  vs gripper bracket vert. plate @nest:    17.5  OK 
+  tray sensors @nest (per member)  vs nanomax300_in             :    79.1  OK 
+  tray sensors @nest (per member)  vs nanomax300_out            :    79.1  OK 
+  tray sensors @nest (per member)  vs fiber_holder_in           :    61.5  OK 
+  tray sensors @nest (per member)  vs fiber_holder_out          :    61.5  OK 
+  tray sensors @nest (per member)  vs fiber_in                  :    71.5  OK 
+  tray sensors @nest (per member)  vs fiber_out                 :    71.5  OK 
+  tray sensors @nest (per member)  vs die stage stack (per member):   117.4  OK 
+  tray sensors @nest (per member)  vs microscope_arm            :    66.5  OK 
+  tray sensors @nest (per member)  vs arm bar @nest             :     5.5  OK 
+  tray sensors @nest (per member)  vs z_axis_motor @nest        :   121.3  OK 
+  tray sensors @far col (per member) vs wafer_tray                :    58.0  OK 
+  tray sensors @far col (per member) vs tray_deck                 :    50.0  OK 
+  tray sensors @far col (per member) vs tray pins (per member)    :    60.0  OK 
+  tray sensors @far col (per member) vs tower @far column (per member):    98.5  OK 
+  tray sensors @far col (per member) vs x_axis_block @far column  :   102.5  OK 
+  tray sensors @far col (per member) vs y_axis_rail_lx20          :   102.5  OK 
+  tray sensors @far col (per member) vs y_axis_block              :    96.5  OK 
+  tray sensors @far col (per member) vs y_axis_motor              :   154.5  OK 
+  tray sensors @far col (per member) vs y_stage_riser             :    90.0  OK 
+  tray sensors @far col (per member) vs x_axis_rail_lx20          :   108.5  OK 
+  tray sensors @far col (per member) vs x_axis_motor              :   146.4  OK 
+  arm end plate @far col           vs tower @far column (per member):    95.0  OK 
+  arm end plate @nest              vs nanomax300_in             :    93.0  OK 
 
 clearances vs microscope cylinders (radial or vertical, mm):
   die stage: RMPG40W motor vs microscope_column (dia 40):    97.4  OK 
@@ -144,6 +172,15 @@ clearances vs microscope cylinders (radial or vertical, mm):
   z_axis_motor @nest       vs objective (dia 34)        :   152.8  OK 
   z_axis_motor @nest       vs microscope_tube (dia 40)  :   116.9  OK 
   z_axis_motor @nest       vs microscope_column (dia 40):   163.4  OK 
+  camera_dart @nest        vs objective (dia 34)        :    49.5  OK 
+  camera_dart @nest        vs microscope_tube (dia 40)  :    46.5  OK 
+  camera_dart @nest        vs microscope_column (dia 40):   121.5  OK 
+  camera_lens @nest        vs objective (dia 34)        :    57.0  OK 
+  camera_lens @nest        vs microscope_tube (dia 40)  :    54.0  OK 
+  camera_lens @nest        vs microscope_column (dia 40):   129.0  OK 
+  camera_usb_plug @nest    vs objective (dia 34)        :    78.8  OK 
+  camera_usb_plug @nest    vs microscope_tube (dia 40)  :    75.8  OK 
+  camera_usb_plug @nest    vs microscope_column (dia 40):   150.7  OK 
 
 swept volumes nest <-> tray (after the 8 mm lift; per member) vs static objects:
   gripper band vs nanomax300_in         :    42.7  OK     arm band:    93.0  OK 
@@ -156,7 +193,7 @@ swept volumes nest <-> tray (after the 8 mm lift; per member) vs static objects:
   gripper band vs nest_rmpg40w_motor    :    35.0  OK     arm band:    96.9  OK 
   gripper band vs x_axis_rail_lx20      :   106.0  OK     arm band:    36.2  OK 
   gripper band vs x_axis_riser          :    96.0  OK     arm band:    62.7  OK 
-  gripper band vs x_axis_motor          :   193.0  OK     arm band:   183.0  OK 
+  gripper band vs x_axis_motor          :   146.4  OK     arm band:   153.0  OK 
   gripper band vs y_axis_motor          :   152.0  OK     arm band:   147.0  OK 
   gripper band vs y_axis_plate          :   133.8  OK     arm band:   128.8  OK 
   gripper band vs microscope_arm        :    42.5  OK     arm band:    34.5  OK 
@@ -164,5 +201,8 @@ swept volumes nest <-> tray (after the 8 mm lift; per member) vs static objects:
   gripper band vs microscope_tube (dia 40):     4.9  OK     arm band:     7.0  OK 
   gripper band vs microscope_column (dia 40):    44.1  OK     arm band:    82.0  OK 
 
+
+tray camera on the arm end plate (vertical layout): Basler dart daA1440 S-mount standing on the plate top, ring through a dia 17 hole, axis at die X -76 / Y 3, 16 mm M12 lens on a 4 mm spacer, lens front 56.1 above the jaws' die-bottom plane -> 75.6 to a tray die top at the +8 traverse height: field 18.5 x 13.9 mm, 13 um/px; column 0 imaged with the jaws at die X -19 (inside the exchange envelope), far column at -131; housing from the vendor STEP
+  laser displacement sensor: not fitted (rejected for size, SN['laser']); Z across the tray by touch-off per tray type, the camera's size-based height check and the +/-0.15 pick window (docs/pick_and_place_design.md 3.5)
 the gripper band sweep necessarily passes under the objective (that is the exchange); its clearance there is the
 bar height check in cad/gripper/checks.txt (tallest part 9.0 mm above die top vs WD).
