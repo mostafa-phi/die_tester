@@ -30,12 +30,13 @@ import os
 import sys
 
 import bpy
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
-from build_scene import enable_gpu, eevee_engine        # noqa: E402  (needs HERE on sys.path)
+from build_scene import (                                # noqa: E402  (needs HERE on sys.path)
+    enable_gpu, eevee_engine, frame_distance, world_corners)
 
 MM = 0.001
 
@@ -226,6 +227,53 @@ def cycle(out_col, out_row, in_col, in_row, theta_trim):
     ]
 
 
+def add_orbit_camera(degrees, first, last, aspect):
+    """A camera that circles the station over the whole cycle and ends behind it.
+
+    The camera hangs off a pivot empty standing on the machine's centroid, so rotating the pivot
+    about Z swings the camera round while it keeps looking at the same point.  Its elevation and
+    lens come from cam_iso, and its radius is the largest of the distances needed at 24 azimuths
+    around the circle, so nothing leaves the frame part-way through the turn.
+    """
+    source = bpy.data.objects["cam_iso"]
+    machine = [o for o in bpy.data.objects
+               if o.type == "MESH" and o.name != "optical_table"]
+    corners = world_corners(machine)
+    # Mean of the corners, which is also the mean of the parts' own centres; it lands at
+    # (-60, -20, 1.5) mm, essentially on the die plane between the nest and the tray.
+    target = sum(corners, Vector((0.0, 0.0, 0.0))) / len(corners)
+
+    # cam_iso's own offset from the target sets the elevation; frame_distance wants a direction
+    # pointing from the target out towards the camera, which is exactly that offset.
+    base = source.matrix_world.translation - target
+    radius = max(frame_distance(source.data, target, corners, swung, aspect)
+                 for swung in _azimuths(base, 24))
+
+    pivot = empty("rig_orbit")
+    pivot.location = target
+    camera = source.copy()
+    camera.data = source.data.copy()
+    camera.name = "cam_orbit"
+    camera.data.name = "cam_orbit"
+    bpy.context.scene.collection.objects.link(camera)
+    camera.location = target + base.normalized() * radius
+    camera.rotation_euler = base.to_track_quat("Z", "Y").to_euler()
+    camera.parent = pivot
+    camera.matrix_parent_inverse = pivot.matrix_world.inverted()
+
+    keyframe(pivot, first, target, (0.0, 0.0, 0.0))
+    keyframe(pivot, last, target, (0.0, 0.0, math.radians(degrees)))
+    print("[anim] orbit camera: %+.0f deg over %d frames, radius %.0f mm"
+          % (degrees, last - first, radius * 1000))
+    return camera
+
+
+def _azimuths(direction, count):
+    """`direction` swung around Z in `count` even steps, keeping its elevation."""
+    return [Matrix.Rotation(2.0 * math.pi * i / count, 4, "Z") @ direction
+            for i in range(count)]
+
+
 def keyframe(obj, frame, location=None, rotation=None):
     if location is not None:
         obj.location = location
@@ -340,7 +388,11 @@ def main():
     ap.add_argument("--engine", choices=("cycles", "eevee"), default="cycles",
                     help="cycles resolves the shallow surface detail; eevee is the fast draft")
     ap.add_argument("--samples", type=int, default=48)
-    ap.add_argument("--camera", default="nest")
+    ap.add_argument("--camera", default="nest",
+                    help="iso, plan, side, front, nest, or orbit")
+    ap.add_argument("--orbit", type=float, default=180.0,
+                    help="degrees the orbit camera turns over the cycle; 180 ends behind the "
+                         "station, negative goes the other way round")
     ap.add_argument("--resolution", type=int, nargs=2, default=(1280, 854))
     args = ap.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])
 
@@ -352,6 +404,8 @@ def main():
     end = animate(rig, (die_out, die_in),
                   cycle(args.out_column, args.out_row,
                         args.in_column, args.in_row, args.theta_trim))
+    add_orbit_camera(args.orbit, bpy.context.scene.frame_start, end,
+                     args.resolution[0] / args.resolution[1])
     smooth_all()
     bpy.ops.wm.save_as_mainfile(filepath=args.output)
     print("[anim] %d frames (%.1f s at %d fps) -> %s"

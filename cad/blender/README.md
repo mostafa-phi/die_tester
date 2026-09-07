@@ -73,6 +73,15 @@ and the fiber tips with a little transmission).
 close-up on the exchange. All are framed on the machine rather than on the 940 × 560 mm optical
 table, so the table is cropped at the edges.
 
+`animate_exchange.py` adds a sixth, `cam_orbit`, which circles the station once over the cycle and
+finishes behind it — `--orbit` sets the turn in degrees (180 by default, negative to go the other
+way round). It hangs off a pivot empty standing on the machine's centroid, at (−60, −20, 1.5) mm,
+essentially the die plane between the nest and the tray, so turning the pivot about Z swings the
+camera while it keeps looking at the same point. Elevation and lens come from `cam_iso`. The radius
+is the largest of the distances needed at 24 azimuths around the circle — 1502 mm — so the machine
+never leaves the frame mid-turn; the cost is that it looks a little small at the azimuths that would
+have allowed a closer stand-off.
+
 **Rendering** is Cycles on the GPU when OptiX or CUDA is available; both scripts call
 `enable_gpu()` and report which device they picked, because Cycles' device choice lives in user
 preferences rather than in the `.blend` and so has to be made again in every background run.
