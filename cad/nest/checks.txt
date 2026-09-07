@@ -123,7 +123,7 @@ cage blocks vs the gripper during the push (jaws open, +X indexed):
   Y guard +X+Y                       vs far_tip (push)            :    2.57  OK 
   Y guard +X+Y                       vs near_tip (push)           :    9.20  OK 
   Y guard +X+Y                       vs blade (push)              :   10.94  OK 
-nest vs fiber / holder envelopes (holder front 5 mm from the facet, body 25 wide, Z -8..+4):
+nest vs fiber / holder envelopes (HFC005 chuck dia 6.35 from 5 mm behind the facet, HFR001 rotator dia 25 from 46.9, HCS013 mount from 71):
   X guard -X-Y                       vs fiber_in                  :    1.40  OK 
   Y guard -X-Y                       vs fiber_in                  :    0.50  OK 
   X guard -X+Y                       vs fiber_in                  :    4.80  OK 
@@ -148,82 +148,136 @@ nest vs fiber / holder envelopes (holder front 5 mm from the facet, body 25 wide
   chuck block                        vs fiber_out                 :    0.50  OK 
   riser neck                         vs fiber_out                 :    4.89  OK 
   riser wide body                    vs fiber_out                 :   12.39  OK 
-  X guard -X-Y                       vs holder_in                 :    4.00  OK 
-  Y guard -X-Y                       vs holder_in                 :    4.00  OK 
-  X guard -X+Y                       vs holder_in                 :    9.80  OK 
-  Y guard -X+Y                       vs holder_in                 :   11.60  OK 
-  stop pad +X-Y                      vs holder_in                 :    4.00  OK 
-  Y guard +X-Y                       vs holder_in                 :    4.00  OK 
-  stop pad +X+Y                      vs holder_in                 :    9.80  OK 
-  Y guard +X+Y                       vs holder_in                 :   11.60  OK 
-  cage plate                         vs holder_in                 :    3.00  OK 
-  chuck block                        vs holder_in                 :    5.50  OK 
-  riser neck                         vs holder_in                 :    3.00  OK 
-  riser wide body                    vs holder_in                 :    4.00  OK 
-  X guard -X-Y                       vs holder_out                :    9.80  OK 
-  Y guard -X-Y                       vs holder_out                :   11.60  OK 
-  X guard -X+Y                       vs holder_out                :    4.00  OK 
-  Y guard -X+Y                       vs holder_out                :    4.00  OK 
-  stop pad +X-Y                      vs holder_out                :    9.80  OK 
-  Y guard +X-Y                       vs holder_out                :   11.60  OK 
-  stop pad +X+Y                      vs holder_out                :    4.00  OK 
-  Y guard +X+Y                       vs holder_out                :    4.00  OK 
-  cage plate                         vs holder_out                :    3.00  OK 
-  chuck block                        vs holder_out                :    5.50  OK 
-  riser neck                         vs holder_out                :    3.00  OK 
-  riser wide body                    vs holder_out                :    4.00  OK 
+  X guard -X-Y                       vs chuck_in                  :    4.00  OK 
+  Y guard -X-Y                       vs chuck_in                  :    4.00  OK 
+  X guard -X+Y                       vs chuck_in                  :    9.80  OK 
+  Y guard -X+Y                       vs chuck_in                  :   11.60  OK 
+  stop pad +X-Y                      vs chuck_in                  :    4.00  OK 
+  Y guard +X-Y                       vs chuck_in                  :    4.00  OK 
+  stop pad +X+Y                      vs chuck_in                  :    9.80  OK 
+  Y guard +X+Y                       vs chuck_in                  :   11.60  OK 
+  cage plate                         vs chuck_in                  :    3.00  OK 
+  chuck block                        vs chuck_in                  :    5.50  OK 
+  riser neck                         vs chuck_in                  :    3.00  OK 
+  riser wide body                    vs chuck_in                  :    9.32  OK 
+  X guard -X-Y                       vs rotator_in                :   45.90  OK 
+  Y guard -X-Y                       vs rotator_in                :   45.90  OK 
+  X guard -X+Y                       vs rotator_in                :   51.70  OK 
+  Y guard -X+Y                       vs rotator_in                :   53.50  OK 
+  stop pad +X-Y                      vs rotator_in                :   45.90  OK 
+  Y guard +X-Y                       vs rotator_in                :   45.90  OK 
+  stop pad +X+Y                      vs rotator_in                :   51.70  OK 
+  Y guard +X+Y                       vs rotator_in                :   53.50  OK 
+  cage plate                         vs rotator_in                :   44.90  OK 
+  chuck block                        vs rotator_in                :   47.40  OK 
+  riser neck                         vs rotator_in                :   44.90  OK 
+  riser wide body                    vs rotator_in                :   30.90  OK 
+  X guard -X-Y                       vs mount_in                  :   70.00  OK 
+  Y guard -X-Y                       vs mount_in                  :   70.00  OK 
+  X guard -X+Y                       vs mount_in                  :   75.80  OK 
+  Y guard -X+Y                       vs mount_in                  :   77.60  OK 
+  stop pad +X-Y                      vs mount_in                  :   70.00  OK 
+  Y guard +X-Y                       vs mount_in                  :   70.00  OK 
+  stop pad +X+Y                      vs mount_in                  :   75.80  OK 
+  Y guard +X+Y                       vs mount_in                  :   77.60  OK 
+  cage plate                         vs mount_in                  :   69.00  OK 
+  chuck block                        vs mount_in                  :   71.50  OK 
+  riser neck                         vs mount_in                  :   69.00  OK 
+  riser wide body                    vs mount_in                  :   55.00  OK 
+  X guard -X-Y                       vs chuck_out                 :    9.80  OK 
+  Y guard -X-Y                       vs chuck_out                 :   11.60  OK 
+  X guard -X+Y                       vs chuck_out                 :    4.00  OK 
+  Y guard -X+Y                       vs chuck_out                 :    4.00  OK 
+  stop pad +X-Y                      vs chuck_out                 :    9.80  OK 
+  Y guard +X-Y                       vs chuck_out                 :   11.60  OK 
+  stop pad +X+Y                      vs chuck_out                 :    4.00  OK 
+  Y guard +X+Y                       vs chuck_out                 :    4.00  OK 
+  cage plate                         vs chuck_out                 :    3.00  OK 
+  chuck block                        vs chuck_out                 :    5.50  OK 
+  riser neck                         vs chuck_out                 :    3.00  OK 
+  riser wide body                    vs chuck_out                 :    9.32  OK 
+  X guard -X-Y                       vs rotator_out               :   51.70  OK 
+  Y guard -X-Y                       vs rotator_out               :   53.50  OK 
+  X guard -X+Y                       vs rotator_out               :   45.90  OK 
+  Y guard -X+Y                       vs rotator_out               :   45.90  OK 
+  stop pad +X-Y                      vs rotator_out               :   51.70  OK 
+  Y guard +X-Y                       vs rotator_out               :   53.50  OK 
+  stop pad +X+Y                      vs rotator_out               :   45.90  OK 
+  Y guard +X+Y                       vs rotator_out               :   45.90  OK 
+  cage plate                         vs rotator_out               :   44.90  OK 
+  chuck block                        vs rotator_out               :   47.40  OK 
+  riser neck                         vs rotator_out               :   44.90  OK 
+  riser wide body                    vs rotator_out               :   30.90  OK 
+  X guard -X-Y                       vs mount_out                 :   75.80  OK 
+  Y guard -X-Y                       vs mount_out                 :   77.60  OK 
+  X guard -X+Y                       vs mount_out                 :   70.00  OK 
+  Y guard -X+Y                       vs mount_out                 :   70.00  OK 
+  stop pad +X-Y                      vs mount_out                 :   75.80  OK 
+  Y guard +X-Y                       vs mount_out                 :   77.60  OK 
+  stop pad +X+Y                      vs mount_out                 :   70.00  OK 
+  Y guard +X+Y                       vs mount_out                 :   70.00  OK 
+  cage plate                         vs mount_out                 :   69.00  OK 
+  chuck block                        vs mount_out                 :   71.50  OK 
+  riser neck                         vs mount_out                 :   69.00  OK 
+  riser wide body                    vs mount_out                 :   55.00  OK 
 holder bodies vs the gripper at the nest (jaws closed):
-  far_tip                            vs holder_in                 :    6.50  OK 
-  near_tip                           vs holder_in                 :    6.50  OK 
-  blade                              vs holder_in                 :    6.50  OK 
-  near_arm                           vs holder_in                 :    3.20  OK 
-  far_arm                            vs holder_in                 :    6.00  OK 
-  far_tip                            vs holder_out                :    6.50  OK 
-  near_tip                           vs holder_out                :    6.50  OK 
-  blade                              vs holder_out                :    6.50  OK 
-  near_arm                           vs holder_out                :    6.00  OK 
-  far_arm                            vs holder_out                :    3.20  OK 
+  far_tip                            vs chuck_in                  :    6.50  OK 
+  near_tip                           vs chuck_in                  :    6.50  OK 
+  blade                              vs chuck_in                  :    6.50  OK 
+  near_arm                           vs chuck_in                  :    3.20  OK 
+  far_arm                            vs chuck_in                  :    6.00  OK 
+  far_tip                            vs rotator_in                :   48.40  OK 
+  near_tip                           vs rotator_in                :   48.40  OK 
+  blade                              vs rotator_in                :   48.40  OK 
+  near_arm                           vs rotator_in                :   45.10  OK 
+  far_arm                            vs rotator_in                :   47.90  OK 
+  far_tip                            vs chuck_out                 :    6.50  OK 
+  near_tip                           vs chuck_out                 :    6.50  OK 
+  blade                              vs chuck_out                 :    6.50  OK 
+  near_arm                           vs chuck_out                 :    6.00  OK 
+  far_arm                            vs chuck_out                 :    3.20  OK 
+  far_tip                            vs rotator_out               :   48.40  OK 
+  near_tip                           vs rotator_out               :   48.40  OK 
+  blade                              vs rotator_out               :   48.40  OK 
+  near_arm                           vs rotator_out               :   47.90  OK 
+  far_arm                            vs rotator_out               :   45.10  OK 
 the nest moves under FIXED fibers (at station X 5) and holders: worst clearance of every moving member over stage offsets -7.5..+7.5 (device stepping +/-4, travel ends +/-7.5):
+  X guard -X+Y             vs chuck_out                 :    4.00 @-1.0  OK 
   X guard -X+Y             vs fiber_in (station X 5)    :    4.80 @+1.0  OK 
   X guard -X+Y             vs fiber_out (station X 5)   :    1.30 @+4.0  OK 
-  X guard -X+Y             vs holder_out                :    4.00 @-7.5  OK 
+  X guard -X-Y             vs chuck_in                  :    4.00 @-1.0  OK 
   X guard -X-Y             vs fiber_in (station X 5)    :    1.30 @+4.0  OK 
   X guard -X-Y             vs fiber_out (station X 5)   :    4.80 @+1.0  OK 
-  X guard -X-Y             vs holder_in                 :    4.00 @-7.5  OK 
+  Y guard +X+Y             vs chuck_out                 :    4.00 @-7.5  OK 
   Y guard +X+Y             vs fiber_in (station X 5)    :    6.60 @-7.5  OK 
   Y guard +X+Y             vs fiber_out (station X 5)   :    0.40 @-4.0  OK 
-  Y guard +X+Y             vs holder_out                :    4.00 @-7.5  OK 
+  Y guard +X-Y             vs chuck_in                  :    4.00 @-7.5  OK 
   Y guard +X-Y             vs fiber_in (station X 5)    :    0.40 @-4.0  OK 
   Y guard +X-Y             vs fiber_out (station X 5)   :    6.60 @-7.5  OK 
-  Y guard +X-Y             vs holder_in                 :    4.00 @-7.5  OK 
+  Y guard -X+Y             vs chuck_out                 :    4.00 @-2.0  OK 
   Y guard -X+Y             vs fiber_in (station X 5)    :    6.60 @-2.0  OK 
   Y guard -X+Y             vs fiber_out (station X 5)   :    0.40 @+4.0  OK 
-  Y guard -X+Y             vs holder_out                :    4.00 @-7.5  OK 
+  Y guard -X-Y             vs chuck_in                  :    4.00 @-2.0  OK 
   Y guard -X-Y             vs fiber_in (station X 5)    :    0.40 @+4.0  OK 
   Y guard -X-Y             vs fiber_out (station X 5)   :    6.60 @-2.0  OK 
-  Y guard -X-Y             vs holder_in                 :    4.00 @-7.5  OK 
+  cage plate               vs chuck_in                  :    3.00 @-7.5  OK 
+  cage plate               vs chuck_out                 :    3.00 @-7.5  OK 
   cage plate               vs fiber_in (station X 5)    :    1.89 @-7.5  OK 
   cage plate               vs fiber_out (station X 5)   :    1.89 @-7.5  OK 
-  cage plate               vs holder_in                 :    3.00 @-7.5  OK 
-  cage plate               vs holder_out                :    3.00 @-7.5  OK 
+  chuck block              vs chuck_in                  :    5.50 @-7.5  OK 
+  chuck block              vs chuck_out                 :    5.50 @-7.5  OK 
   chuck block              vs fiber_in (station X 5)    :    0.50 @-4.0  OK 
   chuck block              vs fiber_out (station X 5)   :    0.50 @-4.0  OK 
-  chuck block              vs holder_in                 :    5.50 @-7.5  OK 
-  chuck block              vs holder_out                :    5.50 @-7.5  OK 
+  riser neck               vs chuck_in                  :    3.00 @-7.5  OK 
+  riser neck               vs chuck_out                 :    3.00 @-7.5  OK 
   riser neck               vs fiber_in (station X 5)    :    4.89 @-7.5  OK 
   riser neck               vs fiber_out (station X 5)   :    4.89 @-7.5  OK 
-  riser neck               vs holder_in                 :    3.00 @-7.5  OK 
-  riser neck               vs holder_out                :    3.00 @-7.5  OK 
   riser wide body          vs fiber_in (station X 5)    :   12.39 @-7.5  OK 
   riser wide body          vs fiber_out (station X 5)   :   12.39 @-7.5  OK 
-  riser wide body          vs holder_in                 :    4.00 @-7.5  OK 
-  riser wide body          vs holder_out                :    4.00 @-7.5  OK 
   rotary body              vs fiber_in (station X 5)    :   29.19 @-7.5  OK 
   rotary body              vs fiber_out (station X 5)   :   29.19 @-7.5  OK 
-  rotary body              vs kxc04015_knob             :    5.30 @-7.5  OK 
   rotary cable             vs fiber_in (station X 5)    :   52.40 @+7.5  OK 
   rotary cable             vs fiber_out (station X 5)   :   52.40 @+7.5  OK 
-  rotary cable             vs kxc04015_knob             :    3.20 @-7.5  OK 
   rotary cable             vs kxc04015_motor            :    1.90 @-7.5  TIGHT
   rotary motor             vs fiber_in (station X 5)    :   34.40 @+7.5  OK 
   rotary motor             vs fiber_out (station X 5)   :   34.40 @+7.5  OK 
@@ -233,17 +287,15 @@ the nest moves under FIXED fibers (at station X 5) and holders: worst clearance 
   rotary worm              vs fiber_out (station X 5)   :   27.19 @-4.0  OK 
   spacer                   vs fiber_in (station X 5)    :   57.69 @-7.5  OK 
   spacer                   vs fiber_out (station X 5)   :   57.69 @-7.5  OK 
-  spacer                   vs kxc04015_knob             :    3.50 @-7.5  OK 
   stage table              vs fiber_in (station X 5)    :   65.69 @-7.5  OK 
   stage table              vs fiber_out (station X 5)   :   65.69 @-7.5  OK 
   stage table              vs kxc04015_coupling         :    3.50 @-7.5  OK 
-  stage table              vs kxc04015_knob             :    3.50 @-7.5  OK 
+  stop pad +X+Y            vs chuck_out                 :    4.00 @-7.5  OK 
   stop pad +X+Y            vs fiber_in (station X 5)    :    4.80 @-7.5  OK 
   stop pad +X+Y            vs fiber_out (station X 5)   :    0.90 @-4.0  OK 
-  stop pad +X+Y            vs holder_out                :    4.00 @-7.5  OK 
+  stop pad +X-Y            vs chuck_in                  :    4.00 @-7.5  OK 
   stop pad +X-Y            vs fiber_in (station X 5)    :    0.90 @-4.0  OK 
   stop pad +X-Y            vs fiber_out (station X 5)   :    4.80 @-7.5  OK 
-  stop pad +X-Y            vs holder_in                 :    4.00 @-7.5  OK 
 KXC04015-C vendor STEP vs the catalog envelope (station frame; the file is the record where they differ):
   base       vendor X  -26.0..  28.5 Y  -17.0..  23.6 Z  -95.3.. -70.3   envelope X  -15.0..  28.5 Y  -17.0..  23.0 Z  -95.3.. -74.3
   table      vendor X  -15.9..  25.9 Y  -17.0..  23.0 Z  -79.1.. -65.3   envelope X  -15.0..  25.0 Y  -17.0..  23.0 Z  -74.3.. -65.3
@@ -255,6 +307,6 @@ RMPG40W-N vendor STEP vs the envelope (station frame):
   motor      vendor X  -54.5.. -37.0 Y   13.1..  40.9 Z  -54.7.. -26.9   envelope X  -54.5.. -37.0 Y   13.0..  41.0 Z  -54.8.. -26.8
   cable      vendor X  -68.0.. -55.0 Y   14.5..  28.5 Z  -54.8.. -45.4   envelope X  -95.0.. -55.0 Y   14.5..  28.5 Z  -59.4.. -45.4
 fixed stack members vs the holders and fibers (both motors point -X):
-  rmpg40w_table                      vs holder_in                 :   14.30  OK 
-  rmpg40w_table                      vs holder_out                :   14.30  OK 
+  rmpg40w_body                       vs rotator_out               :   14.80  OK 
+  rmpg40w_worm                       vs rotator_out               :   14.80  OK 
 near nose face at the end of the push: X 0.10 = blade overtravel (die -X end face at X 0.00 on the pads)

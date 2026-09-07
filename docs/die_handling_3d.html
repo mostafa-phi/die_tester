@@ -131,7 +131,7 @@
         <span class="sw" style="background:#44474d"></span><span>Die stage under the nest: Suruga KXC04015-C X stage (15 mm travel) steps the die from device to device under the fixed fibers; MISUMI RMPG40W-N motorized rotary on top of it nulls the yaw measured fiducial-to-fiducial under the microscope. The stack needs 100 mm, so the fiber stages sit on 25 mm risers. The gripper meets the nest at stage home only.</span>
         <span class="sw" style="background:#3d3d3d"></span><span>Noses: 0.35 mm tall, top 0.10 mm below the die surface; the two 3 × 3 mm bars and tip blocks are the only tool parts under the objective.</span>
       </div>
-      <div class="hint">Geometry follows the CAD package (<code>cad/station</code>, <code>cad/gripper</code>, <code>cad/nest</code>, <code>cad/tray</code>; transport from the MISUMI LX20 files) and the concept study rev. 2.11. Still to measure on the bench: fiber-axis height above the NanoMax platform, objective working distance and tube diameter.</div>
+      <div class="hint">Geometry follows the CAD package (<code>cad/station</code>, <code>cad/gripper</code>, <code>cad/nest</code>, <code>cad/tray</code>; transport from the MISUMI LX20 files) and the concept study rev. 2.11. Fiber holders are the Thorlabs HCS013 mount + HFR001 rotator + HFC005 chuck on each NanoMax platform; the station stands on a Thorlabs MB6090/M breadboard with a 12 mm metrology base plate under the nest and fiber stages. Still to measure on the bench: objective working distance and tube diameter.</div>
     </div>
   </aside>
 
@@ -435,7 +435,10 @@
   // Scene 1: test station exchange (mirrors cad/station/model.py, envelope build)
   // =====================================================================
   const ST = {
-    tableZ: -111, riser: 25, gapY: 45, nanoW: 112, nanoH: 62.5, platH: 4, protr: 5,   // NanoMax on 25 mm risers (die-stage stack needs 100 mm)
+    tableZ: -111, bbTop: -123, riser: 36.5, gapY: 45, nanoW: 112, nanoH: 62.5, platH: 0, protr: 5,   // base plate top -111 (nest, NanoMax risers), breadboard top -123
+    // fiber holders (cad/common FIBER): HCS013 mount 25 x 20 x 25 at the platform's inner edge (front 71 from the facet, axis 12.5 above the
+    // platform), HFR001 rotator dia 25 x 24.1 in its front face, HFC005 chuck dia 6.35 to 5 mm from the facet
+    mountFront: 71, mountD: 20, rotLen: 24.1, chuckD: 6.35,
     // transport: three MISUMI LX2005CG-B1 actuators (cad/station/checks.txt): X L300 along X at Y -165, rail X -385..-85 with its
     // bottom at Z 7.25 on a 118 mm riser bar; Z L100 on an angle bracket on the X table (rail Z 44.25..144.25, table centre 90.5 at the
     // nest); Y L200 under the tray (rail bottom Z -48, ledges at Z -12). X table centre at the nest -121 (the arm bar starts at the
@@ -478,7 +481,8 @@
       // optical table and nest (cad/nest): KB1X1 base, T-riser (wide body below the fiber holders, 10 mm neck Y -2..8 up to the
       // cage plate), Semitron cage plate with four corner blocks (+X stop pads, -X guard, Y guards), copper chuck (block, neck to the
       // TEC, 9 x 5 lapped pad island at Z -1.5..0), TEC 15 x 15 under the neck
-      g.add(cb(-540, 220, -280, 280, tz - 12, tz, mat(0xd6dae0)));
+      g.add(cb(-671, 229, -290, 310, ST.bbTop - 12.7, ST.bbTop, mat(0xd6dae0)));                        // Thorlabs MB6090/M breadboard 600 x 900
+      g.add(cb(-80, 110, -165, 171, ST.bbTop, tz, mat(COL.stage)));                                   // metrology base plate 190 x 336 x 12
       // die stage stack (cad/nest levels()): KB1X1 12.7, adapter 3, KXC04015-C 30 (table top Z -65.3, motor section 59 toward -X, motor
       // box 4 mm above the table top), MISUMI RMPG40W-N motorized rotary 35 ON the X-stage table (body 40 x 55, axis through the die,
       // motor toward -X, long end toward +Y; rides with the stage) on an 8 mm spacer, riser 38 sq wide body on the rotary table (top Z -22.3)
@@ -517,21 +521,17 @@
       [-1, 1].forEach((s) => {
         const yIn = s < 0 ? -ST.gapY : 6 + ST.gapY;                       // inner face
         const y0 = s < 0 ? yIn - ST.nanoW : yIn, y1 = y0 + ST.nanoW;
-        g.add(cb(-51, 61, y0, y1, tz, tz + ST.riser, mat(COL.stage)));                 // 25 mm riser plate
+        g.add(cb(-51, 61, y0, y1, tz, tz + ST.riser, mat(COL.stage)));                 // 36.5 mm riser plate on the base plate
         g.add(cb(-51, 61, y0, y1, tz + ST.riser, tz + ST.riser + ST.nanoH, mat(COL.axisFixed)));
         const mv = new THREE.Group();                                      // platform + holder + fiber (moves with the stage's Y axis)
         mv.add(cb(-41, 51, y0 + 6, y1 - 6, tz + ST.riser + ST.nanoH, tz + ST.riser + ST.nanoH + ST.platH, mat(COL.gantry)));
         const pt = tz + ST.riser + ST.nanoH + ST.platH;
-        // holder envelope (cad/common FIBER): tip 5 mm beyond the holder front, body 25 wide, Z -8..+4, 20 long
-        if (s < 0) {
-          mv.add(cb(-4, 14, y1 - 14, y1 - 6, pt, 4.5, mat(COL.clamp)));
-          mv.add(cb(1, 9, y1 - 8, -ST.protr - 20 + 1, -1, 2, mat(COL.arm)));
-          mv.add(cb(-7.5, 17.5, -ST.protr - 20, -ST.protr, -8, 4, mat(COL.clamp)));
-        } else {
-          mv.add(cb(-4, 14, y0 + 6, y0 + 14, pt, 4.5, mat(COL.clamp)));
-          mv.add(cb(1, 9, 6 + ST.protr + 20 - 1, y0 + 8, -1, 2, mat(COL.arm)));
-          mv.add(cb(-7.5, 17.5, 6 + ST.protr, 6 + ST.protr + 20, -8, 4, mat(COL.clamp)));
-        }
+        // Thorlabs holder stack: HCS013 mount (base on the platform, axis at Z 0.5), HFR001 rotator, HFC005 chuck, bare fiber
+        const yf = s < 0 ? 0 : 6, mf = yf + s * ST.mountFront, rf = mf - s * ST.rotLen, ct = yf + s * ST.protr;
+        mv.add(cb(-10.5, 20.5, Math.min(mf, mf + s * ST.mountD), Math.max(mf, mf + s * ST.mountD), pt, pt + 3, mat(COL.clamp)));   // mount base + flanges
+        mv.add(cb(-7.5, 17.5, Math.min(mf, mf + s * ST.mountD), Math.max(mf, mf + s * ST.mountD), pt, pt + 25, mat(COL.clamp)));   // mount body 25 x 20 x 25
+        const rot = cyl(12.5, ST.rotLen, mat(0x8a8f96, { metalness: 0.5, roughness: 0.45 })); rot.rotation.x = Math.PI / 2; rot.position.set(5, 0.5, (mf + rf) / 2); mv.add(rot);
+        const chk = cyl(ST.chuckD / 2, Math.abs(rf - ct), mat(0xb8955a, { metalness: 0.6, roughness: 0.4 }), 24); chk.rotation.x = Math.PI / 2; chk.position.set(5, 0.5, (rf + ct) / 2); mv.add(chk);
         const fib = cyl(0.0625, ST.protr, mat(COL.fiber, { roughness: 0.3 }), 12); fib.rotation.x = Math.PI / 2;
         fib.position.set(5, 0.5, s < 0 ? -ST.protr / 2 : 6 + ST.protr / 2); mv.add(fib);
         g.add(mv); this.fibers.push({ g: mv, s });
@@ -554,8 +554,8 @@
       const cyx = ST.xAxisCy, zr = ST.xRailZ, ax = zr + 13;
       const mLx = mat(0x2d3138), mLxTab = mat(0x3f5f80), mMot = mat(0x4d5058), mPlate = mat(0x3a3f47);
       const [rx0, rx1] = ST.xRail;
-      g.add(cb(rx0, rx1, cyx - 20, cyx + 20, tz, zr, mat(COL.stage)));                                  // riser bar body
-      g.add(cb(rx0, rx1, cyx - 30, cyx + 30, tz, tz + 8, mat(COL.stage)));                              // foot flange (slots for the table bolts)
+      g.add(cb(rx0, rx1, cyx - 20, cyx + 20, ST.bbTop, zr, mat(COL.stage)));                            // riser bar body (130 tall, on the breadboard)
+      g.add(cb(rx0, rx1, cyx - 35, cyx + 35, ST.bbTop, ST.bbTop + 8, mat(COL.stage)));                  // foot flange 70 wide (slots in rows 50 apart)
       g.add(cb(rx0 - 56, rx1, cyx - 20, cyx + 20, zr, zr + 26.5, mLx));                                // rail + bracket casting
       g.add(cb(rx0 - 69, rx0 - 56, cyx - 20, cyx + 20, ax - 20, ax + 20, mPlate));                      // T2042 adapter plate
       g.add(cb(rx0 - 159, rx0 - 69, cyx - 21, cyx + 21, ax - 21, ax + 21, mMot));                       // AZM46AK stepper envelope
@@ -589,8 +589,8 @@
       // tray ledges 12 mm below the chuck pad; 8 columns along X x 14 rows along Y = 112 pockets
       const trayX0 = ST.colX[ST.cols - 1] - 11, trayX1 = ST.colX[0] + 21, trayCx = (trayX0 + trayX1) / 2, trayLenY = ST.rows * ST.rowPitch + 2.5;
       const yr = ST.yRailZ, ayx = yr + 13, yc = 3, yR0 = yc - 100, yR1 = yc + 100;                      // rail centred on the pick line
-      g.add(cb(trayCx - 20, trayCx + 20, yR0, yR1, tz, yr, mat(COL.stage)));                            // riser bar
-      g.add(cb(trayCx - 40, trayCx + 40, yR0, yR1, tz, tz + 8, mat(COL.stage)));                        // foot flange
+      g.add(cb(trayCx - 20, trayCx + 20, yR0, yR1, ST.bbTop, yr, mat(COL.stage)));                      // riser bar (75 tall, on the breadboard)
+      g.add(cb(trayCx - 40, trayCx + 40, yR0, yR1, ST.bbTop, ST.bbTop + 8, mat(COL.stage)));            // foot flange
       g.add(cb(trayCx - 20, trayCx + 20, yR0, yR1 + 56, yr, yr + 26.5, mLx));                           // rail + bracket casting
       g.add(cb(trayCx - 20, trayCx + 20, yR1 + 56, yR1 + 69, ayx - 20, ayx + 20, mPlate));
       g.add(cb(trayCx - 21, trayCx + 21, yR1 + 69, yR1 + 159, ayx - 21, ayx + 21, mMot));
@@ -626,8 +626,9 @@
       addLabel('die stage · MISUMI RMPG40W-N rotary on Suruga KXC04015-C (X ±7.5) · KB1X1', () => new THREE.Vector3(-30, tz + 50, -20));
       addLabel('fiber', () => new THREE.Vector3(5, 2.4, -9));
       addLabel('fiber', () => new THREE.Vector3(5, 2.4, 15));
-      addLabel('NanoMax 300 (input) on 25 mm riser', () => new THREE.Vector3(5, tz + ST.riser + 66, -ST.gapY - 56));
-      addLabel('NanoMax 300 (output) on 25 mm riser', () => new THREE.Vector3(5, tz + ST.riser + 66, 6 + ST.gapY + 56));
+      addLabel('NanoMax 300 (input) · 36.5 mm riser on the base plate · HCS013 + HFR001 + HFC005', () => new THREE.Vector3(5, tz + ST.riser + 66, -ST.gapY - 56));
+      addLabel('NanoMax 300 (output) · 36.5 mm riser on the base plate', () => new THREE.Vector3(5, tz + ST.riser + 66, 6 + ST.gapY + 56));
+      addLabel('Thorlabs MB6090/M breadboard 600 × 900 · metrology base plate 190 × 336 × 12', () => new THREE.Vector3(-350, ST.bbTop + 2, 250));
       addLabel('microscope column X +80', () => new THREE.Vector3(80, 200, 3));
       addLabel('X actuator · MISUMI LX2005CG L300 · 118 mm riser bar', () => new THREE.Vector3(-260, zr + 30, ST.xAxisCy));
       addLabel('Z actuator · LX20 L100 · brake stepper', () => this.xCar.localToWorld(new THREE.Vector3(43, z0 + 262, ST.xAxisCy)));
@@ -640,7 +641,7 @@
       addLabel('keep-out under objective Ø34', () => new THREE.Vector3(22, 2.2, -8), 'warn');
       this.dieLabel = addLabel('die under test', () => this.die.position.clone().add(new THREE.Vector3(5, 0.8, -1)));
       this.die2Label = addLabel('next die', () => this.die2.position.clone().add(new THREE.Vector3(5, 0.8, -1)));
-      setGrid(800, 20, tz);
+      setGrid(1000, 25, ST.bbTop - 12.7);
       this.rebuild();
     },
     rebuild() { this.pose(parseFloat(ui.t.value)); },

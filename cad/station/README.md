@@ -17,7 +17,12 @@ envelopes, the microscope envelope and the table, then computes the clearances.
 | Part | File in `cad/vendor` | Status |
 |---|---|---|
 | Thorlabs NanoMax 300, MAX313D/M (×2) | `thorlabs_MAX313D_M.step` | **placed**; the input stage is rotated −90° so its Z micrometer (46 mm out of the +X face) points −Y and its Y micrometers +X. A left-handed NanoMax would allow the mirror layout. |
-| Thorlabs KB1X1 kinematic base | `thorlabs_KB1X1.step` | **placed** under the nest riser (25.4 × 25.4 × 12.7 mm assembled) |
+| Thorlabs KB1X1 kinematic base | `thorlabs_KB1X1.step` | **placed** under the nest stack on the base plate (25.4 × 25.4 × 12.7 mm assembled; one central M4 screw, drawing 2374-E0W) |
+| Thorlabs HCS013 RMS-threaded flexure stage mount (×2) | `thorlabs_HCS013.step` | **placed** on each NanoMax platform (drawing 16022-E0W: 25 × 20 × 25, axis 12.5 above the platform, key in the centre groove) |
+| Thorlabs HFR001 fiber chuck rotator (×2) | `thorlabs_HFR001.step` | **placed** in the HCS013 front face (10916-E0W: Ø25 × 24.1 + 5 mm RMS thread, Ø6.35 bore, 3 × M3 nylon setscrews) |
+| Thorlabs HFC005 Ø1/4" fiber chuck (×2) | `thorlabs_HFC005.step` | **placed** through the rotator (10907-E0W: Ø6.35 × 70 brass; the file is drawn tilted and is realigned to Y) |
+| Thorlabs AMA010/M mounting cleats (×4) | `thorlabs_AMA010_M.step` | **placed** beside each mount (10775-E0W) |
+| Thorlabs MB6090/M breadboard | `thorlabs_MB6090_M.step` | **placed** as `optical_table` (13808-E0W: 600 × 900 × 12.7, 864 × M6) |
 | MISUMI **LX2005CG-B1-A2040-300** (X), **-200** (Y), **-100** (Z) single-axis actuators | `misumi_LX2005CG-B1-A2040-{300,200,100}.step` | **placed** (`lx_file_members()`: body with the motor-bracket casting + cover strip, table plate, adapter plate + screws; the motor is an envelope on the plate). The files confirmed the catalog reading: 40 wide × 26.5 tall body, 52 × 57 table plate to 27 above the rail bottom, screw axis at 13, bracket casting 56 beyond the rail, 40 × 40 × 13 adapter plate hanging 7 mm below the rail. Effective stroke = L − 63.5. The uploaded files carry the A2040 (□40 servo) adapter plate; the actuators are ordered with the T2042 plate for the Oriental Motor AZM46 steppers (decided; same outline). |
 | SMC MHZ2-6D-M9N | `smc_MHZ2-6D.step` | **placed** through `cad/gripper` (fingers set from the drawn open position to closed) |
 | Suruga KXC04015-C X stage | `suruga_KXC04015-C.step` | **placed** through `cad/nest` (motor and cable toward −X; `checks.txt` checks base, table, motor and cable loop per member) |
@@ -32,9 +37,11 @@ same side) and moved to the LX20 class for cost and speed; see `docs/bom_month1.
 
 | Element | Position | Why |
 |---|---|---|
-| Optical table plane | Z −111 | NanoMax on a 25 mm riser + deck 62.5 + platform 4 + holder 20 puts the fiber axis at die-top height (Z 0.5); the riser exists because the die-stage stack needs 100 mm under the die. |
+| **Breadboard** Thorlabs MB6090/M (600 × 900 × 12.7, 864 × M6 on 25 mm) | top at **Z −123**; X −671…229, Y −290…310; holes at X 4 and Y 10 (mod 25) | Sized to the footprint (X −544…100, Y −190…262) with 48 mm or more of margin; placed so every riser bolt row lands on a hole line (`checks.txt`, "grid"). |
+| **Metrology base plate** (`nest_base_plate_6061`, 190 × 336 × 12) | on the breadboard, top at **Z −111**; X −80…110, Y −165…171 | Carries both NanoMax risers, the nest's KB1X1 (one M4 tap: the base has a single central screw) and the microscope column, so the fiber-to-die loop closes through one plate and their bolt patterns are free of the 25 mm grid (Thorlabs' 1" KB1X1 and the 112 mm stage pitch do not fit it). 14 slots to the breadboard. |
+| Fiber axis | Z 0.5 | NanoMax base on a 36.5 mm riser on the plate + 62.5 deck + 12.5 (HCS013 optical axis) = die-top height. The riser exists because the die-stage stack needs 111 mm from the plate top to the die bottom. |
 | Nest (`cad/nest`) on its **die stage** | T-riser neck X −8…18, Y −2…8 down to Z −12, 38 × 38 wide body to Z −22.3 on a **MISUMI RMPG40W-N** motorized rotary (axis through the die, motor toward −X, body toward +Y, on an 8 mm spacer) on a **Suruga KXC04015-C** X stage (±7.5 mm, motor toward −X) on a KB1X1; copper chuck; Semitron cage X −2.5…12.5, Y −2…8 | Narrow at the top so both fiber corridors stay open; the nest steps the die from device to device under fixed fibers; the rotary above the travel nulls the fiducial-to-fiducial yaw; the gripper meets it at stage home only. |
-| NanoMax 300 (input / output) on 25 mm risers | inner faces 45 mm from the facets: Y −157…−45 and Y 51…163; X −51…61 | Fiber holders reach in from the platforms; holder fronts 5 mm from the facets. |
+| NanoMax 300 (input / output) on 36.5 mm risers | inner faces 45 mm from the facets: Y −157…−45 and Y 51…163; X −51…61 | **Fiber holders (Thorlabs, vendor STEP):** an **HCS013** RMS-threaded flexure-stage mount in the platform's centre groove at the platform's inner edge (front face 71 mm from the facet, axis 12.5 above the platform, locked by two **AMA010/M** cleats), an **HFR001** fiber chuck rotator screwed into its front face (Ø25, 24.1 long, 360°, front 46.9 from the facet), an **HFC005** Ø1/4" chuck (Ø6.35 × 70) clamped by the rotator's three nylon setscrews, tip 5 mm from the facet, bare fiber to the facet. No adapter plate: the HCS013 is Thorlabs' own NanoMax mount. |
 | Microscope | objective Ø34 centred on the die, front lens at WD 20; Ø40 tube above; arm to a Ø40 column at **X = 80** | Behind the nest, as on the bench. |
 | **X actuator** (LX2005CG L 300, stroke 236.5; 208.7 used) | along X, centre-line **Y = −165**; rail X −385…−85 with its bottom at Z 7.2 on a **118 mm riser bar** (40 wide, under the base rail; the bracket casting, adapter plate and motor overhang to X −544) | Its riser flange (Y −195…−135) lies beside the tray's Y sweep and beside the input NanoMax (X ≥ −51), so nothing passes under it and the riser is one bar, no bridge. At Y −165 (moved out from −140, rev. 2.13) the deck clears the flange by 33.5 mm at row 0 and by 14 mm at the end of the Y actuator's physical stroke, so a lost soft limit cannot drive the deck into the riser (checks "@Y stroke end"). Travel margins 25.3 mm at the far column, 2.5 mm after the push-to-stop. |
 | **Z actuator** (LX2005CG L 100, stroke 36.5; 20 used) | vertical on a 60 × 60 × 10 angle bracket bolted to the X table plate (4 × M4); rail mounting face on the bracket's +X leg, rail Z 44…144, adapter plate and brake motor up to Z ≈ 303; table plate centre at Z 90.5 at the nest (76…112.5 available) | Only 8 mm lift + 12 mm drop are needed; the ball screw back-drives, hence the brake motor (or a pneumatic slide, see the design note). |
@@ -59,12 +66,13 @@ two Ø3 dowels) and are exported per part; the printing and finishing instructio
 
 | File | Part | Interfaces |
 |---|---|---|
-| `x_axis_riser_6061[_h]` | riser bar under the X actuator: 40 wide body from the table to the rail bottom, 60 × 8 foot flange with 6.6 × 14 slots on a 50 mm pitch | top: 10 × M3 tap-drill + 2 × Ø4 pin holes on the LX20 base pattern; foot: M6 or ¼-20 on a 25 mm / 1″ grid |
-| `y_axis_riser_6061` | same under the Y actuator (80 wide flange) | 6 × M3 + 2 × Ø4; foot slots |
+| `x_axis_riser_6061[_h]` | riser bar under the X actuator: 40 wide body from the breadboard to the rail bottom (130 tall), 70 × 8 foot flange with 6.6 × 14 slots on a 50 mm pitch in two rows 50 apart (on the breadboard grid) | top: 10 × M3 tap-drill + 2 × Ø4 pin holes on the LX20 base pattern; foot: M6 or ¼-20 on a 25 mm / 1″ grid |
+| `y_axis_riser_6061` | same under the Y actuator (75 tall, 80 wide flange, rows 50 apart) | 6 × M3 + 2 × Ø4; foot slots |
+| `nest_base_plate_6061` | 190 × 336 × 12 metrology base plate on the breadboard (NanoMax risers, KB1X1, microscope column) | to the breadboard: 14 × 6.6 × 10 slots in two columns (X −71 / 104) on the grid; on top: 2 × 16 M6 tap-drill (riser patterns), 1 × M4 tap-drill (KB1X1 centre screw), 4 × M6 tap-drill (column) |
 | `tower_bracket_6061` | 60 × 60 × 10 base on the X table plate, 10 mm leg carrying the Z rail, gusset rib | base: 4 × Ø4.5 counterbored + 2 × Ø3 dowels (table pattern); leg: 4 × M3 tap-drill + 2 × Ø4 pins (Z rail base pattern) |
 | `arm_6061[_h]` | one piece: 33-deep adapter block on the Z table plate, 25 sq bar along +Y, 8 mm end plate over the gripper bracket | block: 4 × Ø4.5 counterbored Ø8 from the outside + 2 × Ø3 dowels; end plate: 4 × M4 tap-drill + 2 × Ø3 dowels on `gripper.IFACE` |
 | `tray_deck_6061` | flat 6 mm deck on the Y table plate; two Ø3 m6 dowel pins 3.0 mm proud locate the tray (round hole in the −X rim, 4.5 mm slot along X in the +X rim, 0.05 mm clearance per side; `tray.datum_pins()`), gravity holds it | 4 × Ø4.5 counterbored from the top + 2 × Ø3 dowels (table pattern); 2 × Ø3 H7 pin holes |
-| `nanomax_riser_6061` (×2) | 25 mm plate under each NanoMax | 16 × Ø6.6 through on the 25 mm grid (M6 bolts through the stage slots into the table) |
+| `nanomax_riser_6061` (×2) | 36.5 mm plate under each NanoMax, on the base plate | 16 × Ø6.6 through on the 25 mm grid (M6 bolts through the stage slots and the riser into the base plate's taps) |
 
 The arm end plate is extended from the gripper interface (X −56) to X −94 in the vertical layout to carry the tray
 camera (next section); the `_h` layout keeps the short plate and has no camera yet.
@@ -138,15 +146,16 @@ pipeline keys its collections and materials on these prefixes. Material suffixes
 
 | Prefix | Members |
 |---|---|
-| `optical_table` | the table plate |
-| `nest_*` | KB1X1, adapter, KXC04015 (`nest_kxc04015_base/table/coupling/motor/knob`), spacer, rotary (`nest_rmpg40w_body/table/worm/motor/cable/bolts`), `nest_riser_6061`, `nest_tec`, `nest_chuck_copper`, `nest_cage_semitron` |
-| `nanomax300_in/out`, `nanomax_riser_in/out`, `fiber_holder_in/out`, `fiber_in/out` | fiber stages, risers, holders and fiber tips |
+| `optical_table` | the Thorlabs MB6090/M breadboard (vendor geometry, 864 holes) |
+| `nest_base_plate_6061` | metrology base plate on the breadboard |
+| `nest_*` | KB1X1, adapter, KXC04015 (`nest_kxc04015_base/table/coupling/motor`; the knob and cable are in the coupling solid), spacer, rotary (`nest_rmpg40w_body/table/worm/motor/cable/bolts`), `nest_riser_6061`, `nest_tec`, `nest_chuck_copper`, `nest_cage_semitron` |
+| `nanomax300_in/out`, `nanomax_riser_in/out`, `fiber_mount_in/out`, `fiber_rotator_in/out`, `fiber_chuck_in/out`, `fiber_cleats_in/out`, `fiber_in/out` | fiber stages, risers, HCS013 mounts, HFR001 rotators, HFC005 chucks, AMA010/M cleats, fiber tips |
 | `objective`, `microscope_tube/arm/column`, `objective_keepout` | microscope (the keep-out is a render aid) |
 | `x_axis_rail_lx20/plate/motor/block`, `x_axis_riser` | X actuator (`block` is the moving table) and its riser bar |
 | `y_axis_rail_lx20/plate/motor/block`, `y_stage_riser`, `tray_deck`, `tray_pin_xm/xp`, `wafer_tray` | Y actuator, deck, pins and tray |
 | `tower_bracket_6061`, `z_axis_rail_lx20/plate/motor/block`, `arm_6061` | Z tower on the X table and the arm |
-| `gripper_*` | gripper module at the nest (`gripper_far_arm/near_arm/far_tip/near_tip/blade/bracket/mhz2_body/finger_near/finger_far`) |
-| `camera_dart`, `camera_lens`, `camera_usb_plug` (+ `camera_fov`, render aid) | tray camera |
+| `gripper_*` | gripper module at the nest (`gripper_far_arm/near_arm/far_tip/near_tip/blade/bracket/mhz2_body/mhz2_fing_near/mhz2_fing_far`) |
+| `camera_dart`, `camera_lens`, `camera_usb_plug` | tray camera (`camera_fov`, the field-of-view aid, exists only in `gripper_with_sensors.step`) |
 | `die_at_nest` | the die on the chuck |
 
 `station_far_column[_h].step` holds the same moving members at the farthest tray column with the suffix
@@ -180,8 +189,7 @@ replaces, the Y stage passing under the X axis (two pedestals) and the horizonta
 
 ## Open dimensions to measure before ordering the risers and brackets
 
-1. Fiber axis height above the NanoMax platform (`holder_axis_above_deck`, assumed 20): sets every riser height together with the 25 mm NanoMax riser (`common.NANOMAX_RISER`).
-2. Objective working distance and the diameter of whatever sits above it (`common.OBJ_WD`, `TUBE_DIA`).
-3. The real fiber holder (`common.FIBER`).
+1. Objective working distance and the diameter of whatever sits above it (`common.OBJ_WD`, `TUBE_DIA`); the column's base pattern on the base plate (4 × M6 on 50 mm assumed).
+2. The HFC005 chuck orientation in the rotator (the STEP has a fiber hole at both ends; the model puts the collet cap toward the die) and the chuck's clamped length: 41.9 mm of the 70 stand beyond the rotator front to reach the facet with 5 mm of bare fiber. If that overhang is too much on the bench, the HCS013 moves 10–15 mm inward along the platform groove (`common.FIBER["mount_front"]`).
 4. The AZM46 motor bodies on each LX20 (the model's motor envelope is 42 sq × 90 long, which covers the AZM46MK brake motor on Z and the AZM46AK on X and Y with margin) and their cable exits.
 5. KXC04015 and RMPG40W-N bolt patterns for the two adapter plates (from their STEP files); the KB1X1 platform pattern.

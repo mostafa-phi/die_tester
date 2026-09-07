@@ -100,11 +100,17 @@ STALE = ["station/checks_vendor.txt", "station/checks_vendor_h.txt", "station/re
 TWO_PASS = {"gripper": [["--horizontal"]], "station": [["--horizontal"]]}
 
 
+TEXT_OUTPUTS = (".txt", ".step", ".json", ".py")
+
+
 def sha(path):
+    """sha256 of a file; text outputs are hashed with CRLF folded to LF, so a checkout that converted line endings (Windows,
+    `* text=auto`) still matches the manifest written on Linux."""
     h = hashlib.sha256()
+    text = path.endswith(TEXT_OUTPUTS)
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(1 << 20), b""):
-            h.update(chunk)
+            h.update(chunk.replace(b"\r\n", b"\n") if text else chunk)
     return h.hexdigest()
 
 

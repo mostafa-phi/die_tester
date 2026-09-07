@@ -14,6 +14,18 @@ curl -sSL -A "$UA" -o thorlabs_KB1X1.step \
   "https://thin01mstroc282prod.dxcloud.episerver.net/globalassets/items/k/kb/kb1/kb1x1/2374-e0w.step"
 # Imperial NanoMax (MAX313D, 22802-E0W) if that is what is on the bench:
 #   https://thin01mstroc282prod.dxcloud.episerver.net/globalassets/items/m/ma/max/max313d/22802-e0w.step
+# Fiber holder stack on each NanoMax platform (drawings 16022 / 10916 / 10907 / 10775-E0W) and the station breadboard (13808-E0W).
+# Asset URLs come from the Thorlabs GraphQL products query (query "S": products(...){items{code assets{name url group}}}).
+curl -sSL -A "$UA" -o thorlabs_HCS013.step \
+  "https://thin01mstroc282prod.dxcloud.episerver.net/globalassets/items/h/hc/hcs/hcs013/16022-e0w.step"
+curl -sSL -A "$UA" -o thorlabs_HFR001.step \
+  "https://thin01mstroc282prod.dxcloud.episerver.net/globalassets/items/h/hf/hfr/hfr001/10916-e0w.step"
+curl -sSL -A "$UA" -o thorlabs_HFC005.step \
+  "https://thin01mstroc282prod.dxcloud.episerver.net/globalassets/items/h/hf/hfc/hfc005/10907-e0w.step"
+curl -sSL -A "$UA" -o thorlabs_AMA010_M.step \
+  "https://thin01mstroc282prod.dxcloud.episerver.net/globalassets/items/a/am/ama/ama010_m/10775-e0w.step"
+curl -sSL -A "$UA" -o thorlabs_MB6090_M.step \
+  "https://thin01mstroc282prod.dxcloud.episerver.net/globalassets/items/m/mb/mb6/mb6090_m/13808-e0w.step"
 
 # --- MISUMI LX20 actuators (transport X/Y/Z): CAD download needs a MISUMI account, download by hand ----
 #   https://us.misumi-ec.com/vona2/detail/110300075020/   configure LX2005CG-B1-A2040-<L>, "CAD" -> STEP AP214

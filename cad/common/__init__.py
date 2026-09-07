@@ -40,11 +40,18 @@ CONTACT_Z1 = DIE_THK - NOSE_GAP_TOP               # 0.40
 # Fiber side envelope (measure on the bench; used by the nest and the station)
 # ----------------------------------------------------------------------------
 FIBER = dict(
-    protrusion=5.0,                 # fiber tip beyond the holder front face
-    holder_w=25.0,                  # holder body width along X (centred on the die)
-    holder_zb=-8.0, holder_zt=4.0,  # holder body bottom / top relative to the die bottom (fiber axis at Z 0.5)
-    holder_len=20.0,                # holder body length along Y (envelope only)
+    protrusion=5.0,                 # bare fiber beyond the chuck tip, to the facet
     retract=1.0,                    # fiber retract along +/-Y before the gripper moves
+    # Thorlabs holder stack on each NanoMax top platform (vendor STEP in cad/vendor; drawings 16022 / 10916 / 10907-E0W):
+    # HCS013 RMS-threaded flexure-stage mount (25 wide x 20 deep x 25 tall, key in the platform's centre groove, locked by
+    # two AMA010/M cleats, optical axis 12.5 above the platform) -> HFR001 fiber chuck rotator screwed into its front face
+    # (dia 25 knurled body 24.1 long + 5 mm RMS thread, 360 deg rotation, three M3 nylon setscrews clamp the chuck)
+    # -> HFC005 dia 1/4" fiber chuck (dia 6.35 x 70 brass, dia 200 um stripped fiber). The mount sits at the platform's inner
+    # edge, so the chuck reaches the facet with 41.9 mm of its length beyond the rotator. No adapter plate is needed.
+    mount_w=25.0, mount_d=20.0, mount_h=25.0, mount_axis=12.5, mount_flange=3.0,
+    rotator_d=25.0, rotator_len=24.1, rotator_thread=5.0,
+    chuck_d=6.35, chuck_len=70.0,
+    mount_front=None,               # facet -> HCS013 front face (set below from the NanoMax geometry)
 )
 
 # ----------------------------------------------------------------------------
@@ -97,11 +104,47 @@ def sensor_fov(wd, f=None, sensor=None, px=None):
 # putting the fiber axis at the die-top height. Everything under the die (nest stack) is built up from TABLE_Z.
 # ----------------------------------------------------------------------------
 NANOMAX = dict(w=112.0, h=62.5, platform_h=4.0, gap_y=45.0)   # footprint, deck height, top platform, inner face to facet
-HOLDER_AXIS_ABOVE_DECK = 20.0                                  # fiber axis above the NanoMax platform (holder-dependent; measure)
-NANOMAX_RISER = 25.0                                           # riser plate under each NanoMax (and under the Y stage): the motorized
-                                                               # die-stage stack (KB1X1 + RMPG40W-N 35 + KXC04015 30 + riser) needs
-                                                               # 100 mm under the die; the fiber stages set the table plane, so they rise
-TABLE_Z = DIE_TOP - HOLDER_AXIS_ABOVE_DECK - NANOMAX["h"] - NANOMAX["platform_h"] - NANOMAX_RISER   # -111.0
+NANOMAX["platform_w"] = 60.0                                   # top platform 60 x 60 with a 3 mm cross groove (vendor STEP)
+FIBER["mount_front"] = NANOMAX["gap_y"] + (NANOMAX["w"] - NANOMAX["platform_w"]) / 2   # 71: HCS013 front face at the platform's inner edge
+HOLDER_AXIS_ABOVE_DECK = FIBER["mount_axis"]                   # 12.5: HCS013 axis above the NanoMax top platform (Thorlabs 16022-E0W)
+NEST_BASE_T = 12.0                                             # metrology base plate (6061) on the breadboard: carries both NanoMax risers,
+                                                               # the nest's KB1X1 (one M4 tap) and the microscope column, so the fiber-to-die
+                                                               # loop closes through one plate and its bolt pattern is free of the 25 mm grid
+NANOMAX_RISER = 36.5                                           # riser plate under each NanoMax on the base plate: the die-stage stack needs
+                                                               # 111 mm from the plate top to the die bottom (KB1X1 + KXC04015 + RMPG40W-N +
+                                                               # riser), the fiber axis is 75 above the NanoMax base (62.5 deck + 12.5 mount)
+TABLE_Z = DIE_TOP - HOLDER_AXIS_ABOVE_DECK - NANOMAX["h"] - NANOMAX_RISER - NEST_BASE_T   # -123.0: breadboard top
+BASE_TOP = TABLE_Z + NEST_BASE_T                               # -111.0: base plate top (KB1X1 seat, NanoMax riser seat, column base)
+# Thorlabs MB6090/M aluminium breadboard, 600 x 900 x 12.7, 864 x M6 on 25 mm, first hole 25 from the edge (drawing 13808-E0W).
+# Placed so that the riser bolt rows land on holes: X holes at 4 (mod 25), Y holes at 10 (mod 25); see station README "Bolt grid".
+BREADBOARD = dict(file="thorlabs_MB6090_M.step", L=900.0, W=600.0, t=12.7, pitch=25.0, edge=25.0, x0=-671.0, y0=-290.0)
+BREADBOARD["hole0"] = (BREADBOARD["x0"] + BREADBOARD["edge"], BREADBOARD["y0"] + BREADBOARD["edge"])   # (-646, -265)
+
+
+def grid_offset(x, y):
+    """Distance of (x, y) from the nearest breadboard hole, per axis (0 = on a hole line)."""
+    p = BREADBOARD["pitch"]; hx, hy = BREADBOARD["hole0"]
+    dx = (x - hx) % p; dy = (y - hy) % p
+    return min(dx, p - dx), min(dy, p - dy)
+
+
+def holder_boxes(side):
+    """AABB envelopes of the fiber holder stack on one side (-1 input at Y < 0, +1 output at Y > 6), station frame (die
+    bottom Z 0, fiber axis at DIE_TOP): chuck (from the fiber protrusion to the rotator front), rotator, mount (with its
+    flanges). The nest checks use these; the station uses the vendor STEP and falls back to these."""
+    f = FIBER; ax = DIE_TOP; cx = DIE_LEN / 2
+    yf = 0.0 if side < 0 else DIE_WID
+    span = (lambda a, b: (yf - b, yf - a)) if side < 0 else (lambda a, b: (yf + a, yf + b))
+    rf = f["mount_front"]; r0 = rf - f["rotator_len"]
+    out = {}
+    y0, y1 = span(f["protrusion"], r0)
+    out["chuck"] = box(cx - f["chuck_d"] / 2, cx + f["chuck_d"] / 2, y0, y1, ax - f["chuck_d"] / 2, ax + f["chuck_d"] / 2)
+    y0, y1 = span(r0, rf)
+    out["rotator"] = box(cx - f["rotator_d"] / 2, cx + f["rotator_d"] / 2, y0, y1, ax - f["rotator_d"] / 2, ax + f["rotator_d"] / 2)
+    y0, y1 = span(rf, rf + f["mount_d"])
+    w2 = f["mount_w"] / 2 + f["mount_flange"]
+    out["mount"] = box(cx - w2, cx + w2, y0, y1, ax - f["mount_axis"], ax - f["mount_axis"] + f["mount_h"])
+    return out
 KB1X1_H = 12.7                                                 # Thorlabs KB1X1 kinematic base, assembled height (vendor STEP 2374-E0W)
 
 # ----------------------------------------------------------------------------

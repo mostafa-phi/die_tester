@@ -67,10 +67,7 @@ L, W, T = C.DIE_LEN, C.DIE_WID, C.DIE_THK               # 10, 6, 0.5
 
 N = dict(
     # --- fiber side (single source: common.FIBER; measure on the bench) ---
-    fiber_protrusion=C.FIBER["protrusion"],
-    holder_w=C.FIBER["holder_w"],
-    holder_zb=C.FIBER["holder_zb"], holder_zt=C.FIBER["holder_zt"],
-    holder_len=C.FIBER["holder_len"],
+    fiber_protrusion=C.FIBER["protrusion"],                              # holder stack envelopes: common.holder_boxes()
     # --- chuck pad: lapped copper, 0.5 mm inboard of every die edge -> 9 x 5 mm = 75 % of the backside ---
     pad=(0.5, 9.5, 0.5, 5.5), pad_z=(-1.5, 0.0),
     vac_holes=((2.0, 1.5), (5.0, 1.5), (8.0, 1.5), (2.0, 4.5), (5.0, 4.5), (8.0, 4.5)), vac_d=0.5,
@@ -200,7 +197,7 @@ def tec():
     return box(cx_ - w / 2, cx_ + w / 2, cy_ - d / 2, cy_ + d / 2, N["tec_z"] - h, N["tec_z"])
 
 
-def levels(table_z=C.TABLE_Z, kb_top=None):
+def levels(table_z=C.BASE_TOP, kb_top=None):
     """Z of every interface in the die-stage stack (bottom up): table, KB1X1, adapter, KXC04015-C, RMPG40W-N, riser base."""
     kb_top = table_z + C.KB1X1_H if kb_top is None else kb_top
     z = {"table": table_z, "kb_top": kb_top, "ad1_top": kb_top + N["adapter_t"]}
@@ -342,14 +339,16 @@ def kxc04015_vendor(z0, x_off=0.0, path=None):
     return parts
 
 
-def stack(table_z=C.TABLE_Z, kb_top=None, x_off=0.0, vendor=False):
+def stack(table_z=C.BASE_TOP, kb_top=None, x_off=0.0, vendor=False):
     """All die-stage stack parts under the riser, name -> shape, plus the levels dict. vendor=True places the Suruga
     KXC04015-C and MISUMI RMPG40W-N STEP files when they are present."""
     z = levels(table_z, kb_top)
     kx = (kxc04015_vendor(z["kxc_bottom"], x_off) if vendor else None) or kxc04015(z["kxc_bottom"], x_off)
     ro = (rmpg40w_vendor(z["rot_bottom"], x_off) if vendor else None) or rmpg40w(z["rot_bottom"], x_off)
     parts = {"nest_adapter_kb_kxc": adapter_kb_kxc(z["kb_top"]), "kxc04015_base": kx["base"], "kxc04015_table": kx["table"],
-             "kxc04015_coupling": kx["coupling"], "kxc04015_motor": kx["motor"], "kxc04015_knob": kx["knob"]}
+             "kxc04015_coupling": kx["coupling"], "kxc04015_motor": kx["motor"]}
+    if kx["knob"] is not kx["coupling"]:                        # envelope build only: the vendor file has the knob in the coupling solid
+        parts["kxc04015_knob"] = kx["knob"]                     # (adding the same shape twice gave an unnamed member in the STEP)
     parts["nest_spacer_kxc_rot"] = spacer_kxc_rot(z["kxc_top"], x_off)
     parts.update({f"rmpg40w_{k}": v for k, v in ro.items()})          # on the X-stage table, moves with x_off
     return parts, z
@@ -388,14 +387,12 @@ def riser(stage_top):
 def fiber_envelopes():
     """Fiber (dia 0.125 at the die-top height, X 1..9 where the waveguides are) and holder body envelopes."""
     fz0, fz1 = T - 0.0625 - 0.05, T + 0.0625 + 0.05
-    p, hw, hl = N["fiber_protrusion"], N["holder_w"] / 2, N["holder_len"]
-    zb, zt = N["holder_zb"], N["holder_zt"]
-    return {
-        "fiber_in": box(1.0, 9.0, -p, 0.0, fz0, fz1),
-        "fiber_out": box(1.0, 9.0, W, W + p, fz0, fz1),
-        "holder_in": box(5 - hw, 5 + hw, -p - hl, -p, zb, zt),
-        "holder_out": box(5 - hw, 5 + hw, W + p, W + p + hl, zb, zt),
-    }
+    p = N["fiber_protrusion"]
+    out = {"fiber_in": box(1.0, 9.0, -p, 0.0, fz0, fz1), "fiber_out": box(1.0, 9.0, W, W + p, fz0, fz1)}
+    for side, tag in ((-1, "in"), (1, "out")):                  # HFC005 chuck, HFR001 rotator, HCS013 mount (common.holder_boxes)
+        for k, v in C.holder_boxes(side).items():
+            out[f"{k}_{tag}"] = v
+    return out
 
 
 
@@ -491,7 +488,8 @@ def main():
     for bn, blk in blocks.items():
         for gn in ("far_tip", "near_tip", "blade"):
             check(bn, blk, f"{gn} (push)", grip_push[gn], need=0.2)
-    rep.append("nest vs fiber / holder envelopes (holder front 5 mm from the facet, body 25 wide, Z -8..+4):")
+    rep.append(f"nest vs fiber / holder envelopes (HFC005 chuck dia {C.FIBER['chuck_d']} from {N['fiber_protrusion']:.0f} mm behind the facet, "
+               f"HFR001 rotator dia {C.FIBER['rotator_d']:.0f} from {C.FIBER['mount_front'] - C.FIBER['rotator_len']:.1f}, HCS013 mount from {C.FIBER['mount_front']:.0f}):")
     for fn_, fe in fib.items():
         for bn, blk in blocks.items():
             check(bn, blk, fn_, fe, need=0.3)
@@ -500,7 +498,7 @@ def main():
         check("riser neck", neck, fn_, fe, need=2.0)
         check("riser wide body", wide, fn_, fe, need=2.0)
     rep.append("holder bodies vs the gripper at the nest (jaws closed):")
-    for hn in ("holder_in", "holder_out"):
+    for hn in ("chuck_in", "rotator_in", "chuck_out", "rotator_out"):
         for gn, gp in grip_closed.items():
             check(gn, gp, hn, fib[hn], need=2.0)
     # the nest MOVES under fixed fibers and holders: the fibers stay at station X 5 (the device under test is brought to them),
@@ -509,7 +507,7 @@ def main():
     p_ = N["fiber_protrusion"]
     fixed_fib = {"fiber_in (station X 5)": box(DIE_CX - 0.1, DIE_CX + 0.1, -p_, 0.0, fz0, fz1),
                  "fiber_out (station X 5)": box(DIE_CX - 0.1, DIE_CX + 0.1, W, W + p_, fz0, fz1),
-                 "holder_in": fib["holder_in"], "holder_out": fib["holder_out"]}
+                 "chuck_in": fib["chuck_in"], "rotator_in": fib["rotator_in"], "chuck_out": fib["chuck_out"], "rotator_out": fib["rotator_out"]}
     used = N["stage_step_used"]; ends = k["travel"] / 2
     offs = sorted(set([-ends, ends] + [round(-used + i * 1.0, 1) for i in range(int(2 * used) + 1)]))
     rep.append(f"the nest moves under FIXED fibers (at station X 5) and holders: worst clearance of every moving member over stage offsets "

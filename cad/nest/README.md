@@ -44,10 +44,13 @@ stepped from device to device by moving the nest, as the current tester does wit
 One X move keeps both fibers registered to each other. The gripper meets the nest only at the stage
 **home** position; the exchange sequence homes the stage first and the software fence enforces it.
 
-The stack needs 100 mm under the die, so the two NanoMax stages and the Y stage sit on **25 mm riser
-plates** (`common.NANOMAX_RISER`) and the table plane is at Z −111; the fiber axis stays at Z 0.5.
+The stack needs 111 mm from its seat to the die bottom, so the nest's KB1X1 and the two NanoMax stages stand on a
+**12 mm metrology base plate** on the breadboard (plate top Z −111, breadboard top Z −123, `common.BASE_TOP` /
+`TABLE_Z`), the NanoMax on **36.5 mm riser plates** (`common.NANOMAX_RISER`) so that their Thorlabs HCS013 mounts put
+the fiber axis at Z 0.5 (base + 62.5 deck + 12.5). Holder envelopes for the checks come from `common.holder_boxes()`
+(HFC005 chuck Ø6.35 from 5 mm behind the facet, HFR001 rotator Ø25 from 46.9, HCS013 mount from 71).
 
-| Level (bottom up) | Part | Z (table = −111.0) |
+| Level (bottom up) | Part | Z (base plate top = −111.0) |
 |---|---|---|
 | kinematic base | Thorlabs KB1X1 (2374-E0W), 25.4 sq × 12.7 | −111.0 … −98.3 |
 | adapter | `STEP/nest_adapter_kb_kxc.step`, 6061, 3 mm: KB1X1 platform pattern → 4 × M3 tapped on the X stage's 32 × 32 base holes | −98.3 … −95.3 |

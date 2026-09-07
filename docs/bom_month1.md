@@ -38,6 +38,8 @@ the nest stages and the transfer axes are the largest items and are also the pro
 | # | Item | Exact part | Vendor | Unit price | Qty | Notes |
 |---|---|---|---|---|---|---|
 | B1 | Manual XYZ for the hand‑cycling rig | **Thorlabs PT3** (1″ XYZ, ¼‑20) or **PT3/M** | Thorlabs / Fisher | $1,350 | 1 (skip if in stock) | Carries the gripper over nest and tray for Gate 1. |
+| B2a | Station breadboard | **Thorlabs MB6090/M** aluminium breadboard, 600 × 900 × 12.7 mm, 864 × M6 on 25 mm | Thorlabs | ~$700 | 1 | The whole station (`cad/station`: footprint X −544…100, Y −190…262 with ≥ 48 mm margin); every riser bolt row lands on a hole line, the nest and fiber stages sit on a 12 mm 6061 metrology base plate whose pattern is free of the grid |
+| B2b | Fiber holders | **Thorlabs HCS013** RMS-threaded flexure stage mount ×2, **HFR001** fiber chuck rotator ×2 (Ø1/4" chucks, 360°), **HFC005** fiber chuck for Ø200 µm stripped fiber ×2, **AMA010/M** cleats ×4 | Thorlabs | $84 + $287 + $175 per side, cleats ~$10 each | 1 set | On the NanoMax top platforms (HCS013 keys into the platform groove, axis 12.5 mm above it); the rotator lets the fiber's polarization axis be set; the chuck reaches the facet with 41.9 mm beyond the rotator front. Vendor STEP placed in `cad/station` |
 | B2 | Rig plate | **Thorlabs MB1218** 12 × 18″ breadboard | Thorlabs / Fisher | $281 | 1 | Common plate for nest, tray, manual stage; later the robot bench. |
 | B3 | Nest kinematic base | **Thorlabs KB1X1** (or KB1X1/M) kinematic base | Thorlabs | ~$150 | 1 | Lets the nest move between rig and tester and return repeatably. |
 | B4 | Right‑angle bracket + posts for the gripper | Thorlabs **AP90**, **RS2P**, **TR75** as needed | Thorlabs | ~$150 total | — | |

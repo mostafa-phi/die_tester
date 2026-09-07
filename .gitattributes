@@ -1,2 +1,9 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# CAD outputs: STEP is text but must stay byte-exact (build.py hashes them; the zipped station assemblies contain them),
+# STL / PNG / zip are binary. checks*.txt and the manifest stay text; build.py folds CRLF when hashing.
+*.step -text
+*.stl binary
+*.zip binary
+*.png binary

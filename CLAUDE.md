@@ -134,10 +134,17 @@ agent never edits `cad/blender/`.
   `--check` passes, never from a working tree mid-build, and its commits touch only its own paths.
 - **Naming in messages and commits:** "designer agent" and "3D-viz agent", so the user and both agents can
   tell whose work a commit is.
+- **Questions and announcements between the agents go in per-agent handoff files**, each written only by its
+  owner: `cad/blender/HANDOFF.md` (3D-viz agent → designer agent) and `cad/station/HANDOFF.md` (designer agent →
+  3D-viz agent). Append-only, dated, entries marked `OPEN` / `ANSWERED` / `ANNOUNCEMENT`; the answer to an item
+  goes in the answering agent's own file. Prefer a check over a message (`source.json`, `members.json`,
+  `verify_scene.py`, `build.py --check`). Both read both files after every pull. The user decides only what is
+  the user's (design, purchases, scope).
 
 ## 6. Still-open measurements (do not silently replace with guesses)
 
-Real fiber-holder envelope, microscope working distance and tube diameter, TEC part number and
+Microscope working distance and tube diameter (and its column base pattern), the HFC005 chuck's clamped length in the
+HFR001 (41.9 mm overhang to the facet in the model), TEC part number and
 heat load, die backside finish, the LX20 envelope against its STEP (and the stepper length), the KB1X1 platform bolt pattern for
 the adapter plate under the X stage, RMPG40W-N resolution and repeatability, and the tray camera's lens (the 16 mm M12
 lens and its spacer are an envelope in `common.SENSORS` until the lens is chosen and its STEP placed; the dart housing

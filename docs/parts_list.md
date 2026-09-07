@@ -39,6 +39,8 @@ the hand-cycling and sequence trials.
 | Stock for machining | C101 copper (chuck), Semitron ESd 480 rod/sheet (cage, tip blocks), 6061 plate and bar (risers, brackets, adapters) | — | Boedeker / Professional Plastics; McMaster |
 | Printing | Bambu PPA-CF filament, hardened 0.4 nozzle | 2 spools | ~2 kg of parts incl. the risers |
 | Bench rig | Thorlabs PT3 (if not in stock), MB1218 breadboard, AP90 / RS2P / TR75 | 1 set | hand-cycling rig |
+| Station breadboard | Thorlabs **MB6090/M** aluminium breadboard 600 × 900 × 12.7 mm, M6 on 25 mm (17.6 kg) | 1 | the whole station; placed in `cad/station` from the vendor STEP |
+| Fiber holders | Thorlabs **HCS013** RMS-threaded flexure stage mount ×2, **HFR001** fiber chuck rotator ×2, **HFC005** Ø1/4" fiber chuck for Ø200 µm stripped fiber ×2, **AMA010/M** mounting cleats ×4 (2 per mount) | 1 set | on the NanoMax platforms; no adapter plate needed |
 | | AWS GEMINI-20 0.001 g scale | 1 | jaw force check |
 | | Ideal-tek 2ACFR.SA.1 tweezers with A2ACF carbon-fiber tips | 3 | the only approved hand tool |
 | | Simco-Ion Aerostat PC2 ionizer | 1 | before real dies are cycled |
@@ -55,7 +57,8 @@ the hand-cycling and sequence trials.
 | Cage with stop pads and guards | `cad/nest/STEP/nest_cage_semitron.step` | Semitron ESd 480 | CNC | now |
 | Far and near tip blocks | `cad/gripper/STEP/far_tip_block_semitron.step`, `near_tip_block_semitron.step` | Semitron ESd 480 | micro CNC, crown R 30 | now, 3 of each |
 | Gauge die | — | steel or ceramic | grind | now |
-| NanoMax riser plates ×2 | `cad/station/STEP/nanomax_riser_6061.step` | 6061 plate 112 × 112 × 25 | mill, drill | with the chuck (metrology loop) |
+| NanoMax riser plates ×2 | `cad/station/STEP/nanomax_riser_6061.step` | 6061 plate 112 × 112 × 36.5 | mill, drill | with the chuck (metrology loop) |
+| Metrology base plate | `cad/station/STEP/nest_base_plate_6061.step` | 6061 plate 190 × 336 × 12, faced both sides | mill, drill, tap | with the chuck (metrology loop) |
 | Nest T-riser | `cad/nest/STEP/nest_riser_6061.step` | 6061 | CNC | final (TEC heat path) |
 | KB1X1 → KXC adapter, KXC → rotary spacer | `cad/nest/STEP/nest_adapter_kb_kxc.step`, `nest_spacer_kxc_rot.step` | 6061 | waterjet + tap / mill | final (metrology loop) |
 | Gripper bracket, far arm, near arm | `cad/gripper/STEP/bracket_6061.step`, `far_arm_6061.step`, `near_arm_6061.step` | 6061-T6, arms hard anodised | CNC | final, after the rig trials |
