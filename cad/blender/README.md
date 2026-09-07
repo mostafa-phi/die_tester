@@ -2,7 +2,9 @@
 
 This folder turns the station assembly into a Blender scene and animates one die exchange on it.
 It is **downstream of the CAD, not a CAD component**: nothing here defines geometry, and
-`cad/build.py` does not know about it. The single input is
+`cad/build.py` does not know about it. **Before editing either script, read
+[BLUEPRINT.md](BLUEPRINT.md)** — the rules there come from bugs that already shipped here. The
+single input is
 [`../station/STEP/station_assembly.step.zip`](../station/STEP/), which `cad/station/model.py` writes
 and which is tracked in the repo.
 
@@ -29,7 +31,13 @@ UV_SYSTEM_CERTS=1 uv run --with cascadio --with numpy --with trimesh --python 3.
 "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" --background \
     --python cad/blender/build_scene.py -- --render iso plan side front nest
 
-# 3. scene -> animated scene + preview video
+# 3. scene -> animated scene
+"C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" --background     --python cad/blender/animate_exchange.py
+
+# 4. check it before spending an hour rendering (exits non-zero on failure)
+"C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" --background     --python cad/blender/verify_scene.py
+
+# 5. preview video
 "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" --background \
     --python cad/blender/animate_exchange.py -- --preview --camera iso
 ```
@@ -48,6 +56,7 @@ match for Cycles at this scale: use eevee to check motion, cycles for anything a
 | `step_to_glb.py` | tessellates the assembly STEP at 0.05 mm linear / 0.2 rad angular deflection and writes `station_assembly.glb`; prints part count and bounding box for checking |
 | `build_scene.py` | imports the GLB, sorts the parts into collections, assigns materials, adds lighting and five cameras, saves `die_tester_station.blend`, optionally renders stills |
 | `animate_exchange.py` | rigs the moving groups onto empties, keyframes the 14-step exchange, saves `die_tester_station_animated.blend`, optionally renders an mp4 |
+| `verify_scene.py` | checks the animated scene against the static one — inventory, per-axis placement, die seating, contact band, loop closure — and exits non-zero if anything is off |
 
 `station_assembly.glb` and both `.blend` files are git-ignored (35 MB and 29 MB each); the scripts,
 this README and `renders/` are tracked. Re-run the three steps to get them back.
@@ -122,10 +131,16 @@ copies the die into the pocket it will be picked from: one die leaves the nest f
 the other comes from its pocket to the nest. Released dice keep riding the tray, so a die placed in
 row +2 moves with the stage when it later travels to another row — which is what actually happens.
 
-The cycle order is the real one: the die on the nest is offloaded to its tray pocket first, the
-next die is then collected from its pocket, brought back and seated with the push-to-stop, and only
-then does the carriage retreat. Parking is towards the tray (−X); going the other way would drive
-the arm at the microscope column, which stands at X 80.
+**Where the cycle starts.** It is a loop, and the README's numbered steps begin in the middle of
+it: step 13 leaves the gripper parked 60 mm out at the traverse height, jaws open, fibers back at
+the facets, a device under test. That is the pose step 0 begins from — die stage to home, fibers
+retract 1 mm, and only *then* does the gripper come in over the die and descend onto it. The last
+frame returns to the first frame's pose, so the clip loops.
+
+The order is the real one: the die on the nest is offloaded to its tray pocket first, the next die
+is then collected from its pocket, brought back and seated with the push-to-stop, and only then does
+the carriage retreat. Parking is towards the tray (−X); going the other way would drive the arm at
+the microscope column, which stands at X 80.
 
 **Two things in the animation are illustrative, not measured.** The yaw trim angle
 (`--theta-trim`, default 0.4°) stands in for a trim whose real value is read per die from the

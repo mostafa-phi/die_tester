@@ -22,9 +22,15 @@ Every position comes from the CAD or the design documents, in millimetres in the
 Two dice are animated: the one the STEP carries on the nest, which goes out to a tray pocket, and a
 copy of it already sitting in another pocket, which comes back to the nest.  That is the exchange -
 the STEP is a single static pose and has only the one die.
+
+The cycle is a loop, and the README's numbered steps start in the middle of it.  Step 13 leaves the
+gripper parked 60 mm out at the traverse height with the fibers back at the facets and a device
+under test, so that is the state step 0 begins from: stage home, fibers retract, and only then does
+the gripper come in over the die and descend.  The last frame returns to the first frame's pose.
 """
 
 import argparse
+import json
 import math
 import os
 import sys
@@ -78,6 +84,7 @@ PUSH_SLIDE = 0.2      # how far the die itself slides onto the pads, step 12
 # X 80. -60 mm takes the jaws clear of the nest cage (X -2.5..12.5) and of the fiber corridor,
 # while staying well short of tray column 0 at -95.
 PARK = -60.0
+START_STAGE_X = 4.0   # the die stage starts one device off home, so step 0 has something to do
 
 
 def column_dx(col):
@@ -143,6 +150,12 @@ def build_rig():
 
     # The yaw empty sits on the rotary axis so a Z rotation on it is the fiducial trim.
     rig["theta"].location = THETA_AXIS * MM
+    # attach() reads target.matrix_world, and assigning .location does not refresh it: without this
+    # update the yaw empty still reads as sitting at the origin, every part attached to it keeps a
+    # parent inverse computed against that stale matrix, and the whole nest top - chuck, cage, TEC,
+    # riser, rotary table - ends up displaced by the axis offset (5, 3, 0) mm once the depsgraph
+    # catches up, leaving the die hanging off the edge of its chuck.
+    bpy.context.view_layer.update()
 
     attach(X_CARRIAGE, rig["x"])
     attach(Z_CARRIAGE, rig["z"])
@@ -191,10 +204,10 @@ def cycle(out_col, out_row, in_col, in_row, theta_trim):
     traverse, ledge = TRAVERSE, LEDGE_DROP
     return [
         # label                       s     targets
-        ("hold",                     0.5, {}),
-        ("0  die stage to home",     0.8, {"sx": 0.0}),
+        ("hold (parked, under test)", 0.5, {}),
+        ("0  die stage to home",     0.8, {"sx": 0.0, "th": 0.0}),
         ("1  fibers retract 1 mm",   0.5, {"fib": FIBER_RETRACT}),
-        ("2  Z to traverse",         0.7, {"z": traverse, "jaw": JAW_OPEN}),
+        ("2  gripper in over the die", 1.4, {"x": 0.0, "jaw": JAW_OPEN}),
         ("3  Z down beside the die", 0.7, {"z": 0.0}),
         ("4  jaws close",            0.5, {"jaw": 0.0}),
         ("5  vacuum off, lift 8 mm", 0.7, {"z": traverse}),
@@ -283,10 +296,17 @@ def keyframe(obj, frame, location=None, rotation=None):
         obj.keyframe_insert("rotation_euler", frame=frame)
 
 
-def animate(rig, dice, segments):
+def animate(rig, dice, segments, start_theta):
     """Write the keyframes.  Axis values are millimetres in the station frame."""
-    state = {"x": 0.0, "z": 0.0, "y": 0.0, "jaw": JAW_OPEN,
-             "sx": 4.0, "th": 0.0, "fib": 0.0, "push": 0.0}
+    # The cycle is a loop, and the documented step list starts in the middle of it: step 13 leaves
+    # the gripper parked at the traverse height with the fibers back in and a device under test, so
+    # that is where step 0 must find it.  Starting from the STEP's static pose instead would have
+    # the jaws already standing on the die before the fibers have even retracted.
+    # Yaw starts at the trim the previous device needed, and step 0 homes it: the jaws grip end
+    # faces and push to the stop pads, so the die has to be square to them before they come in.
+    # It also closes the loop - the clip ends on the new device's trim, where it began.
+    state = {"x": PARK, "z": TRAVERSE, "y": 0.0, "jaw": JAW_OPEN,
+             "sx": START_STAGE_X, "th": start_theta, "fib": 0.0, "push": 0.0}
     die_out, die_in = dice
     # Which rig each die rides, and its world position, tracked as the carriers move.
     carrier = {die_out: "nest", die_in: "tray"}
@@ -320,12 +340,14 @@ def animate(rig, dice, segments):
             keyframe(die, frame, position[die])
 
     frame = 1.0
+    marks = []
     write(frame, state)
     for label, seconds, targets in segments:
         previous = dict(state)
         state.update(targets)
         frame += max(1.0, round(seconds * FPS))
         write(frame, previous)
+        marks.append((int(frame), label))
         print("[anim] f%4d  %s" % (int(frame), label))
 
         # Hand the die over at the frames where the jaws actually take or release it.
@@ -342,6 +364,9 @@ def animate(rig, dice, segments):
     scene.render.fps = FPS
     scene.frame_start = 1
     scene.frame_end = int(frame)
+    # verify_scene.py looks steps up by name, so editing the cycle cannot leave it checking the
+    # wrong frames.
+    scene["exchange_steps"] = json.dumps(marks)
     return int(frame)
 
 
@@ -403,7 +428,8 @@ def main():
 
     end = animate(rig, (die_out, die_in),
                   cycle(args.out_column, args.out_row,
-                        args.in_column, args.in_row, args.theta_trim))
+                        args.in_column, args.in_row, args.theta_trim),
+                  args.theta_trim)
     add_orbit_camera(args.orbit, bpy.context.scene.frame_start, end,
                      args.resolution[0] / args.resolution[1])
     smooth_all()
