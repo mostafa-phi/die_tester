@@ -100,6 +100,21 @@ end faces and scrape them. Therefore:
 | 4 | Z +8 mm | |
 | 5 | Die-present check (section 4) before the X move | a die left on the pad is seen by the camera; a die missing from the jaws stops the sequence |
 
+### 3.5 Z across the tray: a taught map, not a planarity requirement
+
+What the sequences above tolerate in Z: at the **pick** the nose top must stay 0.10 mm below the die top and the crown
+must stay on the end face, so +0.05 / −0.30 mm; at the **place** (tray or chuck) ±0.10 mm. The chuck is one taught
+point. Across the tray the ledge plane wanders by the LX20 running parallelism (0.025 mm per axis over the X and Y
+travel), the deck flatness (0.05 called out), the printed tray's ledge plane (0.1 called out; a PPA-CF print can bow
+more), the ledge height and the die thickness: 0.1–0.2 mm stacked, more than the +0.05 pick window. So Z is commanded
+**per pocket** from a plane (or 3 × 3 grid) fitted to measured ledge heights, and the Z actuator's ±5 µm repeatability
+does the rest. The measurement is a laser displacement sensor on the Z carriage (Panasonic HG-C1030 class, ±10 µm,
+30 ± 5 mm range) scanning nine points after every tray load, about 10 s; it also reports an empty pocket, a die
+sitting proud and a warped tray before any pick. Without the sensor, the closed jaws on a gauge die touch off the
+corner pockets once per tray type, and the pick height is lowered 0.1 mm (band Z −0.05…0.30 on the end face) to widen
+the window to ±0.15 mm. X, Y and yaw of the tray come from the two deck pins (`cad/tray/README.md`), so the map is
+only Z.
+
 ## 4. Sensing the die in the jaws
 
 The MHZ2's two D-M9N switches cannot tell a gripped die from an empty closed jaw (the hard stop is

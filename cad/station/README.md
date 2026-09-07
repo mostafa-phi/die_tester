@@ -63,7 +63,7 @@ two Ø3 dowels) and are exported per part; the printing and finishing instructio
 | `y_axis_riser_6061` | same under the Y actuator (80 wide flange) | 6 × M3 + 2 × Ø4; foot slots |
 | `tower_bracket_6061` | 60 × 60 × 10 base on the X table plate, 10 mm leg carrying the Z rail, gusset rib | base: 4 × Ø4.5 counterbored + 2 × Ø3 dowels (table pattern); leg: 4 × M3 tap-drill + 2 × Ø4 pins (Z rail base pattern) |
 | `arm_6061[_h]` | one piece: 33-deep adapter block on the Z table plate, 25 sq bar along +Y, 8 mm end plate over the gripper bracket | block: 4 × Ø4.5 counterbored Ø8 from the outside + 2 × Ø3 dowels; end plate: 4 × M4 tap-drill + 2 × Ø3 dowels on `gripper.IFACE` |
-| `tray_deck_6061` | 8 mm deck on the Y table plate with a 2 mm locating pocket for the tray (0.2 mm clearance per side) | 4 × Ø4.5 counterbored from the pocket floor + 2 × Ø3 dowels |
+| `tray_deck_6061` | flat 6 mm deck on the Y table plate; two Ø3 m6 dowel pins 3.0 mm proud locate the tray (round hole in the −X rim, 4.5 mm slot along X in the +X rim, 0.05 mm clearance per side; `tray.datum_pins()`), gravity holds it | 4 × Ø4.5 counterbored from the top + 2 × Ø3 dowels (table pattern); 2 × Ø3 H7 pin holes |
 | `nanomax_riser_6061` (×2) | 25 mm plate under each NanoMax | 16 × Ø6.6 through on the 25 mm grid (M6 bolts through the stage slots into the table) |
 
 ## Movement pattern (one exchange)

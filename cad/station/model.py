@@ -298,7 +298,9 @@ M = dict(
     dowel3=2.9, dowel4=3.9,               # press-fit dowel holes (ream to H7 after printing)
     flange_t=8.0, flange_w=60.0, y_flange_w=80.0,   # riser foot flanges: thickness, total width (X riser / Y riser)
     slot=(6.6, 14.0), slot_pitch=50.0,    # foot slots for M6 or 1/4-20 table bolts (25 mm or 1 in grid)
-    deck_t=8.0, deck_pocket=2.0, deck_clr=0.2,      # tray deck: thickness, tray locating pocket depth, clearance per side
+    deck_t=6.0,                           # tray deck: flat 6 mm plate (the tray bottom sits on its top face)
+    tray_pin=(3.0, 10.0, 3.0),            # tray datum pins: dia 3 m6 dowel, 10 long, 3.0 proud of the deck top (below the tray's
+                                          # 3.8 mm wall top); reamed dia 3 H7 through the deck; positions from tray.datum_pins()
     rib_len=40.0, rib_h=60.0, rib_t=10.0, # tower gusset rib on the -X side of the leg
     nanomax_grid=25.0, nanomax_hole=6.6,  # NanoMax riser plates: through holes on the 25 mm grid (M6 bolts through the stage slots)
 )
@@ -439,16 +441,19 @@ def arm(xf, zc, z_iface_top, gx):
 
 
 def deck_part(tray_x0, tray_x1, ty0, ty1, cx, yc, z0):
-    """Tray deck on the Y table plate: 8 mm plate, tray footprint + 8 per side, 2 mm locating pocket (0.2 clearance per
-    side), 4 x M4 counterbored from the top on the table's 20 x 45 pattern, 2 dowels. Tray bottom sits at z0 + 6."""
-    t, pk, cl = M["deck_t"], M["deck_pocket"], M["deck_clr"]
+    """Tray deck on the Y table plate: flat 6 mm plate, tray footprint + 8 per side, 4 x M4 counterbored from the top on
+    the table's 20 x 45 pattern, 2 dowels to the table, and two reamed dia 3 holes for the tray datum pins (round hole
+    and slot in the tray's X rims, tray.datum_pins). The tray bottom sits on the deck top at z0 + 6; the pins stand 3 mm
+    proud, inside the tray's 3.8 mm height, so nothing above the deck can meet them."""
+    t = M["deck_t"]
     d = box(tray_x0 - 8, tray_x1 + 8, ty0 - 8, ty1 + 8, z0, z0 + t)
-    d = d.cut(box(tray_x0 - cl, tray_x1 + cl, ty0 - cl, ty1 + cl, z0 + t - pk, z0 + t + 0.5))
     al, ac = LX["table_holes"]
     for dy in (-al / 2, al / 2):
         for dx in (-ac / 2, ac / 2):
             d = d.cut(C.cyl_z(cx + dx, yc + dy, z0 - 0.5, z0 + t + 0.5, M["m4_clr"] / 2))
-            d = d.cut(C.cyl_z(cx + dx, yc + dy, z0 + t - pk - M["m4_cbore"][1], z0 + t + 0.5, M["m4_cbore"][0] / 2))
+            d = d.cut(C.cyl_z(cx + dx, yc + dy, z0 + t - M["m4_cbore"][1], z0 + t + 0.5, M["m4_cbore"][0] / 2))
+    for px, py in TM.datum_pins(tray_x0, tray_x1, yc):
+        d = d.cut(C.cyl_z(px, py, z0 - 0.5, z0 + t + 0.5, M["tray_pin"][0] / 2))
     for dx in (-LX["table_dowel"][1] / 2, LX["table_dowel"][1] / 2):
         d = d.cut(C.cyl_z(cx + dx, yc, z0 - 0.5, z0 + 5.0, M["dowel3"] / 2))
     return d
@@ -479,9 +484,12 @@ def y_stage_and_tray(active_col_x, active_row_y):
     riser = y_riser_part(ay["y0"], ay["y1"], tray_cx, zr)
     deck_z0 = zr + LX["block_top"]
     deck = deck_part(tray_x0, tray_x1, ty0, ty1, tray_cx, active_row_y, deck_z0)
-    tray, z_led, _ = TM.tray(x_first, active_row_y, deck_z0 + M["deck_t"] - M["deck_pocket"])   # tray bottom on the pocket floor
+    tray, z_led, _ = TM.tray(x_first, active_row_y, deck_z0 + M["deck_t"])   # tray bottom on the deck top, on the two pins
+    pd, pl, pp = M["tray_pin"]
+    pins = [C.cyl_z(px, py, deck_z0 + M["deck_t"] + pp - pl, deck_z0 + M["deck_t"] + pp, pd / 2)
+            for px, py in TM.datum_pins(tray_x0, tray_x1, active_row_y)]
     parts = {"y_axis_rail_lx20": ay["rail"], "y_axis_block": ay["block"], "y_axis_plate": ay["plate"], "y_axis_motor": ay["motor"],
-             "y_stage_riser": riser, "tray_deck": deck, "wafer_tray": tray}
+             "y_stage_riser": riser, "tray_deck": deck, "wafer_tray": tray, "tray_pin_xm": pins[0], "tray_pin_xp": pins[1]}
     S["_y_limits"] = (ay["c_lo"], ay["c_hi"]); S["_y_motor_y"] = ay["motor_y"]
     return parts, z_led, (tray_x0, tray_x1, tray_len_y)
 
@@ -513,7 +521,7 @@ def main():
     zc_nest = za + S["arm_sec"] / 2                                    # Z block centre at the nest: the bar is centred on the block
     S["z_rail_z0"] = zc_nest - S["tray_drop"] - S["end_margin"] - lo_c    # rail start so the tray set-down keeps the end margin
     S["x_rail_z"] = S["z_rail_z0"] - S["tower_t"] - LX["block_top"]    # X rail bottom: the Z rail starts on the tower base plate
-    S["y_rail_z"] = -S["tray_drop"] - (TM.TR["floor_t"] + TM.TR["ledge_h"]) - (M["deck_t"] - M["deck_pocket"]) - LX["block_top"]   # ledge top at -tray_drop
+    S["y_rail_z"] = -S["tray_drop"] - (TM.TR["floor_t"] + TM.TR["ledge_h"]) - M["deck_t"] - LX["block_top"]   # ledge top at -tray_drop
     xc_nest = G.IFACE[0] - (S["tower_w"] / 2 + LX["block_top"] + S["arm_plate_t"])   # arm bar starts at the adapter plate
     S["xc_nest"] = xc_nest
     S["x_rail_x1"] = xc_nest + S["push_x"] + lo_c + S["end_margin"]    # rail's nest end: push-to-stop stays inside the travel
@@ -688,6 +696,11 @@ def main():
         ("arm @far column (per member)", arm2_parts, "x_axis_motor", xax["motor"]),
         ("arm @far column (per member)", arm2_parts, "y_axis_motor", yparts["y_axis_motor"]),
         ("gripper mhz2_body @far col", grip_stick["mhz2_body"], "wafer_tray", stick),
+        ("tray pins (per member)", [yparts["tray_pin_xm"], yparts["tray_pin_xp"]], "gripper near_arm @far col", grip_stick["near_arm"]),
+        ("tray pins (per member)", [yparts["tray_pin_xm"], yparts["tray_pin_xp"]], "gripper near_tip @far col", grip_stick["near_tip"]),
+        ("tray pins (per member)", [yparts["tray_pin_xm"], yparts["tray_pin_xp"]], "gripper blade @far col", grip_stick["blade"]),
+        ("tray pins (per member)", [yparts["tray_pin_xm"], yparts["tray_pin_xp"]], "gripper mhz2_body @far col", grip_stick["mhz2_body"]),
+        ("tray pins (per member)", [yparts["tray_pin_xm"], yparts["tray_pin_xp"]], "arm @far column (per member)", arm2_parts),
         ("gripper bracket @far col", grip_stick["bracket"], "wafer_tray", stick),
         ("gripper far_arm @far col", grip_stick["far_arm"], "wafer_tray", stick),
         ("gripper near_arm @far col", grip_stick["near_arm"], "wafer_tray", stick),
@@ -762,7 +775,7 @@ def main():
         "optical_table": (0.86, 0.88, 0.90), "nest_kb1x1": (0.45, 0.48, 0.52), "nest_riser_6061": al, "nest_chuck_copper": (0.72, 0.45, 0.20), "nest_tec": (0.85, 0.85, 0.88), "nest_cage_semitron": (0.16, 0.16, 0.18),
         "nest_adapter_kb_kxc": al, "nest_spacer_kxc_rot": al, "nest_rmpg40w_body": dark, "nest_rmpg40w_table": (0.25, 0.25, 0.27),
         "nest_rmpg40w_worm": dark, "nest_rmpg40w_motor": (0.30, 0.30, 0.32), "nest_rmpg40w_cable": (0.30, 0.30, 0.32), "nest_rmpg40w_bolts": (0.45, 0.48, 0.52),
-        "nanomax_riser_in": al, "nanomax_riser_out": al, "y_stage_riser": al, "x_axis_riser": al, "tray_deck": al,
+        "nanomax_riser_in": al, "nanomax_riser_out": al, "y_stage_riser": al, "x_axis_riser": al, "tray_deck": al, "tray_pin_xm": (0.45, 0.48, 0.52), "tray_pin_xp": (0.45, 0.48, 0.52),
         "nest_kxc04015_base": dark, "nest_kxc04015_table": (0.25, 0.25, 0.27), "nest_kxc04015_coupling": dark, "nest_kxc04015_motor": (0.30, 0.30, 0.32), "nest_kxc04015_knob": dark,
         "nanomax300_in": blue, "nanomax300_out": blue, "fiber_holder_in": (0.36, 0.40, 0.44),
         "fiber_holder_out": (0.36, 0.40, 0.44), "fiber_in": (0.94, 0.82, 0.50), "fiber_out": (0.94, 0.82, 0.50),

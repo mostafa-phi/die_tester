@@ -560,9 +560,9 @@
       this.zCar.add(cb(65, 90, cyx + 20, 25, 78, 103, mat(COL.axisMove)));                              // arm: 25 sq bar along +Y
       this.zCar.add(cb(gxr - 56, gxr - 22, -15, 25, 70, 78, mat(COL.axisMove)));                        // arm: 8 mm end plate over the bracket interface
       this.gr = makeGripper(); this.gr.position.set(gxr, 0, 0); this.zCar.add(this.gr);
-      // Y actuator (LX2005CG L200) under the wafer tray on a 63 mm riser bar, motor toward +Y; 8 mm deck with a 2 mm locating pocket;
+      // Y actuator (LX2005CG L200) under the wafer tray on a 63 mm riser bar, motor toward +Y; flat 6 mm deck with two dia 3 tray datum pins (round hole / slot in the tray's X rims);
       // tray ledges 12 mm below the chuck pad; 8 columns along X x 14 rows along Y = 112 pockets
-      const trayX0 = ST.colX[ST.cols - 1] - 5, trayX1 = ST.colX[0] + 15, trayCx = (trayX0 + trayX1) / 2, trayLenY = ST.rows * ST.rowPitch + 2.5;
+      const trayX0 = ST.colX[ST.cols - 1] - 11, trayX1 = ST.colX[0] + 21, trayCx = (trayX0 + trayX1) / 2, trayLenY = ST.rows * ST.rowPitch + 2.5;
       const yr = ST.yRailZ, ayx = yr + 13, yc = 3, yR0 = yc - 100, yR1 = yc + 100;                      // rail centred on the pick line
       g.add(cb(trayCx - 20, trayCx + 20, yR0, yR1, tz, yr, mat(COL.stage)));                            // riser bar
       g.add(cb(trayCx - 40, trayCx + 40, yR0, yR1, tz, tz + 8, mat(COL.stage)));                        // foot flange
@@ -575,6 +575,7 @@
       this.yCar.add(cb(trayX0 - 8, trayX1 + 8, yc - trayLenY / 2 - 8, yc + trayLenY / 2 + 8, yTab, yTab + 6, mat(COL.deck)));   // deck to its pocket floor
       const rowsY0 = Array.from({ length: ST.rows }, (_, k) => yc + (k - (ST.rows - 1) / 2) * ST.rowPitch - 3);
       const mTray = mat(COL.tray);
+      [trayX0 + 3.5, trayX1 - 3.5].forEach((px) => this.yCar.add(vcyl(px, yc, 1.5, yTab + 6 - 7, yTab + 6 + 3, mat(COL.rail))));   // tray datum pins
       const zf = yTab + 6;                                                                              // tray bottom on the pocket floor (Z -15)
       this.yCar.add(cb(trayX0, trayX1, yc - trayLenY / 2, yc + trayLenY / 2, zf, zf + 2.2, mTray));    // floor
       this.yCar.add(trayWalls(trayX0, trayX1, yc - trayLenY / 2, yc + trayLenY / 2, ST.colX, rowsY0, zf + 2.2, zf + 3.8, mTray));

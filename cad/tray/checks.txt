@@ -1,4 +1,4 @@
-Wafer tray 8 x 14 = 112 pockets, 132 x 108 mm, column pitch 16.0 (X), row pitch 7.5 (Y); walls 3.8 tall.
+Wafer tray 8 x 14 = 112 pockets, 144 x 108 mm, column pitch 16.0 (X), row pitch 7.5 (Y); walls 3.8 tall.
 Pocket cavity 12.0 x 6.8: die retained to +/-1.0 mm in X by the end walls (jaw capture +/-1.9) and +/-0.4 mm in Y by four corner posts 1.5 long at the die ends (X -1.0..0.5 and 9.5..11.0); between the posts the +/-Y walls are relieved to 1.0 from the facets (with the 7.5 row pitch the wall between rows is gone there), so a facet can only ever meet a post within 0.5 mm of a die corner; nose slots 3.6 wide (contact band 1.5..4.5), through between pockets and 2.8 into the rims; ledges 1.0 wide x 0.8 tall under the facet-edge strips.
 Die on the ledges at Z 3.0 above the deck; wall top 0.3 mm above the die top.
 

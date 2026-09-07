@@ -17,10 +17,11 @@ and the release pose with the whole gripper module, [iso](../../docs/images/tray
 ## Container assumption
 
 One 4″ wafer (~100–112 dies of 10 × 6 mm, all in one orientation) = one tray of **8 columns × 14 rows
-= 112 pockets** (132 × 108 × 3.8 mm). Pocket indices mirror the wafer map, so a die's identity is its
+= 112 pockets** (144 × 108 × 3.8 mm). Pocket indices mirror the wafer map, so a die's identity is its
 pocket and every die returns to its own pocket after test. Physical pass/fail binning is not done at the
 tester; it is a map operation at the sorting station if ever needed. SLA printed (Formlabs Rigid 10K or
-Protolabs Accura), lidded, DataMatrix on the rim; fits a Form 3 bed and a 5″ wafer box. A second tray
+Protolabs Accura), lidded, DataMatrix on the rim; 144 × 108 mm with the datum rims, so it fits a Form 3 / Form 4 bed and a
+6″ wafer box (not a 5″ one). A second tray
 position along X would need +130 mm X travel (Month-2 option).
 
 ## Pocket geometry (corner-post pocket)
@@ -52,6 +53,18 @@ with a tighter deck locating pocket.
 open-jaw part at the set-down height, with the corner posts and the relieved outer rims as separate
 members. The only non-OK lines are the two ledges at exactly 0 (they carry the die) and the end walls
 0.30 mm from the open tip blocks and blade (the nose slot's designed side clearance).
+
+## Location on the deck: two pins
+
+The tray drops onto two Ø3 dowel pins pressed into the flat deck (`cad/station`, `tray_pin`), 3.0 mm proud so they stay
+below the tray's wall top and nothing above the deck can meet them. The −X rim has a round Ø3.1 hole, the +X rim a
+3.1 × 4.5 slot along X (`datum_hole`, `datum_slot`, 3.5 mm in from the rim faces on the tray's Y centre line;
+`datum_pins()` gives the positions, which the deck imports). The 0.05 mm clearance per side sets the placement
+repeatability: ±0.05 mm in X and Y and 0.7 mrad of yaw over the 137 mm pin spacing (±0.05 mm at the far pockets),
+inside the noses' 0.30 mm side clearance in the slot channel and the pocket's ±0.4 mm Y retention. Gravity holds the
+tray; a spring plunger against the +X rim is an option if the Y moves ever prove to shift it. The X rims are 10 mm
+wide beyond the end walls to carry the holes (`rim_x` 11 / 21 from the die origins). The pins fix X, Y and yaw; Z is
+a taught map (see `docs/pick_and_place_design.md` §3.5).
 
 ## Station placement
 

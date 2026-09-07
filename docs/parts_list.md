@@ -61,7 +61,7 @@ the hand-cycling and sequence trials.
 | Tower bracket | `cad/station/STEP/tower_bracket_6061.step` | 6061 | mill from a 60 × 60 × 110 block | final |
 | Arm | `cad/station/STEP/arm_6061.step` | 6061 (stock 25 sq bar + machined block acceptable) | mill | final |
 | X and Y riser bars | `cad/station/STEP/x_axis_riser_6061.step`, `y_axis_riser_6061.step` | 6061 bar (or 80/20 40 × 120 profile with a tapped top plate) | saw, face, drill, tap | final |
-| Tray deck | `cad/station/STEP/tray_deck_6061.step` | 6061 plate | mill | final, or keep the print if the pocket floor measures flat |
+| Tray deck | `cad/station/STEP/tray_deck_6061.step` | 6061 plate, 2 × Ø3 m6 × 10 dowel pins pressed in | mill, ream | final, or keep the print if the top measures flat |
 
 ## 3. Print (Bambu H2C, PPA-CF)
 

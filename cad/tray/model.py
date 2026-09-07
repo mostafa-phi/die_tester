@@ -49,7 +49,11 @@ TR = dict(
     relief_y=1.0,                  # between the posts the +/-Y walls are relieved to >= 1.0 from the facets; with the 7.5 mm row
                                    # pitch (0.7 mm wall) that removes the wall between rows entirely: a facet can touch nothing
     slot_depth=2.8, slot_y=(1.2, 4.8),   # nose slot channel (3.6 wide) runs this far beyond the cavity into the rims
-    rim_x=(5.0, 15.0),             # tray rim beyond the last pocket's die origin (-X side) and the first pocket's (+X side)
+    rim_x=(11.0, 21.0),            # tray rim beyond the last pocket's die origin (-X side) and the first pocket's (+X side):
+                                   # 10 mm of rim beyond the end walls carries the datum hole / slot (tray 144 x 108)
+    datum_hole=3.1, datum_slot=4.5, datum_inset=3.5,   # location on two dia 3 deck pins: round hole (-X rim) and a 4.5 long slot
+                                   # along X (+X rim), 0.05 clearance per side, centred datum_inset from the rim's outer face on
+                                   # the tray's Y centre line; a printed/SLA tray drops onto the pins, gravity holds it
     rim_y=1.25,                    # half of the extra length in Y: 1.0 mm of outer rim remains beyond the relief
     jaw_open=1.5,                  # per-side jaw opening at the tray (of the 2.0 available)
 )
@@ -128,7 +132,23 @@ def tray(x_first, yc, z_deck):
     for r in reliefs:                                                             # one strip per column, cut one at a time
         slab = slab.cut(cq.Workplane().add(r))                                   # (a compound of these leaves a broken shape)
     slab = slab.union(cq.Workplane().add(cq.Compound.makeCompound(ledges)))
+    for h in datum_features(x0, x1, yc, z_deck, z_led + TR["wall_above_die"]):
+        slab = slab.cut(cq.Workplane().add(h))
     return slab, z_led, (x0, x1, y0, y1)
+
+
+def datum_pins(x0, x1, yc):
+    """(X, Y) of the two deck pins for a tray with extents x0..x1 centred on yc: -X round hole, +X slot."""
+    return [(x0 + TR["datum_inset"], yc), (x1 - TR["datum_inset"], yc)]
+
+
+def datum_features(x0, x1, yc, z0, z1):
+    """Round hole and X slot (through, dia datum_hole) that put the tray on the two deck pins."""
+    (xa, ya), (xb, yb) = datum_pins(x0, x1, yc)
+    dh, sl = TR["datum_hole"], TR["datum_slot"]
+    hole = C.cyl_z(xa, ya, z0 - 0.5, z1 + 0.5, dh / 2).val()
+    slot = cq.Workplane("XY").slot2D(sl, dh).extrude(z1 - z0 + 1.0).translate((xb, yb, z0 - 0.5)).val()
+    return [hole, slot]
 
 
 def pocket_walls(xd, yd, z_deck):
