@@ -25,8 +25,8 @@ clearances vs boxes (AABB separation, mm; negative = overlap):
   die stage stack (per member)     vs y_axis_motor              :   141.2  OK 
   die stage stack (per member)     vs y_stage_riser             :    32.0  OK 
   die stage stack (per member)     vs gripper @nest (per member):    61.4  OK 
-  nest moving @-7.5 (per member)   vs nanomax300_in             :     9.5  OK 
-  nest moving @+7.5 (per member)   vs nanomax300_out            :    28.0  OK 
+  nest moving @-7.5 (per member)   vs nanomax300_in             :    27.5  OK 
+  nest moving @+7.5 (per member)   vs nanomax300_out            :    10.0  OK 
   nest moving @-7.5 (per member)   vs fiber_holder_in (per member):     3.0  OK 
   nest moving @+7.5 (per member)   vs fiber_holder_out (per member):     3.0  OK 
   nest_cage (per member)           vs fiber_holder_in (per member):     3.0  OK 
@@ -196,7 +196,7 @@ swept volumes nest <-> tray (after the 8 mm lift; per member) vs static objects:
   gripper band vs fiber_holder_out      :     6.5  OK     arm band:    73.5  OK 
   gripper band vs nest_riser_6061       :    12.5  OK     arm band:    82.5  OK 
   gripper band vs nest_kxc04015_motor   :    69.4  OK     arm band:   131.3  OK 
-  gripper band vs nest_rmpg40w_motor    :    35.0  OK     arm band:    96.9  OK 
+  gripper band vs nest_rmpg40w_motor    :    35.0  OK     arm band:   104.9  OK 
   gripper band vs x_axis_rail_lx20      :   131.0  OK     arm band:    36.2  OK 
   gripper band vs x_axis_riser          :   121.0  OK     arm band:    62.7  OK 
   gripper band vs x_axis_motor          :   146.4  OK     arm band:   153.0  OK 

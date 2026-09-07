@@ -3,7 +3,7 @@ Y free within +/-0.6 mm (corner guards). Fiber protrusion 5.0 mm: holder bodies 
 Chuck pad 9 x 5 mm = 75 % of the backside on metal, 0.5 mm inboard of every edge; 6 x dia 0.5 vacuum holes; copper neck to a 15 x 15 TEC at Z -12.0.
 Push-to-stop: set down 0.2 mm short, jaws open, gripper +1.73 mm -> near nose seats the die with 0.25 N (blade overtravel 0.1 mm).
 Die stage stack (table Z -111.0): KB1X1 top -98.3, adapter, KXC04015-C -95.3..-65.3 (table top), 8 mm spacer, RMPG40W-N -57.3..-22.3 (table top), riser wide body -22.3..-12.0 (10.3 mm: TEC pocket 2.5 + floor), neck to the cage plate at -4.5.
-Stage travel 15 mm (+/-7.5); device stepping uses +/-4. Both motors point -X (X < -15); the rotary's long end and motor toward -Y; the rotary rides on the X stage (yaw measured fiducial-to-fiducial under the microscope is die-vs-travel, so the rotary must be above the travel). The gripper meets the nest at stage HOME only.
+Stage travel 15 mm (+/-7.5); device stepping uses +/-4. Both motors point -X (X < -15); the rotary's long end and motor toward +Y; the rotary rides on the X stage (yaw measured fiducial-to-fiducial under the microscope is die-vs-travel, so the rotary must be above the travel). The gripper meets the nest at stage HOME only.
 
 chuck pad inside the die footprint (positive = pad edge inboard of the die edge):
   pad X 0.5..9.5 in die 0..10 (margins 0.5 / 0.5); pad Y 0.5..5.5 in die 0..6 (margins 0.5 / 0.5)
@@ -250,10 +250,10 @@ KXC04015-C vendor STEP vs the catalog envelope (station frame; the file is the r
   motor      vendor X  -74.0.. -36.0 Y  -11.0..  17.0 Z  -94.3.. -61.3   envelope X  -74.0.. -27.0 Y  -11.0..  17.0 Z  -91.3.. -61.3
   coupling   vendor X  -74.0.. -26.0 Y  -16.0..  30.8 Z  -94.3.. -62.6   envelope X  -27.0.. -15.0 Y  -11.0..  17.0 Z  -95.3.. -80.3
 RMPG40W-N vendor STEP vs the envelope (station frame):
-  body       vendor X  -95.0..  31.5 Y  -35.0..  23.0 Z  -57.3.. -26.8   envelope X  -15.0..  25.0 Y  -32.0..  23.0 Z  -57.3.. -28.8
+  body       vendor X  -95.0..  31.5 Y  -17.0..  41.0 Z  -57.3.. -26.8   envelope X  -15.0..  25.0 Y  -17.0..  38.0 Z  -57.3.. -28.8
   table      vendor X  -14.5..  24.5 Y  -16.5..  22.5 Z  -28.8.. -22.3   envelope X  -14.5..  24.5 Y  -16.5..  22.5 Z  -28.8.. -22.3
-  motor      vendor X  -54.5.. -37.0 Y  -34.9..  -7.1 Z  -54.7.. -26.9   envelope X  -54.5.. -37.0 Y  -35.0..  -7.0 Z  -54.8.. -26.8
-  cable      vendor X  -68.0.. -55.0 Y  -22.5..  -8.5 Z  -54.8.. -45.4   envelope X  -95.0.. -55.0 Y  -22.5..  -8.5 Z  -59.4.. -45.4
+  motor      vendor X  -54.5.. -37.0 Y   13.1..  40.9 Z  -54.7.. -26.9   envelope X  -54.5.. -37.0 Y   13.0..  41.0 Z  -54.8.. -26.8
+  cable      vendor X  -68.0.. -55.0 Y   14.5..  28.5 Z  -54.8.. -45.4   envelope X  -95.0.. -55.0 Y   14.5..  28.5 Z  -59.4.. -45.4
 fixed stack members vs the holders and fibers (both motors point -X):
   rmpg40w_table                      vs holder_in                 :   14.30  OK 
   rmpg40w_table                      vs holder_out                :   14.30  OK 
