@@ -33,7 +33,8 @@ the die).
 
 ## Station placement
 
-In the station the tray rides on the Y-stage deck with columns along X (die X of column 0 at −150,
-column 7 at −262) and rows along Y (7.5 mm pitch, ±48.75 mm of Y travel). The column positions
-(`TR["col0_x"]`, pitches) are read by `cad/station`, so changing them here moves the transport
-targets too.
+In the station the tray rides on the deck of the Y actuator with columns along X (die X of column 0 at −95,
+column 7 at −207) and rows along Y (7.5 mm pitch, ±48.75 mm of Y travel); the ledges sit 12 mm below the
+chuck pad. Column 0 is set by the tray's +X rim (col 0 + 15) and the deck (+8) clearing the input NanoMax
+base at X −51 as the rows sweep through its Y band (21 / 13 mm). The column positions (`TR["col0_x"]`,
+pitches) are read by `cad/station`, so changing them here moves the transport targets too.

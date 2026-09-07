@@ -1,6 +1,6 @@
 # System Redesign Study — Batch Edge-Coupled Testing of Hundreds of 10 × 6 mm Photonic Dies
 
-**Status:** concept study for review, rev. 2.10 (CAD of the gripper, the self-registering nest on its die stage, the wafer tray and the full station in [`cad/`](../cad/README.md))
+**Status:** concept study for review, rev. 2.11 (CAD of the gripper, the self-registering nest on its die stage, the wafer tray and the full station with its MISUMI LX20 transport in [`cad/`](../cad/README.md))
 **Scope:** ground-up redesign of the die-tester stage and handling system. The current
 machine is architected around a single manually loaded die; this study treats the whole
 stage system as open for redesign and asks what a machine looks like when the unit of
@@ -42,7 +42,11 @@ along the die and the NanoMax fiber stages travel only 4 mm, so a Suruga KXC0401
 the nest steps the die from device to device (as the current tester's centre stage does), with a
 MISUMI RMPG40W-N motorized rotary on top of it that nulls the yaw measured fiducial-to-fiducial
 under the microscope; the gripper meets the nest at stage home only. The stack needs 100 mm under the die, so the
-fiber stages sit on 25 mm risers.
+fiber stages sit on 25 mm risers. Rev. 2.11 writes down what the transfer axes actually need
+(±0.15 mm at the nest, ±0.3 mm at the tray, ±0.05 mm in Z, since the die is placed by hard
+references) and replaces the Velmex BiSlides with three **MISUMI LX20** actuators (lead 5 for
+speed); the tray moves 55 mm closer to the nest and the X actuator's narrow band beside the tray
+sweep removes the bridge riser. The interactive model still shows the rev. 2.10 layout.
 
 Coordinate convention follows the brief: **X** = 10 mm die dimension, **Y** = 6 mm die
 dimension (optical propagation; fibers approach along ±Y), **Z** = vertical, **θ** =
@@ -501,7 +505,7 @@ can be drawn on the table and interlocked.
 
 | Option | Verdict |
 |---|---|
-| **Bench-level 3-axis Cartesian** from motorized linear stages (Zaber X-LSM, Thorlabs LTS150, or Suruga Seiki stages on a DS102 — the controller family the tester already drives) | **Selected.** Straight-line entry under the objective, predictable swept volume, µm repeatability, no θ. The prototype axes are the production kinematics with shorter travel. |
+| **Bench-level 3-axis Cartesian** from motorized linear stages; rev. 2.11 sizes it to what the handling needs (±0.15 mm at the nest, ±0.3 mm at the tray, ±0.05 mm in Z, every position approached from one side) and selects three **MISUMI LX2005CG-B1-T2042** actuators (X L 300 / 236.5 mm stroke, Y L 200, Z L 100; lead 5 for speed, ±5 µm repeatability, 27 N·m moment rating on the X table; `docs/bom_month1.md` A1) over Velmex / Zaber / Thorlabs stages | **Selected.** Straight-line entry under the objective, predictable swept volume, no θ. The die is placed by hard references (stop pads, pocket walls), so the axes need repeatability, stiffness under the cantilevered arm and a power-off hold on Z, not µm accuracy. The prototype axes are the production kinematics; a second tray position needs a longer X (LX26/30 class). |
 | 4-axis SCARA (Epson T3/T6 class) | Only with an offset gripper bar: the vertical quill must land at the die's X end, ~15 mm from center, where a Ø30–35 mm objective barrel is. With the bar it does nothing a linear axis cannot. |
 | Articulated desktop arm (Dobot MG400 class) | **Rejected for the tester.** J2/J3 are pitch joints in a vertical plane (parallelogram wrist): the forearm approaches from above and behind, into the microscope column's volume, and its swept volume near the nest is an arc. Acceptable only for a bench-only cycling rig with no microscope. |
 | Overhead gantry spanning the cell | Rejected for the tester (bridge lives where the column and fiber stacks are); right for the sorting station (Fig. 1), where nothing is above the wafer. |
@@ -527,9 +531,13 @@ can be drawn on the table and interlocked.
 | Top-and-bottom sandwich clamp at the end zones | **Rejected.** Still touches the top surface and adds nothing over end-face gripping. |
 | Electrostatic top chuck | Rejected: unpredictable on pyroelectric LN. |
 
-**Layout and operation.** X axis at −X of the nest at bench level, on a riser decoupled
-from the nest base plate, so its motion never enters the metrology loop; sticks arrayed
-along the X axis on the −X side, outside both fiber corridors. The axes move **only while fibers are retracted** and is parked
+**Layout and operation.** X actuator at −X of the nest beside the input fiber stage
+(centre-line Y −140) on its own riser bar, decoupled from the nest base plate, so its
+motion never enters the metrology loop; its 52 mm band lies beside the tray's Y sweep, so
+nothing passes under it. The Z actuator stands on an angle bracket on the X table with
+its brake motor up; one 25 mm square bar runs from the Z table along +Y to the gripper.
+The tray rides on the Y actuator under the arm, columns along X from die X −95 to −207,
+outside both fiber corridors (`cad/station/README.md`). The axes move **only while fibers are retracted** and is parked
 during every measurement, so pipelining is not needed in the long-test regime; in the
 screening regime the incoming die is pre-staged in a second gripper before the fibers
 retract, making the swap itself ~5 s and the full exchange 15–25 s including vision

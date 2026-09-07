@@ -30,8 +30,9 @@ disagree with each other.
   the component's `P` / `N` / `TR` / `S` dict.
 - **Vendor geometry.** Bought parts are placed from manufacturer STEP in `cad/vendor/` (git-ignored,
   licensed downloads; see `cad/vendor/README.md`) whenever the file is present; there is no separate
-  envelope build. Envelopes are fallbacks, never the record where a vendor file exists. What we learned from vendor files (SMC finger gap, Velmex slider height,
-  NanoMax micrometer protrusion) is written into the model comments, not just the chat.
+  envelope build. Envelopes are fallbacks, never the record where a vendor file exists. What we learned from vendor files (SMC finger gap, KXC table pattern,
+  NanoMax micrometer protrusion) is written into the model comments, not just the chat. Catalog numbers typed into an
+  envelope (`common.LX20`) say where they came from and are confirmed against the STEP when it arrives.
 - **Handling sequences.** How the jaws pick and place (heights, forces, interlocks, the friction-only
   decision, nose crown) is `docs/pick_and_place_design.md`; the gripper, tray and nest models quote it.
 - **Honesty of checks.** Clearance checks are per member (`gap_any`, `gap_parts`), never on the
@@ -100,6 +101,6 @@ Therefore:
 ## 5. Still-open measurements (do not silently replace with guesses)
 
 Real fiber-holder envelope, microscope working distance and tube diameter, TEC part number and
-heat load, die backside finish, Velmex carriage bolt patterns, the KB1X1 platform bolt pattern for
+heat load, die backside finish, the LX20 envelope against its STEP (and the stepper length), the KB1X1 platform bolt pattern for
 the adapter plate under the X stage, RMPG40W-N resolution and repeatability. Until measured they stay as the
 named parameters above with their assumed values stated in the component READMEs.

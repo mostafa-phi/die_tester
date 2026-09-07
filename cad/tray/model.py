@@ -36,7 +36,9 @@ L, W, T = C.DIE_LEN, C.DIE_WID, C.DIE_THK
 
 TR = dict(
     cols=8, rows=14, col_pitch=16.0, row_pitch=7.5,
-    col0_x=-150.0,                 # station: die X of the first (nearest) column; last column at -150 - 7*16 = -262
+    col0_x=-95.0,                  # station: die X of the first (nearest) column; last column at -95 - 7*16 = -207.
+                                   # Set by the tray's +X rim (col0 + 15) and the deck (+8) clearing the input NanoMax
+                                   # base (X -51) as the rows sweep through its Y band: 21 mm from the rim, 13 from the deck
     floor_t=2.2,                   # cavity floor above the deck
     ledge_w=1.0, ledge_h=0.8,      # ledges under the facet-edge strips; ledge top = die bottom
     wall_above_die=0.8,            # wall top above the die bottom

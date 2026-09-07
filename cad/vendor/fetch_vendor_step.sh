@@ -15,13 +15,13 @@ curl -sSL -A "$UA" -o thorlabs_KB1X1.step \
 # Imperial NanoMax (MAX313D, 22802-E0W) if that is what is on the bench:
 #   https://thin01mstroc282prod.dxcloud.episerver.net/globalassets/items/m/ma/max/max313d/22802-e0w.step
 
-# --- Velmex BiSlide: the site sits behind a browser captcha, download by hand ----------------------
-#   https://www.velmex.com/Technical/technical_cad_drawings.html   (Technical library, .stp per model)
-#   X axis : "MN10-0150-xxx-21 2Cleats PK266.stp"  https://velmex.com/document/mn10-0150-xxx-21-2cleats-pk266-stp
-#            -> save as velmex_MN10-0150-21.step   (15 in / 381 mm travel, 2 cleats, PK266 motor)
-#   Z and Y: "MN10-0050-xxx-21 PK266.stp"          (same folder)
-#            -> save as velmex_MN10-0050-21.step   (5 in / 127 mm travel, PK266 motor)
-#   Order as MN10-0150-M02-21 and 2x MN10-0050-M02-21 (M02 = 2 mm/rev metric lead screw).
+# --- MISUMI LX20 actuators (transport X/Y/Z): CAD download needs a MISUMI account, download by hand ----
+#   https://us.misumi-ec.com/vona2/detail/110300075020/   configure LX2005CG-B1-A2040-<L>, "CAD" -> STEP AP214
+#            -> save as misumi_LX2005CG-B1-A2040-300.step / -200.step / -100.step (X / Y / Z), then strip CRLF:
+#               sed -i 's/\r$//' misumi_LX2005CG-B1-A2040-*.step
+#   Order LX2005CG-B1-<adapter>-300 / -200 / -100 (high grade, 1 long block, lead 5, cover, low-particulate grease);
+#   adapter T2042 for a 42 sq stepper (AZM46), A2040 for a 40 sq servo. Same outline, so the CAD serves both.
+#   The Velmex BiSlide files of the earlier layout (velmex_MN10-*.step) are no longer placed.
 
 # --- SMC MHZ2-6D-M9N: CAD needs a (free) SMC account since March 2026 -------------------------------
 #   https://www.smcworld.com/cadlib/en/   or   https://www.smc.eu/en-gb/products/engineering-tools/3d-product-libraries
