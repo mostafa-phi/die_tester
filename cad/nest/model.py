@@ -102,7 +102,11 @@ N = dict(
     # end; 39 sq table 6.5 thick with 8 x M2 on a 10 mm grid + dia 8 bore; base 4 x M3 cbore on 32 x 32 around the axis (bolted from
     # above); worm housing + 28 sq stepper along the body's +X (motor centre 24 from the axis toward the long end), cable dia 14 to X 184
     rot=dict(w=40.0, len_short=20.0, len_long=35.0, h=35.0, table=39.0, table_t=6.5, worm=(20.0, 42.0), motor=(42.0, 59.5), motor_sq=28.0,
-             motor_off=24.0, cable=(60.0, 100.0), cable_d=14.0, motor_side=-1),   # motor_side: the long end / motor go to station -Y
+             motor_off=24.0, cable=(60.0, 100.0), cable_d=14.0, motor_side=+1),   # motor_side: the long end / motor go to station +Y.
+                                                                        # +1 is the only buildable value: the vendor body is placed by
+                                                                        # rotations alone (rev. 2.13; -1 used to MIRROR the file, i.e.
+                                                                        # a part that cannot be bought). Long end toward +Y: body Y -17..41
+                                                                        # below Z -22, clear of the output NanoMax (Y >= 51) and holders
                                                                         # cable: only the 40 mm straight lead-out is modelled; the vendor file
                                                                         # draws it straight to 184 (station X -179), which would run into the
                                                                         # Y-stage riser at X < -150 -> route it down/along -Y after the lead-out
@@ -241,11 +245,11 @@ def _rot_frame(w, z0):
     """Vendor RMPG40W-N file frame (X = worm/motor direction, Y = rotation axis (table at +Y), Z = body length with the axis at Z -24)
     -> station: axis vertical through the die centre, motor toward -X, long end toward motor_side * Y."""
     sgn = N["rot"]["motor_side"]
+    if sgn < 0:
+        raise ValueError("motor_side -1 would mirror the vendor body (not a buildable orientation); rotate the whole nest instead")
     w = w.rotate((0, 0, 0), (1, 0, 0), 90)                      # (x, y, z) -> (x, -z, y): axis up
     w = w.rotate((0, 0, 0), (0, 0, 1), 180)                     # -> (-x, z, y): motor toward -X, long end (+z) toward +Y
-    if sgn < 0:
-        w = w.mirror("XZ")                                      # long end toward -Y instead
-    return w.translate((DIE_CX, DIE_CY + sgn * 24.0, z0 + 16.5))   # file axis lands at Y -/+24 after the rotations / mirror
+    return w.translate((DIE_CX, DIE_CY + sgn * 24.0, z0 + 16.5))   # file axis lands at Y +24 after the rotations
 
 
 def rmpg40w(z0, x_off=0.0):

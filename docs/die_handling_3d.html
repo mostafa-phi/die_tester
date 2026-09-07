@@ -481,7 +481,7 @@
       g.add(cb(-540, 220, -280, 280, tz - 12, tz, mat(0xd6dae0)));
       // die stage stack (cad/nest levels()): KB1X1 12.7, adapter 3, KXC04015-C 30 (table top Z -65.3, motor section 59 toward -X, motor
       // box 4 mm above the table top), MISUMI RMPG40W-N motorized rotary 35 ON the X-stage table (body 40 x 55, axis through the die,
-      // motor toward -X, long end toward -Y; rides with the stage) on an 8 mm spacer, riser 38 sq wide body on the rotary table (top Z -22.3)
+      // motor toward -X, long end toward +Y; rides with the stage) on an 8 mm spacer, riser 38 sq wide body on the rotary table (top Z -22.3)
       const mDark = mat(0x33363c), mAl = mat(COL.stage);
       g.add(cb(-7.7, 17.7, -9.7, 15.7, tz, tz + 12.7, mat(0x6f7378)));                     // KB1X1 kinematic base
       g.add(cb(-15, 25, -17, 23, tz + 12.7, tz + 15.7, mAl));                              // adapter KB1X1 -> KXC04015-C base (3 mm)
@@ -494,11 +494,11 @@
       const knob = cyl(6, 4, mDark); knob.rotation.z = Math.PI / 2; knob.position.set(-76, kz + 22, 3); g.add(knob);
       this.kxcTable.add(cb(-15, 25, -17, 23, kz + 30, kz + 38, mAl));                       // 8 mm spacer with the centre dowel
       const rz = kz + 38;                                                                  // rotary base face (Z -57.3)
-      this.kxcTable.add(cb(-15, 25, -32, 23, rz, rz + 28.5, mDark));                       // RMPG40W-N body
+      this.kxcTable.add(cb(-15, 25, -17, 38, rz, rz + 28.5, mDark));                       // RMPG40W-N body (long end toward +Y)
       this.kxcTable.add(cb(-14.5, 24.5, -16.5, 22.5, rz + 28.5, rz + 35, mat(0x44474d)));  // rotary table 39 sq
-      this.kxcTable.add(cb(-37, -15, -35, -7, rz + 2.5, rz + 30.5, mDark));                // worm housing toward -X
-      this.kxcTable.add(cb(-54.5, -37, -35, -7, rz + 2.5, rz + 30.5, mat(0x4d5058)));      // 28 sq stepper
-      const rc = cyl(7, 40, mDark); rc.rotation.z = Math.PI / 2; rc.position.set(-75, rz + 5, -15.5); this.kxcTable.add(rc);   // cable lead-out
+      this.kxcTable.add(cb(-37, -15, 13, 41, rz + 2.5, rz + 30.5, mDark));                 // worm housing toward -X, at the +Y (long) end
+      this.kxcTable.add(cb(-54.5, -37, 13, 41, rz + 2.5, rz + 30.5, mat(0x4d5058)));       // 28 sq stepper
+      const rc = cyl(7, 40, mDark); rc.rotation.z = Math.PI / 2; rc.position.set(-75, rz + 5, 21.5); this.kxcTable.add(rc);   // cable lead-out
       this.kxcTable.add(cb(-14, 24, -16, 22, rz + 35, -12, mAl));                          // riser wide body / heat sink on the rotary table
       this.kxcTable.add(cb(-8, 18, -2, 8, -12, -4.5, mAl));                              // riser neck between the fiber holders
       g.add(cb(-2.5, 12.5, -4.5, 10.5, -14.5, -12, mat(0xdadde2)));                      // TEC 15 x 15 x 2.5 (cold face at Z -12)

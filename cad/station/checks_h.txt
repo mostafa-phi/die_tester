@@ -25,8 +25,8 @@ clearances vs boxes (AABB separation, mm; negative = overlap):
   die stage stack (per member)     vs y_axis_motor              :   141.2  OK 
   die stage stack (per member)     vs y_stage_riser             :    32.0  OK 
   die stage stack (per member)     vs gripper @nest (per member):    61.4  OK 
-  nest moving @-7.5 (per member)   vs nanomax300_in             :     9.5  OK 
-  nest moving @+7.5 (per member)   vs nanomax300_out            :    28.0  OK 
+  nest moving @-7.5 (per member)   vs nanomax300_in             :    27.5  OK 
+  nest moving @+7.5 (per member)   vs nanomax300_out            :    10.0  OK 
   nest moving @-7.5 (per member)   vs fiber_holder_in (per member):     3.0  OK 
   nest moving @+7.5 (per member)   vs fiber_holder_out (per member):     3.0  OK 
   nest_cage (per member)           vs fiber_holder_in (per member):     3.0  OK 

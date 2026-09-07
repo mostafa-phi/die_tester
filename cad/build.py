@@ -80,6 +80,7 @@ RENDERS = [
     ("station", "station_assembly.step", "station_side.png", "90:20"),
     ("station", "station_assembly_h.step", "station_h_iso.png", "iso"),
     ("station", "station_assembly_h.step", "station_h_side.png", "90:20"),
+    ("station", "station_far_column.step", "station_far_column_iso.png", "iso"),
     ("station", "tower_bracket_6061.step", "station_tower_bracket_iso.png", "iso"),
     ("station", "arm_6061.step", "station_arm_iso.png", "iso"),
     ("station", "tray_deck_6061.step", "station_tray_deck_iso.png", "iso"),

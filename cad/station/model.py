@@ -964,14 +964,19 @@ def main():
     for n, s in moving_nest.items(): assy.add(s, name=n, color=cq.Color(*col.get(n, moving), 1.0))
     for n, s in grip_nest.items(): assy.add(s, name=f"gripper_{n}", color=cq.Color(0.25, 0.25, 0.27, 1.0))
     for n, s in sens_nest.items(): assy.add(s, name=n, color=cq.Color(0.20, 0.22, 0.25, 1.0) if "camera" in n else cq.Color(0.55, 0.58, 0.62, 1.0))
-    ghost = {"x_axis_block_at_far_col": xblock2, "arm_at_far_col": arm2_u}
-    ghost.update({f"{n}_at_far_col": s for n, s in tower2.items()})
-    for n, s in ghost.items():
-        assy.add(s, name=n, color=cq.Color(0.18, 0.31, 0.44, 0.25))
-    for n, s in grip_stick.items(): assy.add(s, name=f"gripper_at_far_col_{n}", color=cq.Color(0.25, 0.25, 0.27, 0.25))
-    for n, s in sens_far.items(): assy.add(s, name=f"{n}_at_far_col", color=cq.Color(0.25, 0.25, 0.27, 0.25))
     assy.add(keepout(), name="objective_keepout", color=cq.Color(0.85, 0.64, 0.25, 0.25))
     assy.save(os.path.join(DIRS["STEP"], f"station_assembly{suffix}.step"))
+    # the second configuration (carriage, tower, arm, gripper and camera at the farthest tray column, jaws open in the pocket):
+    # its own file, so the main assembly holds one gripper (STEP carries no transparency; the earlier ghost looked like a second tool)
+    far = cq.Assembly(name="station_far_column")
+    far.add(xblock2, name="x_axis_block_at_far_col", color=cq.Color(*moving, 1.0))
+    far.add(arm2_u, name="arm_at_far_col", color=cq.Color(*moving, 1.0))
+    for n, s in tower2.items(): far.add(s, name=f"{n}_at_far_col", color=cq.Color(*col.get(n, moving), 1.0))
+    for n, s in grip_stick.items(): far.add(s, name=f"gripper_at_far_col_{n}", color=cq.Color(0.25, 0.25, 0.27, 1.0))
+    for n, s in sens_far.items(): far.add(s, name=f"{n}_at_far_col", color=cq.Color(0.20, 0.22, 0.25, 1.0))
+    for n in ("wafer_tray", "tray_deck", "y_axis_block", "y_axis_plate"):
+        far.add(static[n], name=n, color=cq.Color(*col.get(n, al), 1.0))
+    far.save(os.path.join(DIRS["STEP"], f"station_far_column{suffix}.step"))
     print("wrote station files to", DIRS["comp"])
 
 
