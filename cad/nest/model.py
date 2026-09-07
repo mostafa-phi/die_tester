@@ -46,6 +46,8 @@ Outputs (this folder):
   STEP/nest_spacer_kxc_rot.step         spacer X-stage table -> RMPG40W-N base  (6061, 8 mm, dia 3.4 x 4 on 32 sq, dia 4 dowel)
   STEP/nest_module_assembly.step        chuck + cage + riser + TEC + die stage stack (vendor STEP where present) + die + gripper (closed) + envelopes
   STEP/nest_module_setdown.step         same with the jaws open at the set-down position (push step)
+  STEP/nest_top_assembly.step           what sits on the rotary table: riser + TEC + chuck + cage + seated die
+  STEP/nest_top_no_die.step, nest_top_exploded.step   the same with the pad exposed, and exploded by 8 mm per part
   checks.txt                            clearances vs gripper (closed / open / push), holders, fibers, die; stage at home and +/-travel
 
 Run:  python cad/nest/model.py   (or python cad/build.py)
@@ -590,6 +592,17 @@ def main():
     for k in ("far_tip", "near_tip", "blade", "near_arm", "far_arm"):
         a2.add(grip_open[k].translate((-N["place_short"], 0, 0)), name=f"gripper_{k}_open", color=cq.Color(0.55, 0.58, 0.62, 1.0))
     a2.save(os.path.join(DIRS["STEP"], "nest_module_setdown.step"))
+    # the assembly that sits on the rotary table (riser, TEC, chuck, cage, die): seated, pad exposed, and exploded
+    top = {"nest_riser_6061": rs, "tec_15x15": te, "nest_chuck_copper": ch, "nest_cage_semitron": cg}
+    for name, extra, lift in (("nest_top_assembly", {"die_seated": die_seated}, 0.0), ("nest_top_no_die", {}, 0.0),
+                              ("nest_top_exploded", {"die_seated": die_seated}, 8.0)):
+        a3 = cq.Assembly(name=name)
+        for i, (n, sh) in enumerate(top.items()):
+            dz = lift * max(0, i - 1)                                            # riser and TEC stay, chuck +8, cage +16
+            a3.add(sh.translate((0, 0, dz)), name=n, color=cq.Color(*col[n], 1.0))
+        for n, sh in extra.items():
+            a3.add(sh.translate((0, 0, lift * 3)), name=n, color=cq.Color(0.81, 0.89, 0.97, 1.0))
+        a3.save(os.path.join(DIRS["STEP"], f"{name}.step"))
     for old in ("nest_module_assembly_vendor.step", "nest_adapter_kb_rpg.step", "nest_adapter_rpg_kxc.step"):
         try: os.remove(os.path.join(DIRS["STEP"], old))
         except OSError: pass

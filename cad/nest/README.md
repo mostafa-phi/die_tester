@@ -8,6 +8,12 @@ fiber-holder envelope `FIBER`, bench levels `TABLE_Z` / `KB1X1_H`). Used by `cad
 ![nest](renders/nest_iso.png)
 ![set-down, jaws open](renders/nest_setdown_iso.png)
 
+The assembly on the rotary table (T-riser, TEC, copper chuck, Semitron cage, die): seated, pad exposed, exploded.
+
+![nest top assembly](renders/nest_top_assembly_iso.png)
+![pad exposed](renders/nest_top_no_die_iso.png)
+![exploded](renders/nest_top_exploded_iso.png)
+
 ## What it does
 
 The gripper sets the die down on a lapped copper vacuum-chuck pad 0.2 mm short of two hard-stop pads,
