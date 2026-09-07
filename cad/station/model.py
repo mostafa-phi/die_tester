@@ -926,8 +926,8 @@ def main():
     rep.append("bar height check in cad/gripper/checks.txt (tallest part 9.0 mm above die top vs WD).")
     suffix = G.SFX
     placed = sorted(set(VENDOR_PLACED))
-    rep.insert(0, ("VENDOR MODELS placed: " + ", ".join(placed) + "; envelopes for everything else (the microscope and the three LX20 "
-                   "actuators until their STEP is supplied). AABBs include micrometers, motors, cables and switches.") if placed else
+    rep.insert(0, ("VENDOR MODELS placed: " + ", ".join(placed) + "; envelopes for everything else (the microscope, the fiber holders, the motors and "
+                   "couplings, and any vendor file missing from cad/vendor). AABBs include micrometers, motors, cables and switches.") if placed else
                "VENDOR MODELS: none present in cad/vendor (envelope build; see cad/vendor/README.md)")
     txt = "\n".join(rep); print(txt)
     with open(os.path.join(DIRS["comp"], f"checks{suffix}.txt"), "w") as f: f.write(txt + "\n")
