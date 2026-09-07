@@ -323,6 +323,38 @@ def eevee_engine():
     return "BLENDER_EEVEE_NEXT" if "BLENDER_EEVEE_NEXT" in items else "BLENDER_EEVEE"
 
 
+def enable_gpu():
+    """Point Cycles at OptiX or CUDA when the machine has it.
+
+    The device lives in user preferences rather than in the .blend, so this has to run in every
+    background session, not just the one that built the scene.  Returns the backend that was
+    selected, or None if it fell back to CPU.
+
+    Cycles renders with one backend at a time (plus the CPU), so a machine with both an NVIDIA and
+    an Intel GPU uses one of them, not both: OptiX here, because the RTX 2000 Ada is much the
+    faster of the two.
+    """
+    addon = bpy.context.preferences.addons.get("cycles")
+    if not addon:
+        return None
+    prefs = addon.preferences
+    for device_type in ("OPTIX", "CUDA"):
+        try:
+            prefs.compute_device_type = device_type
+        except TypeError:
+            continue
+        prefs.get_devices()
+        gpus = [d for d in prefs.devices if d.type == device_type]
+        if gpus:
+            for device in prefs.devices:
+                device.use = device.type in (device_type, "CPU")
+            bpy.context.scene.cycles.device = "GPU"
+            print("[render] Cycles on %s: %s" % (device_type, ", ".join(d.name for d in gpus)))
+            return device_type
+    print("[render] no OptiX/CUDA device found, Cycles on CPU")
+    return None
+
+
 def configure_render(engine, samples, resolution):
     scene = bpy.context.scene
     scene.render.resolution_x, scene.render.resolution_y = resolution
@@ -339,25 +371,7 @@ def configure_render(engine, samples, resolution):
     scene.render.engine = "CYCLES"
     scene.cycles.samples = samples
     scene.cycles.use_denoising = True
-    addon = bpy.context.preferences.addons.get("cycles")
-    if not addon:
-        return
-    prefs = addon.preferences
-    for device_type in ("OPTIX", "CUDA"):
-        try:
-            prefs.compute_device_type = device_type
-        except TypeError:
-            continue
-        prefs.get_devices()
-        gpus = [d for d in prefs.devices if d.type == device_type]
-        if gpus:
-            for device in prefs.devices:
-                device.use = device.type in (device_type, "CPU")
-            scene.cycles.device = "GPU"
-            print("[render] Cycles on %s: %s"
-                  % (device_type, ", ".join(d.name for d in gpus)))
-            return
-    print("[render] no OptiX/CUDA device found, Cycles on CPU")
+    enable_gpu()
 
 
 def main():
@@ -414,4 +428,5 @@ def main():
         print("[render] %s" % bpy.context.scene.render.filepath)
 
 
-main()
+if __name__ == "__main__":
+    main()

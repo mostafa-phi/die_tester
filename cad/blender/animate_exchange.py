@@ -33,6 +33,10 @@ import bpy
 from mathutils import Vector
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+if HERE not in sys.path:
+    sys.path.insert(0, HERE)
+from build_scene import enable_gpu, eevee_engine        # noqa: E402  (needs HERE on sys.path)
+
 MM = 0.001
 
 FPS = 30
@@ -68,7 +72,11 @@ JAW_OPEN = 1.5        # per side, steps 9 and 11
 FIBER_RETRACT = 1.0   # step 1
 PUSH = 1.7            # carriage move of the push-to-stop, step 12
 PUSH_SLIDE = 0.2      # how far the die itself slides onto the pads, step 12
-PARK = 40.0           # how far past the nest the carriage parks so the fibers can come in, step 13
+# Step 13 parks the gripper "out" so the fibers can come in and the die stage can step devices.
+# Out is towards the tray (-X): +X would drive the arm at the microscope column, which stands at
+# X 80. -60 mm takes the jaws clear of the nest cage (X -2.5..12.5) and of the fiber corridor,
+# while staying well short of tray column 0 at -95.
+PARK = -60.0
 
 
 def column_dx(col):
@@ -317,12 +325,6 @@ def smooth_all():
     print("[anim] eased %d keyframes" % eased)
 
 
-def eevee_engine():
-    """EEVEE Next is 'BLENDER_EEVEE_NEXT' in Blender 4.2-4.5 and plain 'BLENDER_EEVEE' in 5.x."""
-    items = bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items
-    return "BLENDER_EEVEE_NEXT" if "BLENDER_EEVEE_NEXT" in items else "BLENDER_EEVEE"
-
-
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--blend", default=os.path.join(HERE, "die_tester_station.blend"))
@@ -334,7 +336,10 @@ def main():
     ap.add_argument("--theta-trim", type=float, default=0.4,
                     help="illustrative yaw trim in degrees; the real value is read per die from "
                          "the fiducials, so this only shows that the axis moves")
-    ap.add_argument("--preview", action="store_true", help="render an EEVEE mp4 of the cycle")
+    ap.add_argument("--preview", action="store_true", help="render an mp4 of the cycle")
+    ap.add_argument("--engine", choices=("cycles", "eevee"), default="cycles",
+                    help="cycles resolves the shallow surface detail; eevee is the fast draft")
+    ap.add_argument("--samples", type=int, default=48)
     ap.add_argument("--camera", default="nest")
     ap.add_argument("--resolution", type=int, nargs=2, default=(1280, 854))
     args = ap.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])
@@ -355,8 +360,27 @@ def main():
     if args.preview:
         scene = bpy.context.scene
         scene.camera = bpy.data.objects["cam_" + args.camera]
-        scene.render.engine = eevee_engine()
-        scene.eevee.taa_render_samples = 16
+        if args.engine == "cycles":
+            scene.render.engine = "CYCLES"
+            scene.cycles.samples = args.samples
+            scene.cycles.use_denoising = True
+            backend = enable_gpu()
+            if backend == "OPTIX":
+                # Denoise on the GPU; the default OpenImageDenoise runs on the CPU and, at this
+                # sample count, costs more per frame than the sampling itself.
+                scene.cycles.denoiser = "OPTIX"
+            # 64 parts move every frame, so without this Cycles re-syncs the scene and rebuilds the
+            # BVH for each one and the GPU spends most of the frame idle: measured 5.3 s a frame
+            # without, 2.2 s with.
+            scene.render.use_persistent_data = True
+        else:
+            scene.render.engine = eevee_engine()
+            scene.eevee.taa_render_samples = args.samples
+            # Without ray tracing EEVEE Next gives no contact shadow, and features as shallow as
+            # the tray's 0.4 mm pocket ledges render as flat surface.
+            for flag in ("use_raytracing", "use_shadows", "use_shadow_jitter_viewport"):
+                if hasattr(scene.eevee, flag):
+                    setattr(scene.eevee, flag, True)
         scene.render.resolution_x, scene.render.resolution_y = args.resolution
         # Blender 5 gates the video formats behind media_type; 4.x exposes FFMPEG directly.
         if hasattr(scene.render.image_settings, "media_type"):
@@ -371,4 +395,5 @@ def main():
         print("[anim] preview %s" % scene.render.filepath)
 
 
-main()
+if __name__ == "__main__":
+    main()

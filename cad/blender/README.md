@@ -37,6 +37,12 @@ UV_SYSTEM_CERTS=1 uv run --with cascadio --with numpy --with trimesh --python 3.
 `UV_SYSTEM_CERTS=1` is required on the NTT network: without it uv rejects the intercepting proxy
 with `invalid peer certificate: UnknownIssuer`.
 
+The preview renders in **Cycles** by default, at 48 samples with denoising: about 5 s a frame on an
+RTX 2000 Ada over OptiX, so roughly an hour for the 682-frame cycle. `--engine eevee` is the fast
+draft, but shallow features — the tray's 0.4 mm pocket ledges above all — come out as flat surface
+there. The script switches EEVEE's ray tracing and shadows on, which helps, but it is still no
+match for Cycles at this scale: use eevee to check motion, cycles for anything anyone else sees.
+
 | File | What it does |
 |---|---|
 | `step_to_glb.py` | tessellates the assembly STEP at 0.05 mm linear / 0.2 rad angular deflection and writes `station_assembly.glb`; prints part count and bounding box for checking |
@@ -67,8 +73,9 @@ and the fiber tips with a little transmission).
 close-up on the exchange. All are framed on the machine rather than on the 940 × 560 mm optical
 table, so the table is cropped at the edges.
 
-**Rendering** is Cycles on the GPU when OptiX or CUDA is available (it reports which device it
-picked), EEVEE for the animation preview.
+**Rendering** is Cycles on the GPU when OptiX or CUDA is available; both scripts call
+`enable_gpu()` and report which device they picked, because Cycles' device choice lives in user
+preferences rather than in the `.blend` and so has to be made again in every background run.
 
 ### One unnamed member
 
@@ -93,6 +100,7 @@ documented number, in millimetres in the station frame:
 | jaws | 1.5 mm per side from the closed pose the STEP is drawn in | steps 9 and 11 |
 | fiber retract | 1.0 mm along ±Y, before any gripper move | step 1 |
 | push-to-stop | 1.7 mm carriage move, slides the die 0.2 mm onto the pads | step 12 |
+| park | carriage retreats 60 mm towards the tray | step 13 |
 
 The moving groups were read off the assembly rather than assumed: `x_axis_block` is the LX20 table
 plate centred at X −121 and `z_axis_block` the Z table plate centred at Z 90.5, so those are the
@@ -104,6 +112,11 @@ rotate, about the axis through the die at X 5, Y 3.
 copies the die into the pocket it will be picked from: one die leaves the nest for a tray pocket,
 the other comes from its pocket to the nest. Released dice keep riding the tray, so a die placed in
 row +2 moves with the stage when it later travels to another row — which is what actually happens.
+
+The cycle order is the real one: the die on the nest is offloaded to its tray pocket first, the
+next die is then collected from its pocket, brought back and seated with the push-to-stop, and only
+then does the carriage retreat. Parking is towards the tray (−X); going the other way would drive
+the arm at the microscope column, which stands at X 80.
 
 **Two things in the animation are illustrative, not measured.** The yaw trim angle
 (`--theta-trim`, default 0.4°) stands in for a trim whose real value is read per die from the
