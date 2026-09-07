@@ -59,19 +59,30 @@ DROP_NAMES = {"objective_keepout", "camera_fov"}
 # _steel) per the repo convention; the vendor parts get the finish they actually have.
 # --------------------------------------------------------------------------------------------
 MATERIALS = {
-    "aluminium": ((0.62, 0.64, 0.67), 1.0, 0.38),   # machined + bead-blasted 6061
-    "anodized":  ((0.16, 0.17, 0.19), 0.7, 0.45),   # black-anodized vendor bodies
-    "motor":     ((0.10, 0.10, 0.11), 0.4, 0.55),   # stepper cans / painted housings
-    "steel":     ((0.72, 0.73, 0.75), 1.0, 0.20),   # spring-steel flexure blade, fasteners
-    "copper":    ((0.85, 0.48, 0.30), 1.0, 0.25),   # nest chuck pad
-    "semitron":  ((0.20, 0.21, 0.23), 0.0, 0.65),   # ESd 225 tip blocks and cage
-    "resin":     ((0.86, 0.84, 0.79), 0.0, 0.55),   # SLA wafer tray
-    "ceramic":   ((0.92, 0.92, 0.90), 0.0, 0.40),   # TEC top plate
-    "die":       ((0.55, 0.68, 0.78), 0.0, 0.08),   # air-clad TFLN die
-    "glass":     ((0.80, 0.86, 0.90), 0.0, 0.05),   # fiber tips
-    "table":     ((0.13, 0.14, 0.15), 0.2, 0.70),   # optical table top
-    "cable":     ((0.08, 0.08, 0.09), 0.0, 0.80),
-    "pcb":       ((0.15, 0.35, 0.22), 0.0, 0.60),   # Basler dart board camera
+    # Metallic is a physical property, not a dial: a surface either is an exposed conductor or it
+    # is not, and intermediate values are what make everything look like the same grey alloy.  Only
+    # bare metal gets 1.0 - machined 6061, the copper pad, steel.  Anodizing is a dielectric oxide
+    # layer and painted motor housings are dielectric too, so both get 0.0 and read by their
+    # roughness instead.
+    #
+    # Base colours are lifted from the true blacks of the real hardware: this is lab equipment
+    # being documented, so every part has to stay legible in shadow.  Anodized aluminium and
+    # stepper cans really are near-black, but rendered at their measured value they read as one
+    # silhouette.
+    "aluminium": ((0.66, 0.67, 0.68), 1.0, 0.44),   # machined + bead-blasted 6061, neutral silver
+    "anodized":  ((0.13, 0.14, 0.16), 0.0, 0.38),   # black-anodized bodies: satin dielectric
+    "motor":     ((0.09, 0.09, 0.10), 0.0, 0.50),   # painted stepper housings, dielectric
+    "steel":     ((0.76, 0.77, 0.79), 1.0, 0.18),   # spring-steel flexure blade, fasteners
+    "copper":    ((0.92, 0.48, 0.24), 1.0, 0.22),   # nest chuck pad
+    "brass":     ((0.78, 0.60, 0.28), 1.0, 0.30),   # HFC005 fiber chuck body
+    "semitron":  ((0.22, 0.21, 0.19), 0.0, 0.68),   # ESd 225 tip blocks and cage, warm charcoal
+    "resin":     ((0.91, 0.87, 0.78), 0.0, 0.55),   # SLA wafer tray, warm cream
+    "ceramic":   ((0.94, 0.94, 0.92), 0.0, 0.40),   # TEC top plate
+    "die":       ((0.42, 0.68, 0.88), 0.0, 0.08),   # air-clad TFLN die
+    "glass":     ((0.78, 0.88, 0.96), 0.0, 0.05),   # fiber tips
+    "table":     ((0.11, 0.12, 0.14), 0.0, 0.52),   # MB6090/M breadboard, black anodized
+    "cable":     ((0.12, 0.12, 0.13), 0.0, 0.80),
+    "pcb":       ((0.14, 0.45, 0.24), 0.0, 0.60),   # Basler dart board camera
 }
 
 # (substring, material) — first match wins.
@@ -92,7 +103,7 @@ MATERIAL_RULES = [
     ("fiber_in", "glass"),
     ("fiber_out", "glass"),
     ("fiber_rotator", "anodized"),
-    ("fiber_chuck", "anodized"),
+    ("fiber_chuck", "brass"),        # the assembly authors this bronze; HFC005 bodies are brass
     ("fiber_cleats", "steel"),
     ("fiber_mount", "aluminium"),
     ("nanomax300", "anodized"),
@@ -152,14 +163,52 @@ def import_glb(path):
     return [o for o in imported if o.type == "MESH"]
 
 
-def make_material(key):
+# CAD edges are mathematically sharp, so nothing catches a highlight along them and the parts read
+# as untouched solid modelling.  Real machined and cast parts have a break on every edge.  A Cycles
+# bevel shader fakes that at shading time - no geometry, no modifier on 70 meshes - and the thin
+# highlight it puts on every edge is most of what separates a render from a CAD screenshot.
+BEVEL_RADIUS = 0.00018      # 0.18 mm, about the break a deburred machined edge carries
+BEVEL_SAMPLES = 4
+
+
+def imported_base_color(obj):
+    """The colour the station assembly authored for this member, as imported from the GLB.
+
+    `cad/station/model.py` gives every `cq.Assembly` member a `cq.Color`, cascadio carries it into
+    the GLB and Blender imports it as a Principled base colour.  That is the designer's material
+    intent - black anodizing on the rails, 6061 grey on the machined parts, copper on the chuck,
+    bronze on the fiber chucks - so it is the base colour to render, not one invented here.
+    """
+    for slot in obj.data.materials:
+        if slot is None or not slot.use_nodes:
+            continue
+        for node in slot.node_tree.nodes:
+            if node.type == "BSDF_PRINCIPLED":
+                return tuple(node.inputs["Base Color"].default_value)[:3]
+    return None
+
+
+def make_material(key, rgb=None):
+    """A material of class `key`; `rgb` overrides its base colour but not how it responds to light.
+
+    The class still decides metallic and roughness, because a colour cannot say whether a surface
+    is an exposed conductor or an anodized dielectric, and that distinction is what stopped the
+    whole machine looking like one grey alloy.
+    """
     name = "st_" + key
+    if rgb is not None:
+        name += "_%02x%02x%02x" % tuple(min(255, max(0, int(c * 255 + 0.5))) for c in rgb)
     if name in bpy.data.materials:
         return bpy.data.materials[name]
-    rgb, metallic, roughness = MATERIALS[key]
+    default_rgb, metallic, roughness = MATERIALS[key]
+    rgb = default_rgb if rgb is None else rgb
     mat = bpy.data.materials.new(name)
     mat.use_nodes = True
     bsdf = mat.node_tree.nodes["Principled BSDF"]
+    bevel = mat.node_tree.nodes.new("ShaderNodeBevel")
+    bevel.inputs["Radius"].default_value = BEVEL_RADIUS
+    bevel.samples = BEVEL_SAMPLES
+    mat.node_tree.links.new(bsdf.inputs["Normal"], bevel.outputs["Normal"])
     bsdf.inputs["Base Color"].default_value = (rgb[0], rgb[1], rgb[2], 1.0)
     bsdf.inputs["Metallic"].default_value = metallic
     bsdf.inputs["Roughness"].default_value = roughness
@@ -172,7 +221,7 @@ def make_material(key):
     return mat
 
 
-def sort_into_collections(objects):
+def sort_into_collections(objects, use_assembly_colors=False):
     scene = bpy.context.scene
     made = {}
     dropped = 0
@@ -191,8 +240,9 @@ def sort_into_collections(objects):
             old.objects.unlink(obj)
         made[coll_name].objects.link(obj)
 
+        authored = imported_base_color(obj) if use_assembly_colors else None
         obj.data.materials.clear()
-        obj.data.materials.append(make_material(material_for(name)))
+        obj.data.materials.append(make_material(material_for(name), authored))
         for poly in obj.data.polygons:
             poly.use_smooth = True
     return made, dropped
@@ -230,17 +280,33 @@ def add_lighting(lo, hi):
     """
     world = bpy.data.worlds.new("station_world")
     world.use_nodes = True
-    background = world.node_tree.nodes["Background"]
-    background.inputs[0].default_value = (0.22, 0.24, 0.28, 1.0)
+    tree = world.node_tree
+    background = tree.nodes["Background"]
+    # The world is the main fill here, not a backdrop: a bright even surround is what keeps the
+    # anodized hardware readable and stops the breadboard going to black.  It is a vertical
+    # gradient rather than a flat colour because a metal can only reflect what is around it, and a
+    # flat world turns every polished surface into a flat grey card.
+    coord = tree.nodes.new("ShaderNodeTexCoord")
+    separate = tree.nodes.new("ShaderNodeSeparateXYZ")
+    ramp = tree.nodes.new("ShaderNodeValToRGB")
+    tree.links.new(separate.inputs[0], coord.outputs["Generated"])
+    tree.links.new(ramp.inputs["Fac"], separate.outputs["Z"])
+    ramp.color_ramp.elements[0].position = 0.30
+    ramp.color_ramp.elements[0].color = (0.20, 0.21, 0.24, 1.0)   # floor, below the horizon
+    ramp.color_ramp.elements[1].position = 0.78
+    ramp.color_ramp.elements[1].color = (0.62, 0.66, 0.72, 1.0)   # sky
+    tree.links.new(background.inputs[0], ramp.outputs["Color"])
     background.inputs[1].default_value = 1.0
     bpy.context.scene.world = world
 
     centre = (lo + hi) / 2
     span = max(hi - lo)
     lights = [
-        ("key", Vector((-0.8, -1.0, 1.2)), 4000.0, span * 1.0),
-        ("fill", Vector((1.3, -0.8, 0.5)), 1200.0, span * 1.4),
-        ("rim", Vector((0.1, 1.2, 0.9)), 2200.0, span * 0.9),
+        # Bright enough to read the black hardware, directional enough to keep the form: the key
+        # does the shaping, the world does the filling.
+        ("key", Vector((-0.8, -1.0, 1.2)), 5400.0, span * 0.9),
+        ("fill", Vector((1.3, -0.8, 0.5)), 1900.0, span * 1.6),
+        ("rim", Vector((0.1, 1.2, 0.9)), 2600.0, span * 1.0),
     ]
     for name, direction, power, size in lights:
         data = bpy.data.lights.new("light_" + name, type="AREA")
@@ -356,11 +422,16 @@ def enable_gpu():
 def configure_render(engine, samples, resolution):
     scene = bpy.context.scene
     scene.render.resolution_x, scene.render.resolution_y = resolution
-    scene.view_settings.exposure = 0.6
-    try:
-        scene.view_settings.look = "AgX - Medium High Contrast"
-    except TypeError:
-        pass
+    scene.view_settings.exposure = 0.75
+    # AgX is filmic and desaturating; "Punchy" puts the colour back, which matters for the copper
+    # chuck, the green camera board and the blue die.  Fall back in order if a look is missing.
+    for look in ("AgX - Punchy", "AgX - Base Contrast", "AgX - Medium High Contrast"):
+        try:
+            scene.view_settings.look = look
+        except TypeError:
+            continue
+        print("[render] look %s" % look)
+        break
     scene.render.film_transparent = False
     if engine != "cycles":
         scene.render.engine = eevee_engine()
@@ -377,6 +448,11 @@ def main():
     ap.add_argument("--glb", default=os.path.join(HERE, "station_assembly.glb"))
     ap.add_argument("--output", default=os.path.join(HERE, "die_tester_station.blend"))
     ap.add_argument("--engine", choices=("cycles", "eevee"), default="cycles")
+    ap.add_argument("--assembly-colors", action="store_true",
+                    help="use the colours the station assembly authors (navy moving group, blue "
+                         "NanoMax, light-grey breadboard) instead of the real hardware finishes; "
+                         "useful for design review, where seeing what travels matters more than "
+                         "seeing what it will look like")
     ap.add_argument("--samples", type=int, default=128)
     ap.add_argument("--render", nargs="*", default=[],
                     help="camera names to render after building (iso plan side front)")
@@ -387,7 +463,7 @@ def main():
     objects = import_glb(args.glb)
     print("[scene] imported %d parts" % len(objects))
 
-    made, dropped = sort_into_collections(objects)
+    made, dropped = sort_into_collections(objects, args.assembly_colors)
     kept = [o for o in bpy.data.objects if o.type == "MESH"]
     print("[scene] %d parts kept, %d render aids and far-column copies dropped"
           % (len(kept), dropped))
