@@ -6,5 +6,12 @@
 cad/station/STEP/station_assembly.step
 cad/station/STEP/station_assembly_h.step
 
+# cad/blender/ regenerates its heavy artefacts from the tracked station_assembly.step.zip:
+# the tessellated GLB (~35 MB) and the two .blend files (~29 MB each). The scripts, the README and
+# the renders are tracked; run step_to_glb.py then build_scene.py to get the rest back.
+cad/blender/*.glb
+cad/blender/*.blend
+cad/blender/*.blend1
+
 __pycache__/
 *.pyc

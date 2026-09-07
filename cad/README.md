@@ -10,6 +10,7 @@ Frame, die, contact rules and shared helpers are in `common/`; the rules for wor
 | [`nest/`](nest/README.md) | self-registering, temperature-controlled chip stage: copper vacuum chuck, Semitron cage with stop pads and guards, T-riser with TEC, on the die stage (MISUMI RMPG40W-N rotary on a Suruga KXC04015-C X stage on a KB1X1) | `common`, `gripper` | part STEP/STL, assemblies (seated / set-down), `checks.txt` incl. the moving-nest sweep, renders |
 | [`tray/`](tray/README.md) | 8 × 14 wafer tray with nose-slot pockets | `common`, `gripper` | print STL, pocket check STEP, `checks.txt`, renders (full-tray STEP ignored) |
 | [`station/`](station/README.md) | full station: nest, gripper, MISUMI LX20 X/Z/Y actuators with their risers, tower bracket and arm, NanoMax fiber stages, microscope, tray; clearance checks; layout and movement pattern | all of the above | `checks[_h].txt`, renders (assemblies ignored, ~100 MB) |
+| [`blender/`](blender/README.md) | Blender scene built from the station assembly STEP: the real vendor geometry with materials, cameras and the 14-step exchange animated | `station` (its assembly STEP) | `.blend` scene + animation, stills and preview video (scene files ignored) |
 | `vendor/` | manufacturer STEP (tracked) and the fetch script; see `vendor/README.md` | | |
 
 ## Build
