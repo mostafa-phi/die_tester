@@ -59,6 +59,8 @@ match for Cycles at this scale: use eevee to check motion, cycles for anything a
 | `step_to_glb.py` | tessellates the assembly STEP at 0.05 mm linear / 0.2 rad angular deflection and writes `station_assembly.glb`; prints part count and bounding box for checking |
 | `build_scene.py` | imports the GLB, sorts the parts into collections, assigns materials, adds lighting and five cameras, saves `die_tester_station.blend`, optionally renders stills |
 | `animate_exchange.py` | rigs the moving groups onto empties, keyframes the 14-step exchange, saves `die_tester_station_animated.blend`, optionally renders an mp4 |
+| `HANDOFF.md` | questions from the 3D-viz agent to the designer agent; written only here, answered in `cad/station/HANDOFF.md` or in a commit message |
+| `members.json` | the member names of the assembly these outputs were built from, so a rename or an added member appears as a reviewable diff instead of a part that silently stops moving |
 | `source.json` | the sha256 of the assembly zip the outputs were built from, plus a timestamp; `step_to_glb.py` writes it and `cad/build.py --check` reads it, so a scene left behind the station is visible rather than silent |
 | `verify_scene.py` | checks the animated scene against the static one — inventory, per-axis placement, die seating, contact band, loop closure — and exits non-zero if anything is off |
 

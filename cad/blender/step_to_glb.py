@@ -99,7 +99,7 @@ def report(glb_path):
         print(f"[glb] {axis} {a:10.2f} .. {b:10.2f}   ({b - a:8.2f} wide)")
     names = sorted(n for n in getattr(scene.graph, "nodes_geometry", []))
     print(f"[glb] first parts: {', '.join(names[:8])}")
-    return len(geoms)
+    return sorted(geoms)
 
 
 def main():
@@ -133,7 +133,14 @@ def main():
     )
     print(f"[glb] {args.output}  ({os.path.getsize(args.output) / 1e6:.0f} MB) "
           f"in {time.time() - t0:.0f} s")
-    report(os.path.abspath(args.output))
+    members = report(os.path.abspath(args.output))
+    # The member names are the interface with the station model (CLAUDE.md section 5).  Recording
+    # them makes a rename or an added member show up as a diff here, in review, instead of as a
+    # part that silently stops moving in the next render.
+    with open(os.path.join(HERE, "members.json"), "w", encoding="utf-8") as handle:
+        json.dump({"count": len(members), "members": members}, handle, indent=2)
+        handle.write("\n")
+    print("[src] %d member names -> members.json" % len(members))
     if source.lower().endswith(".zip"):
         record_source(source, HERE)
     else:
