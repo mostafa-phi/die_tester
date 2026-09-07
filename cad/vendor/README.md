@@ -1,8 +1,10 @@
-# Vendor CAD (git-ignored)
+# Vendor CAD
 
 Manufacturer STEP files placed by `python cad/build.py` wherever the file exists (the gripper, nest and
-station models each fall back to their envelope for a missing file and say so in their checks header). They are licensed downloads and are **not
-committed**; `fetch_vendor_step.sh` downloads what can be fetched without a login. Expected names:
+station models each fall back to their envelope for a missing file and say so in their checks header). They are licensed
+manufacturer downloads (Thorlabs, Velmex, SMC, Suruga and MISUMI/CADENAS terms of use apply: for our own design work, not
+for redistribution) and are **tracked in this repository** since 2026-09-07 so they can be used outside this checkout;
+`fetch_vendor_step.sh` documents where each came from. Names:
 
 | File | Part | Source |
 |---|---|---|
