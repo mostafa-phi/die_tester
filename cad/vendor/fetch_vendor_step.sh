@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Manufacturer STEP models placed by cad/build.py wherever present. Files land in this directory and
-# are git-ignored (30 MB each; vendor copyright). Re-run any time.
+# are tracked since 2026-09-07 (licensed downloads, not for redistribution; see README.md). Re-run any time.
 set -eu
 cd "$(dirname "$0")"
 UA="Mozilla/5.0"
