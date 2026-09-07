@@ -437,10 +437,10 @@
       'Jaws close to the finger-on-finger stop; the 0.127 mm blade preloads 0.32 N on the die. X and θ are now defined by the nose faces.',
       'Chuck vacuum off (switch reads atmosphere); Z +8 mm lifts the die off the pad and out of the cage. Nothing has touched the top surface or the facets.',
       'X table runs 95 + 16·c mm along the die\'s long axis to column c of the wafer tray (~1.3 s at 200 mm/s). Every die returns to the pocket it came from; the map holds the result.',
-      'Z −12 mm: die onto the ledges under its facet-edge strips, 12 mm below the chuck pad. The open noses drop into the 3.6 mm slots in the end walls.',
-      'Jaws open 1.5 mm per side; the pocket retains the die to ±1.0 mm in X by its corners and ±0.4 mm in Y. Z +12 mm.',
+      'Z −20 mm (8 mm lift + 12 mm drop): die onto the ledges under its facet-edge strips, 12 mm below the chuck pad. The open noses drop into the 3.6 mm slots in the end walls.',
+      'Jaws open 1.5 mm per side; the pocket retains the die to ±1.0 mm in X by its corners and ±0.4 mm in Y. Z +20 mm.',
       'X selects the next column, the Y actuator under the tray brings the next row to the die line (±48.75 mm). Both moves run together.',
-      'Z −12 mm, jaws close on the end faces, Z +12 mm. The pocket\'s ±1 mm X play is inside the noses\' ±1.9 mm capture, so no vision is needed here.',
+      'Z −20 mm, jaws close on the end faces, Z +20 mm. The pocket\'s ±1 mm X play is inside the noses\' ±1.9 mm capture, so no vision is needed here.',
       'X back to the nest, Z −8 mm onto the chuck pad 0.2 mm short of the stop pads. Jaws open; the gripper indexes +1.7 mm so its compliant nose pushes the die onto the two +X pads with 0.25 N (push-to-stop): X and yaw are now mechanical. Chuck vacuum on (seat detection).',
       'Gripper backs off, Z +8 mm, X out to the park position; only then do the fibers approach again. The camera confirms X against the pads and reads Y; first light follows.'
     ],
@@ -621,10 +621,11 @@
       let dz = 8;
       dz -= 8 * e(seg(t, 3));
       dz += 8 * e(seg(t, 5));
-      dz -= ST.trayDrop * e(seg(t, 7));
-      dz += ST.trayDrop * e(sub(t, 8, 0.5, 1));
-      dz -= ST.trayDrop * e(sub(t, 10, 0, 0.4));
-      dz += ST.trayDrop * e(sub(t, 10, 0.6, 1));
+      const trayZ = 8 + ST.trayDrop;                                   // from the +8 lift height down to the ledges 12 below the pad
+      dz -= trayZ * e(seg(t, 7));
+      dz += trayZ * e(sub(t, 8, 0.5, 1));
+      dz -= trayZ * e(sub(t, 10, 0, 0.4));
+      dz += trayZ * e(sub(t, 10, 0.6, 1));
       dz -= 8 * e(sub(t, 11, 0.4, 0.8));
       dz += 8 * e(sub(t, 12, 0.2, 0.5));
       // jaw opening (per side)
