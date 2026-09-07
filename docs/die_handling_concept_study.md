@@ -46,7 +46,8 @@ fiber stages sit on 25 mm risers. Rev. 2.11 writes down what the transfer axes a
 (±0.15 mm at the nest, ±0.3 mm at the tray, ±0.05 mm in Z, since the die is placed by hard
 references) and replaces the Velmex BiSlides with three **MISUMI LX20** actuators (lead 5 for
 speed, Oriental Motor AZ closed-loop steppers with a brake on Z); the tray moves 55 mm closer to the nest and the X actuator's narrow band beside the tray
-sweep removes the bridge riser. The interactive model still shows the rev. 2.10 layout.
+sweep removes the bridge riser. The interactive model follows this layout and keeps only the two scenes that matter now: the
+test-station exchange and the place into a tray pocket.
 
 Coordinate convention follows the brief: **X** = 10 mm die dimension, **Y** = 6 mm die
 dimension (optical propagation; fibers approach along ±Y), **Z** = vertical, **θ** =

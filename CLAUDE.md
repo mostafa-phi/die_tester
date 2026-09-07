@@ -88,9 +88,10 @@ Therefore:
    design and link to the component READMEs; when a number changes in a model, update the README
    of that component, then grep `docs/` and the viewer for the old value. The concept study keeps
    a revision line at the top of the file; add one when a design decision changes.
-6. **The three.js viewer** (`docs/die_handling_3d.html`, published as an artifact) mirrors the
-   envelope build of `cad/station`; when the station layout or the nest changes, update its `ST`
-   parameters and the nest scene, and republish the artifact.
+6. **The three.js viewer** (`docs/die_handling_3d.html`, published as an artifact) mirrors
+   `cad/station` in two scenes (exchange, tray pocket); when the station layout or the nest changes in a
+   way the user wants shown, update its `ST` parameters and the scene code, screenshot it headless, and
+   republish the artifact. Small model changes do not require a viewer update.
 
 ## 4. Toolchain notes
 
