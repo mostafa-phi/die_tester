@@ -143,12 +143,13 @@ def solve_density(h: float, rep: dict) -> dict:
     U_l = np.column_stack([vec_l["Y"], vec_l["Z"]])[model_l.free]
     base_l = F.Factorised(model_l.reduce(K_l))
     sprung_l = F.Sprung(base_l, U_l, np.array([k_apa, k_apa]))
-    f_g = F.gravity_form(model_l.mat).assemble(model_l.basis)[model_l.free]
+    f_g_full = model_l.gravity()
+    f_g = f_g_full[model_l.free]
     x_g = model_l.expand(sprung_l.solve(f_g))
     resp = platform_response(model_l, x_g, rep)
     out["gravity_loaded"] = {
         "dofs": int(model_l.N),
-        "total_weight_N": float(-f_g.sum()) if False else float(-F.gravity_form(model_l.mat).assemble(model_l.basis).sum()),
+        "total_weight_N": float(-f_g_full.sum()),
         "platform_t_um": resp["t_um"], "theta_urad": resp["theta_urad"], "tip_um": resp["tip_um"],
         "apa_axial_force_N": {leg: float(k_apa * (vec_l[leg] @ x_g)) for leg in ("Y", "Z")},
         "seconds": round(time.time() - t0, 1),

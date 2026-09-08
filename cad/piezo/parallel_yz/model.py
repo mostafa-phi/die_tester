@@ -69,6 +69,16 @@ VARIANTS = {
                  legs=("+Y", "+Z"), guide_sides="plus", windows=False,
                  wall=9.0, wall_free=10.0, bolt_inset=5.5, base_margin=1.0,
                  wire_tie_pos=(64.0, 24.0)),
+    # R04 (2026-09-08): R03's topology with 0.20 mm 17-7PH shim leaves clamped
+    # on a CNC 6061 body. k_leaf = E b t^3 / L^3 = 21 N/mm at L = 8.5, so four
+    # bending leaves per axis give ~0.085 N/um; working stress ~200 MPa, 500 MPa
+    # at the 0.3 mm stop. The stage width follows from tabs, bars and the guide
+    # pair spacing; wall and inset sized so the four M4 clear pockets and opening.
+    "r04": dict(actuator="APA120S", shim=True, t=0.20, L=8.5, b=8.0, s_g=6.0, s_c=7.5, r02=True,
+                legs=("+Y", "+Z"), guide_sides="plus", windows=False,
+                wall=6.5, wall_free=8.0, bolt_inset=5.5, base_margin=1.0,
+                wire_tie_pos=(46.0, 21.0),
+                body_material=dict(name="6061-T6", E_MPa=68900.0, nu=0.33, rho_kg_m3=2700.0)),
 }
 
 # R02 detailing, all in the frame of the +Y leg (rotated onto the others).
@@ -109,6 +119,14 @@ P = dict(
     guide_sides="both",   # "both": guide leaves above and below the stage; "plus": one pair only
     wall_free=8.0,   # frame wall on a side that has no leg
     windows=True,    # corner lightening windows (R02 only; needs the corner blocks)
+    # R04 "shim" mode: the leaves are not part of the profile but separate
+    # spring-steel shims standing edgewise, clamped by bars on milled ledges.
+    # t is then the shim thickness, L the free length between clamp edges.
+    shim=False,
+    tab=3.5,         # clamped tab length at each leaf end
+    bar_t=2.0,       # clamp bar thickness (2 x M2 per bar; its edge defines the root, R0.3)
+    leaf_material=dict(name="17-7PH CH900 precision shim", E_MPa=204000.0, nu=0.30, rho_kg_m3=7800.0),
+    body_material=None,   # None: the plate material below; R04 uses 6061-T6
     apa_clear=1.5,   # pocket clearance beyond the shell, each side
     apa_fit=0.15,    # land-to-land gap = apa_len + apa_fit: the APA120S is 13 +/-0.1 (ICD), shim to fit
     pad=(2.5, 5.0),  # APA pad: 2.5 along the shell, 5.0 through the thickness (vendor STEP)
@@ -135,8 +153,22 @@ def resolve(p: dict) -> dict:
 
 def derived(p: dict) -> dict:
     """Stations along a leg axis (the +Y leg; the others are rotations of it)."""
-    y_in0 = p["a_p"] + p["L"]                 # input stage inner face
-    y_in1 = y_in0 + p["w_in"]                 # input stage outer face (pad boss on it)
+    # In shim mode the platform grows a short arm toward each stage so that the
+    # coupler tabs of the two legs land on different arms instead of crossing
+    # each other in the platform corner (they did, in the first R04 build).
+    arm = p["tab"] + 0.5 if p["shim"] else 0.0
+    a_leg = p["a_p"] + arm                    # platform extent along a leg axis
+    y_in0 = a_leg + p["L"]                    # input stage inner face
+    if p["shim"]:
+        # Guide shims stand at y_g1 / y_g2 (each occupies [y_g, y_g + t]); the
+        # stage runs from the coupler tab to the outer guide's bar.
+        y_g1 = y_in0 + p["tab"] + p["bar_t"]
+        y_g2 = y_g1 + 2 * p["s_g"]
+        y_in1 = y_g2 + p["t"] + p["bar_t"]
+        guide_y = (y_g1, y_g2)
+    else:
+        y_in1 = y_in0 + p["w_in"]             # input stage outer face (pad boss on it)
+        guide_y = (y_in0 + p["w_in"] / 2 - p["s_g"], y_in0 + p["w_in"] / 2 + p["s_g"])
     c0 = p["h_in"] + p["L"]                   # guide leaves anchor into the frame here
     pocket0 = y_in1                           # APA pocket, inner end
     pocket1 = y_in1 + p["apa_len"] + p["apa_fit"] + 2 * p["pad_boss"]   # frame face carrying the far pad
@@ -157,9 +189,10 @@ def derived(p: dict) -> dict:
     clear = p["h_in"] + p["g"]
     inner = (-void_out if "-Y" in legs else -clear, void_out if "+Y" in legs else clear,
              -void_out if "-Z" in legs else -clear, void_out if "+Z" in legs else clear)
-    return dict(y_in0=y_in0, y_in1=y_in1, c0=c0, pocket0=pocket0, pocket1=pocket1,
+    return dict(y_in0=y_in0, y_in1=y_in1, w_in=y_in1 - y_in0, c0=c0, pocket0=pocket0, pocket1=pocket1,
+                arm=arm, a_leg=a_leg,
                 R=R, pocket_h=pocket_h, void_out=void_out, void_lo=void_lo, box=box, inner=inner,
-                guide_y=(y_in0 + p["w_in"] / 2 - p["s_g"], y_in0 + p["w_in"] / 2 + p["s_g"]))
+                guide_y=guide_y)
 
 
 # Leg axes: +Y, +Z driven; -Y, -Z passive. Each entry is the 2 x 2 map that
@@ -193,19 +226,78 @@ def leg_rects(p: dict, d: dict) -> dict:
         (d["pocket0"], d["pocket1"], -d["pocket_h"], d["pocket_h"]),
     ]
     stage = (d["y_in0"], d["y_in1"], -p["h_in"], p["h_in"])
-    leaves = []
-    for z in (-p["s_c"], p["s_c"]):                          # coupler leaves, along Y
-        leaves.append((p["a_p"], d["y_in0"], z - t2, z + t2))
-    for y in d["guide_y"]:                                    # guide leaves, along Z
-        leaves.append((y - t2, y + t2, p["h_in"], d["c0"]))
-        if p["guide_sides"] == "both":
-            leaves.append((y - t2, y + t2, -d["c0"], -p["h_in"]))
-    return dict(voids=voids, stage=stage, leaves=leaves)
+    leaves, notches, bars, roles = [], [], [], []
+    arms = []
+    if p["shim"]:
+        t, tab, bt = p["t"], p["tab"], p["bar_t"]
+        a, y0, y1, h, c0 = d["a_leg"], d["y_in0"], d["y_in1"], p["h_in"], d["c0"]
+        arms.append((p["a_p"], a, -p["a_p"], p["a_p"]))      # platform arm toward this stage
+        # Coupler shims lie on ledges at z = +/-s_c (shim above the top ledge,
+        # below the bottom one); the tabs reach `tab` into the arm and the stage.
+        for s in (1, -1):
+            z_face = s * p["s_c"]
+            z_lo, z_hi = sorted((z_face, z_face + s * t))
+            leaves.append((a - tab, y0 + tab, z_lo, z_hi))
+            b_lo, b_hi = sorted((z_face + s * t, z_face + s * (t + bt)))
+            bars += [(a - tab, a, b_lo, b_hi), (y0, y0 + tab, b_lo, b_hi)]
+            roles += ["coupler_platform", "coupler_stage"]
+            # ledges: everything above (below) the shim face is removed over the tab
+            l_lo, l_hi = sorted((z_face, s * p["a_p"]))
+            notches.append((a - tab, a, l_lo, l_hi))
+            notches.append((y0, y0 + tab, z_face, h) if s > 0 else (y0, y0 + tab, -h, z_face))
+        # Guide shims stand at y_g (occupying [y_g, y_g + t]) from tab below the
+        # stage top to tab into the frame; the inner one is clamped from the
+        # inside (bar toward the platform), the outer one from the outside.
+        y_g1, y_g2 = d["guide_y"]
+        for y_g, side in ((y_g1, -1), (y_g2, +1)):
+            leaves.append((y_g, y_g + t, h - tab, c0 + tab))
+            if side < 0:
+                bar_y = (y_g - bt, y_g)
+                notch_y = (y_g - bt, y_g + t)
+                # At the frame the inner notch runs back to the stage line, or
+                # the two legs' notches leave a 3.5 mm island in the corner.
+                frame_notch_y = (y0, y_g + t)
+            else:
+                bar_y = (y_g + t, y_g + t + bt)
+                notch_y = (y_g, y_g + t + bt)
+                frame_notch_y = notch_y
+            bars += [(bar_y[0], bar_y[1], h - tab, h), (bar_y[0], bar_y[1], c0, c0 + tab)]
+            which = "inner" if side < 0 else "outer"
+            roles += [f"guide_{which}_stage", f"guide_{which}_frame"]
+            notches += [(notch_y[0], notch_y[1], h - tab, h), (frame_notch_y[0], frame_notch_y[1], c0, c0 + tab)]
+    else:
+        for z in (-p["s_c"], p["s_c"]):                          # coupler leaves, along Y
+            leaves.append((p["a_p"], d["y_in0"], z - t2, z + t2))
+        for y in d["guide_y"]:                                    # guide leaves, along Z
+            leaves.append((y - t2, y + t2, p["h_in"], d["c0"]))
+            if p["guide_sides"] == "both":
+                leaves.append((y - t2, y + t2, -d["c0"], -p["h_in"]))
+    return dict(voids=voids, stage=stage, leaves=leaves, notches=notches, bars=bars, roles=roles, arms=arms)
+
+
+# How each clamp bar is fastened, from tracing a straight driver path to its
+# screws inside the finished plate (2026-09-08 review): "screw" has a clear
+# in-plane path, "angled" only a ball-end key through the front opening, and
+# "bond" none at all - those tabs are epoxy-bonded (DP460 / EA 9460) in a jig,
+# the bar staying as cure fixture and mechanical backup.
+BAR_ACCESS = {
+    "coupler_platform": "screw",       # heads face the open channel toward the frame corner
+    "coupler_stage": "angled",         # an 8-12 mm window, then frame
+    "guide_outer_stage": "screw",      # heads face the actuator pocket, fitted before the APA
+    "guide_inner_stage": "bond",       # heads would face the stage coupler bar
+    "guide_outer_frame": "angled",     # into the guide void
+    "guide_inner_frame": "angled",
+}
 
 
 def bolt_points(p: dict, d: dict) -> list[tuple[float, float]]:
     y0, y1, z0, z1 = d["box"]
     i = p["bolt_inset"]
+    if set(p["legs"]) == {"+Y", "+Z"}:
+        # Two-leg plate: the +Y/-Z and -Y/+Z corners sit beside the pockets, so
+        # those two bolts slide along the free walls to under/beside the stages.
+        mid = d["y_in0"] + d["w_in"] / 2
+        return [(y1 - i, z1 - i), (y0 + i, z0 + i), (mid, z0 + i), (y0 + i, mid)]
     return [(y0 + i, z0 + i), (y0 + i, z1 - i), (y1 - i, z0 + i), (y1 - i, z1 - i)]
 
 
@@ -243,9 +335,10 @@ def r02_stops(p: dict, d: dict) -> dict:
     z0, z1 = r["tongue"]
     g = r["stop_gap"]
     # The tongue reaches 2 mm into the fork whatever the leaf length is.
-    tongue = (p["a_p"] + r["post_len"] - 2.0, d["y_in0"] + 0.5, z0, z1)      # 0.5 into the stage
-    post_in = (p["a_p"] - 0.5, p["a_p"] + r["post_len"], z0 - g - r["post_w"][0], z0 - g)
-    post_out = (p["a_p"] - 0.5, p["a_p"] + r["post_len"], z1 + g, z1 + g + r["post_w"][1])
+    a = d.get("a_leg", p["a_p"])            # platform edge along the leg (arm end in shim mode)
+    tongue = (a + r["post_len"] - 2.0, d["y_in0"] + 0.5, z0, z1)      # 0.5 into the stage
+    post_in = (a - 0.5, a + r["post_len"], z0 - g - r["post_w"][0], z0 - g)
+    post_out = (a - 0.5, a + r["post_len"], z1 + g, z1 + g + r["post_w"][1])
     assert post_out[3] < p["s_c"] - p["t"] / 2 - 0.3, "outer post too close to the coupler leaf"
     return dict(tongue=tongue, posts=[post_in, post_out])
 
@@ -321,6 +414,11 @@ def build_base(p: dict, d: dict) -> cq.Workplane:
     iy0, iy1, iz0, iz1 = d["inner"]
     m = p.get("base_margin", r["base_margin"])
     base = base.cut(_box((iy0 - m, iy1 + m, iz0 - m, iz1 + m), -t - 1.0, 1.0))
+    # Windows behind the actuator pockets: the APA leads leave through the back
+    # face, and the actuator is 2 mm thicker than an 8 mm plate anyway.
+    for leg in [leg for leg in DRIVEN if leg in p["legs"]]:
+        y0, y1, z0, z1 = rect_rot(leg, d["pocket0"], d["pocket1"], -d["pocket_h"], d["pocket_h"])
+        base = base.cut(_box((y0 - 1.5, y1 + 1.5, z0 - 1.5, z1 + 1.5), -t - 1.0, 1.0))
     for y, z in bolt_points(p, d):
         base = base.cut(_cyl_through(y, z, p["bolt"], -t - 1.0, 1.0))
     return base
@@ -342,6 +440,10 @@ def build(p: dict) -> tuple[cq.Workplane, cq.Workplane, dict]:
             "voids": [rect_rot(leg, *r) for r in rects["voids"]],
             "stage": rect_rot(leg, *rects["stage"]),
             "leaves": [rect_rot(leg, *r) for r in rects["leaves"]],
+            "notches": [rect_rot(leg, *r) for r in rects["notches"]],
+            "bars": [rect_rot(leg, *r) for r in rects["bars"]],
+            "roles": rects["roles"],
+            "arms": [rect_rot(leg, *r) for r in rects["arms"]],
         }
     for leg in p["legs"]:
         for r in per_leg[leg]["voids"]:
@@ -353,8 +455,16 @@ def build(p: dict) -> tuple[cq.Workplane, cq.Workplane, dict]:
             sk = _rect(sk, rect_rot(leg, p["a_p"], p["h_in"] + p["g"], d["void_lo"], d["c0"]), "s")
     for leg in p["legs"]:
         sk = _rect(sk, per_leg[leg]["stage"], "a")
-        for r in per_leg[leg]["leaves"]:
+        for r in per_leg[leg]["arms"]:
             sk = _rect(sk, r, "a")
+        if not p["shim"]:
+            for r in per_leg[leg]["leaves"]:
+                sk = _rect(sk, r, "a")
+    if p["shim"]:
+        # Ledges and bar notches come out of platform, stages and frame alike.
+        for leg in p["legs"]:
+            for r in per_leg[leg]["notches"]:
+                sk = _rect(sk, r, "s")
     sk = sk.clean()
     sk = sk.reset().vertices().fillet(p["r_root"]).reset()
 
@@ -393,6 +503,54 @@ def build(p: dict) -> tuple[cq.Workplane, cq.Workplane, dict]:
     if p.get("r02"):
         plate, r02_added = add_r02(plate, p, d)
 
+    # Shim leaves (steel) and their clamp bars (body material) as separate solids,
+    # with the two M2 clamp screws per bar: clearance through the bar and the
+    # tab, tapped 4 mm into the body. Screws run normal to the leaf plane.
+    leaf_solids, bar_solids, screws = [], [], []
+    if p["shim"]:
+        for leg in p["legs"]:
+            leaf_solids += [_box(r, 0.0, p["b"]) for r in per_leg[leg]["leaves"]]
+            for r, role in zip(per_leg[leg]["bars"], per_leg[leg]["roles"]):
+                bar = _box(r, 0.0, p["b"])
+                if BAR_ACCESS[role] == "bond":
+                    bar_solids.append(bar)               # cure fixture only: no screws
+                    continue
+                y0, y1, z0, z1 = r
+                along_z = (z1 - z0) <= (y1 - y0)          # thin in z: coupler bar, screws along Z
+                # The body lies beyond the leaf: on the far side of the bar from the free leaf.
+                for x in (p["b"] * 0.25, p["b"] * 0.75):
+                    if along_z:
+                        y, zc = (y0 + y1) / 2, (z0 + z1) / 2
+                        # which side is the body? the ledge is under the leaf: pick the
+                        # side whose point 1 mm beyond the bar+leaf is inside the plate
+                        for s in (-1, 1):
+                            probe = cq.Vector(x, y, zc + s * ((z1 - z0) / 2 + p["t"] + 1.0))
+                            if plate.val().isInside(probe):
+                                start = zc - s * (z1 - z0) / 2 - s * 0.01
+                                depth = (z1 - z0) + p["t"] + 4.0
+                                clear = cq.Solid.makeCylinder(1.1, (z1 - z0) + p["t"] + 0.02, cq.Vector(x, y, start), cq.Vector(0, 0, s))
+                                tap = cq.Solid.makeCylinder(0.8, depth, cq.Vector(x, y, start), cq.Vector(0, 0, s))
+                                bar = bar.cut(cq.Workplane("XY").add(clear))
+                                plate = plate.cut(cq.Workplane("XY").add(tap))
+                                screws.append({"x": x, "y": y, "z": zc, "axis": "z", "into": s,
+                                               "role": role, "access": BAR_ACCESS[role]})
+                                break
+                    else:
+                        z, yc = (z0 + z1) / 2, (y0 + y1) / 2
+                        for s in (-1, 1):
+                            probe = cq.Vector(x, yc + s * ((y1 - y0) / 2 + p["t"] + 1.0), z)
+                            if plate.val().isInside(probe):
+                                start = yc - s * (y1 - y0) / 2 - s * 0.01
+                                depth = (y1 - y0) + p["t"] + 4.0
+                                clear = cq.Solid.makeCylinder(1.1, (y1 - y0) + p["t"] + 0.02, cq.Vector(x, start, z), cq.Vector(0, s, 0))
+                                tap = cq.Solid.makeCylinder(0.8, depth, cq.Vector(x, start, z), cq.Vector(0, s, 0))
+                                bar = bar.cut(cq.Workplane("XY").add(clear))
+                                plate = plate.cut(cq.Workplane("XY").add(tap))
+                                screws.append({"x": x, "y": yc, "z": z, "axis": "y", "into": s,
+                                               "role": role, "access": BAR_ACCESS[role]})
+                                break
+                bar_solids.append(bar)
+
     # Payload block on the front face, centred on the fiber.
     hy, hz = p["payload_wy"] / 2, p["payload_wz"] / 2
     payload = (cq.Workplane("XY")
@@ -400,15 +558,30 @@ def build(p: dict) -> tuple[cq.Workplane, cq.Workplane, dict]:
                .translate((p["b"], -hy, -hz)))
 
     info = {"derived": d, "legs": per_leg, "pads": pads, "r02": r02_added,
+            "leaf_solids": leaf_solids, "bar_solids": bar_solids, "screws": screws,
             "payload_box": {"x": [p["b"], p["b"] + p["payload_len"]],
                             "y": [-hy, hy], "z": [-hz, hz]}}
     return plate, payload, info
 
 
+def apa_placeholder(p: dict, d: dict, leg: str) -> cq.Workplane:
+    """Datasheet envelope of the actuator when no vendor STEP is on hand: the
+    shell (apa_long across the leg, 8 mm along it, full thickness) between two
+    2.5 x 5 pads that meet the lands. Placement only, not for analysis."""
+    shell_len = 8.0                          # APA120S ICD: shell ~8 along the motion axis
+    y_a, y_b = d["y_in1"] + p["pad_boss"], d["pocket1"] - p["pad_boss"]
+    yc = (y_a + y_b) / 2
+    x0 = (p["b"] - p["pad"][1]) / 2
+    shell = _box(rect_rot(leg, yc - shell_len / 2, yc + shell_len / 2, -p["apa_long"] / 2, p["apa_long"] / 2),
+                 (p["b"] - 10.0) / 2, (p["b"] + 10.0) / 2)
+    pads = _box(rect_rot(leg, y_a, y_b, -p["pad"][0] / 2, p["pad"][0] / 2), x0, x0 + p["pad"][1])
+    return shell.union(pads)
+
+
 def place_apa(p: dict, d: dict, leg: str) -> cq.Workplane | None:
     """Vendor APA60S dropped into a driven leg's pocket, for the assembly STEP."""
     if not VENDOR.exists() or p["actuator"] != "APA60S":
-        return None                         # only the APA60S STEP is on hand
+        return apa_placeholder(p, d, leg)   # only the APA60S STEP is on hand
     apa = cq.importers.importStep(str(VENDOR)).val()
     centre = (d["y_in1"] + d["pocket1"]) / 2
     origin, y_axis, z_axis, x_axis = cq.Vector(0, 0, 0), cq.Vector(0, 1, 0), cq.Vector(0, 0, 1), cq.Vector(1, 0, 0)
@@ -438,24 +611,39 @@ def main() -> int:
     plate, payload, info = build(P)
     d = info["derived"]
 
-    plate_solid = plate.val()
-    vol = plate_solid.Volume()
-    rho = P["rho_kg_m3"] * 1e-6                        # g/mm3
+    body = P["body_material"] or {"name": "7075-T6 (Fusion 'Aluminum 7075' values, as fem_r01)",
+                                  "E_MPa": P["E_MPa"], "nu": P["nu"], "rho_kg_m3": P["rho_kg_m3"]}
+    # In shim mode the body is four pieces (frame, two stages, platform) held
+    # together only by the leaves; treat it as a list of solids throughout.
+    body_solids = plate.solids().vals()
+    vol = sum(s.Volume() for s in body_solids)
+    rho = body["rho_kg_m3"] * 1e-6                     # g/mm3
     plate_mass_g = vol * rho
     payload_vol = payload.val().Volume()
     payload_g = payload_vol * P["payload_rho_kg_m3"] * 1e-6
+    leaf_rho = P["leaf_material"]["rho_kg_m3"] * 1e-6 if P["shim"] else rho
+    leaves_g = sum(s.val().Volume() for s in info["leaf_solids"]) * leaf_rho
+    bars_g = sum(s.val().Volume() for s in info["bar_solids"]) * rho
 
     # Moving-mass bookkeeping from the profile rectangles (leaves at half weight,
     # a beam's effective mass); the FE modal is the real answer.
-    stage_mm2 = P["w_in"] * 2 * P["h_in"]
+    stage_mm2 = d["w_in"] * 2 * P["h_in"]
     leaf_mm2 = P["t"] * P["L"]
     platform_g = ((2 * P["a_p"]) ** 2 - 3.14159 * (P["fiber_hole"] / 2) ** 2) * P["b"] * rho
     stage_g = stage_mm2 * P["b"] * rho
-    leaf_g = leaf_mm2 * P["b"] * rho
+    leaf_g = leaf_mm2 * P["b"] * leaf_rho
     moving_one_axis_g = platform_g + 2 * stage_g + 0.5 * (8 + 4) * leaf_g + P["apa_mass_g"] / 2
 
-    cq.exporters.export(plate, str(step_dir /"parallel_yz_r01.step"))
-    loaded = cq.Workplane("XY").add(plate.val()).add(payload.val())
+    # The "plate" STEP the FE meshes: the body plus its shim leaves as separate
+    # solids (fragmented conformal by mesh.py); the assembly adds the clamp bars.
+    plate_wp = cq.Workplane("XY").add(body_solids)
+    for s in info["leaf_solids"]:
+        plate_wp = plate_wp.add(s.val())
+    cq.exporters.export(plate_wp, str(step_dir /"parallel_yz_r01.step"))
+    loaded = cq.Workplane("XY").add(body_solids)
+    for s in info["leaf_solids"]:
+        loaded = loaded.add(s.val())
+    loaded = loaded.add(payload.val())
     base_info = None
     if P.get("r02"):
         base = build_base(P, d)
@@ -483,11 +671,14 @@ def main() -> int:
     # rule from 2026-09-08 is to minimise these, so they are reported every build.
     back = plate.faces("<X")
     wires = back.wires().vals()
-    edm = {"closed_contours_to_thread": len(wires) - 1,
+    edm = {"closed_contours_to_thread": len(wires) - len(body_solids),
+           "body_pieces": len(body_solids),
            "cut_length_mm": sum(w.Length() for w in wires),
            "leaves": len(leaf_boxes := [None] * 0) or sum(len(v["leaves"]) for v in info["legs"].values())}
 
-    assembly = cq.Workplane("XY").add(plate.val())
+    assembly = cq.Workplane("XY").add(body_solids)
+    for s in info["leaf_solids"] + info["bar_solids"]:
+        assembly = assembly.add(s.val())
     for leg in [leg for leg in DRIVEN if leg in P["legs"]]:
         apa = place_apa(P, d, leg)
         if apa is not None:
@@ -516,8 +707,23 @@ def main() -> int:
             "moving_per_axis_incl_half_apa": moving_one_axis_g,
             "note": "profile-rectangle estimates; the FE modal carries the real mass",
         },
-        "material": {"name": "7075-T6 (Fusion 'Aluminum 7075' values, as fem_r01)",
-                     "E_MPa": P["E_MPa"], "nu": P["nu"], "rho_kg_m3": P["rho_kg_m3"]},
+        "material": body,
+        # Regions with a material other than the body's: the shim leaves. The
+        # holder is handled separately (loaded meshes only).
+        "material_regions": [
+            {"box": {"x": [0.0, P["b"]], "y": [y0, y1], "z": [z0, z1]}, **P["leaf_material"]}
+            for parts in info["legs"].values() for (y0, y1, z0, z1) in parts["leaves"]
+        ] if P["shim"] else [],
+        "shim": {"enabled": P["shim"], "tab": P["tab"], "bar_t": P["bar_t"], "leaf_t": P["t"],
+                 "free_length": P["L"], "leaf_depth": P["b"], "leaves_g": leaves_g, "bars_g": bars_g,
+                 "bars": [{"y": [r[0], r[1]], "z": [r[2], r[3]], "leg": leg, "role": role,
+                           "access": BAR_ACCESS[role]}
+                          for leg, parts in info["legs"].items()
+                          for r, role in zip(parts["bars"], parts["roles"])],
+                 "arm": d["arm"],
+                 "clamp": "2 x M2 per bar, bar edge R0.3 defines the root; 32 taps side-drilled",
+                 "screws": info["screws"]}
+                if P["shim"] else {"enabled": False},
         "payload": {"mass_g": payload_g, "box": info["payload_box"],
                     "rho_kg_m3": P["payload_rho_kg_m3"], "E_MPa": P["payload_E_MPa"],
                     "nu": P["payload_nu"],
@@ -550,6 +756,10 @@ def main() -> int:
           f"{vol:.0f} mm3, {plate_mass_g:.1f} g; moving per axis ~{moving_one_axis_g:.1f} g")
     print(f"EDM: {edm['leaves']} leaves, {edm['closed_contours_to_thread']} contours to thread, "
           f"{edm['cut_length_mm'] / 1000:.2f} m of cut")
+    if P["shim"]:
+        print(f"shim leaves: {len(info['leaf_solids'])} x {P['leaf_material']['name']} "
+              f"{P['t']:.2f} x {P['b']:.0f} x {P['L'] + 2 * P['tab']:.1f} ({leaves_g:.1f} g), "
+              f"{len(info['bar_solids'])} clamp bars ({bars_g:.1f} g); stage width {d['w_in']:.1f}")
     print(f"payload block {payload_vol:.0f} mm3 at {P['payload_rho_kg_m3']:.0f} kg/m3 = {payload_g:.2f} g")
     if base_info:
         print(f"base plate {base_info['mass_g']:.0f} g, opening "

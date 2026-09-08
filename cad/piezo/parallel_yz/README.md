@@ -281,6 +281,81 @@ the modal table above quantifies. What it buys: a CNC part instead of a wire-EDM
 part, one-third of the cut length, and a mechanism whose every leaf can be
 pointed at on a drawing.
 
+### R04: CNC body + clamped shim leaves (the compact one)
+
+R03's 99 mm is leaf length, and leaf length is set by the thinnest leaf a mill
+can make: 1.0 mm of aluminium needs 29 mm to be soft enough. The way out is not
+the architecture or the body material but the **leaf**: a precision shim is
+5× thinner, and k ∝ t³/L³, so the same stiffness needs a quarter of the length.
+`variants/r04/` is R03's topology built that way:
+
+- **body:** one CNC 6061-T6 plate, **81.8 × 81.8 × 8 mm, 99 g**, in four pieces
+  (frame, two input stages, a cross-shaped platform) joined only by the leaves;
+  every notch and ledge is a through-profile feature, the 28 M2 clamp taps are
+  side-drilled. The platform's 4 mm arms exist because the two legs' coupler
+  tabs would otherwise cross in the platform corner - they did in the first
+  build, caught in the assembly review of 2026-09-08;
+- **leaves:** 8 × **17-7PH CH900 shim, 0.20 × 8 × 15.5 mm**, standing edgewise
+  on milled ledges, free length **8.5 mm** between clamp-bar edges; the sheet
+  cannot be one part - the Y and Z leaves lie in perpendicular planes - so they
+  are eight rectangles with two Ø2.4 holes per tab, laser- or shear-cut;
+- **clamps:** 16 bars 8 × 3.5 × 2 (6061) with 2 × M2 × 6 where a driver can
+  reach them, torqued 0.3 N·m with thread-locker, bar edge R0.3; the screws only
+  squeeze, the flexure load never passes through them (friction margin ~100×).
+  A straight driver path exists for 6 of the 16 (the platform coupler bars and
+  the outer guide bars, the latter fitted before the actuator), 8 are reachable
+  only with a ball-end key through the front opening, and the 2 inner guide
+  bars face the coupler bar and cannot be driven at all. Those tabs are
+  therefore **epoxy-bonded** (3M DP460 / Loctite EA 9460, jig-cured) with the
+  bar as cure fixture and backup; `model.BAR_ACCESS` records the class of every
+  bar and the sheet says which. Bonding every tab and using the bars only as
+  fixtures is the simpler build and is the recommended one;
+- everything else as R02/R03: tongue-and-fork stops, actuator screw access,
+  holder taps, wire ties, the 13.15 mm land gap, the bolted base in the loaded
+  model - the base now has windows behind both pockets so the APA leads leave
+  through the back face.
+
+Why these numbers: with four leaves bending per axis and a 0.085 N/µm budget,
+k_leaf = E b t³/L³ ≤ 21 N/mm gives L = 42·t; 0.15 mm would save 2 mm per leg
+but doubles the stiffness scatter from the ±0.005 rolling tolerance and puts the
+working stress at 270 MPa, 0.20 mm gives ±7.5 % and ~200 MPa (500 MPa into the
+0.3 mm stop, still under yield with 2.8×). 17-7PH over 1095 for the fatigue
+allowable and corrosion; over 301 full-hard for consistency of E and stock.
+
+![r04](variants/r04/renders/assembly_iso.png)
+
+Converged on the bolted base with the holder (statics 1.2 %, loaded modal
+≤ 0.3 % between 0.7M and 1.5M dofs):
+
+| | R03 (CNC leaves) | **R04 (shim leaves)** |
+|---|---|---|
+| plate | 99 × 99 × 8, 135 g | **82 × 82 × 8, 99 g** + 1.5 g shims + 2 g bars |
+| k_guide Y / Z | 0.0938 N/µm | **0.0602 / 0.0602** |
+| loaded stroke, worst-case / nominal | 101.0 / 108.8 µm | **109.8 / 118.2 µm** |
+| coupling at full stroke | 1.01 % | **0.19 %** (0.2 µm at the tip) |
+| platform roll about the fiber at full stroke | 138 µrad | 71 µrad |
+| gravity | 0.60 µm sag, 4.6 µrad, 0.74 µm tip | 0.66 µm sag, 2.4 µrad, 0.73 µm tip |
+| **first modes, loaded, on the base** | **326 X**, 606 Z, 620 Y, 747 yaw | **575 Z, 580 Y** (the search axes), 661 X, 1385 pitch |
+| first modes, bare | 400 X, 678 Z, 684 Y | 652 Y/Z, 836 X, 1554 yaw |
+| leaf stress at full stroke | 28 MPa (Al) | 157 MPa (steel; ~430 MPa at the 0.3 mm stop) |
+| guide force at stroke | 10.2 N | 7.1 N |
+| cuts | 8 CNC leaves, 13 contours | 8 shims + a 4-piece body, 8 contours, 1.03 m |
+
+What this bought over R03: **a third less area**, the coupling down **5×**, and
+the out-of-plane bounce gone from the bottom of the spectrum (661 Hz, above
+both search axes) - with the same actuator, stroke and count of flexures. The
+guide is softer than the 0.085 N/µm the beam formula aimed for (the one-face
+bonded tab and the stubby leaf's shear add compliance), which is why the stroke
+is 110 µm rather than 100; a millimetre off L would trade that back. The
+platform arms that made the design assemblable cost ~35 Hz on the search axes
+and ~90 Hz on X against the un-assemblable first build.
+
+What the FE does not model: the clamps are bonded on one face (perfect,
+slip-free joints), so hysteresis at the tabs - the real risk of any assembled
+flexure - is a bench measurement; the leaf-to-leaf parallelism is whatever the
+milled ledges give (±0.01 mm over 8 mm is ordinary), and the 0.2 mm shim
+thickness tolerance is ±7.5 % on stiffness per leaf.
+
 ### Against the stacked P0 head
 
 | | stacked P0 (`../`) | parallel R01 (this) |

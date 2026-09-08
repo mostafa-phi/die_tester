@@ -46,10 +46,10 @@ def build(path_msh: Path, h_fine: float, loaded: bool = False, h_coarse: float |
         gmsh.model.occ.importShapes(str(step_loaded if loaded else step_plate))
         gmsh.model.occ.synchronize()
         volumes = gmsh.model.getEntities(3)
-        if loaded:
-            if len(volumes) < 2:
-                raise RuntimeError(f"loaded STEP should hold 2 or more solids, found {len(volumes)}")
-            # Plate + holder (+ base plate for R02): make every contact conformal.
+        if loaded and len(volumes) < 2:
+            raise RuntimeError(f"loaded STEP should hold 2 or more solids, found {len(volumes)}")
+        if len(volumes) > 1:
+            # Body + shim leaves (+ holder, + base): make every contact conformal.
             gmsh.model.occ.fragment(volumes[:1], volumes[1:])
             gmsh.model.occ.synchronize()
             volumes = gmsh.model.getEntities(3)

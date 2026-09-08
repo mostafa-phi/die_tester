@@ -75,49 +75,57 @@ def in_box(points: np.ndarray, box: dict, tol: float = 0.05) -> np.ndarray:
 
 
 class Materials:
-    """Plate everywhere, payload block inside its box (loaded meshes only)."""
+    """Body everywhere, then any recorded material regions (shim leaves), then
+    the holder block inside its box (loaded meshes only)."""
 
     def __init__(self, rep: dict, loaded: bool):
-        self.loaded = loaded
-        self.box = rep["payload"]["box"]
-        m, pl = rep["material"], rep["payload"]
+        m = rep["material"]
         self.plate = self._lame(m["E_MPa"], m["nu"]) + (m["rho_kg_m3"] * 1e-12,)
-        self.payload = self._lame(pl["E_MPa"], pl["nu"]) + (pl["rho_kg_m3"] * 1e-12,)
+        self.regions = [(r["box"], self._lame(r["E_MPa"], r["nu"]) + (r["rho_kg_m3"] * 1e-12,))
+                        for r in rep.get("material_regions", [])]
+        if loaded:
+            pl = rep["payload"]
+            self.regions.append((pl["box"], self._lame(pl["E_MPa"], pl["nu"]) + (pl["rho_kg_m3"] * 1e-12,)))
 
     @staticmethod
     def _lame(E, nu):
         return E * nu / ((1 + nu) * (1 - 2 * nu)), E / (2 * (1 + nu))
 
     def _pick(self, x, index):
-        if not self.loaded:
-            return self.plate[index] + 0.0 * x[0]
-        return np.where(in_box(x, self.box, tol=0.0), self.payload[index], self.plate[index])
+        out = self.plate[index] + 0.0 * x[0]
+        for box, props in self.regions:
+            out = np.where(in_box(x, box, tol=0.0), props[index], out)
+        return out
 
     def lam(self, x): return self._pick(x, 0)
     def mu(self, x): return self._pick(x, 1)
     def rho(self, x): return self._pick(x, 2)
 
 
-def stiffness_form(mat: Materials) -> BilinearForm:
-    @BilinearForm
-    def form(u, v, w):
-        eu, ev = sym_grad(u), sym_grad(v)
-        return 2.0 * mat.mu(w.x) * ddot(eu, ev) + mat.lam(w.x) * trace(eu) * trace(ev)
-    return form
+# The material arrays are evaluated ONCE at the quadrature points and handed to
+# the forms as fields (w["lam"] ...). Calling mat.lam(w.x) inside the form
+# would re-run the region lookup for every local basis-function pair - 900
+# times per element for vector P2 - which with eight shim regions took longer
+# than the solve itself.
+def material_fields(mat: Materials, basis: Basis) -> dict:
+    x = np.asarray(basis.global_coordinates().value)
+    return {"lam": mat.lam(x), "mu": mat.mu(x), "rho": mat.rho(x)}
 
 
-def mass_form(mat: Materials) -> BilinearForm:
-    @BilinearForm
-    def form(u, v, w):
-        return mat.rho(w.x) * dot(u, v)
-    return form
+@BilinearForm
+def stiffness_form(u, v, w):
+    eu, ev = sym_grad(u), sym_grad(v)
+    return 2.0 * w["mu"] * ddot(eu, ev) + w["lam"] * trace(eu) * trace(ev)
 
 
-def gravity_form(mat: Materials) -> LinearForm:
-    @LinearForm
-    def form(v, w):
-        return -mat.rho(w.x) * G_MM_S2 * v[2]        # weight along -Z
-    return form
+@BilinearForm
+def mass_form(u, v, w):
+    return w["rho"] * dot(u, v)
+
+
+@LinearForm
+def gravity_form(v, w):
+    return -w["rho"] * G_MM_S2 * v[2]        # weight along -Z
 
 
 def surface_mass_form(rho_surface: float) -> BilinearForm:
@@ -202,11 +210,20 @@ class Model:
             out[leg] = a_stage - a_frame
         return out
 
+    def fields(self) -> dict:
+        if not hasattr(self, "_fields"):
+            self._fields = material_fields(self.mat, self.basis)
+        return self._fields
+
+    def gravity(self) -> np.ndarray:
+        return gravity_form.assemble(self.basis, rho=self.fields()["rho"])
+
     def assemble(self, with_mass: bool) -> tuple[sp.csr_matrix, sp.csr_matrix | None]:
-        K = stiffness_form(self.mat).assemble(self.basis).tocsr()
+        f = self.fields()
+        K = stiffness_form.assemble(self.basis, lam=f["lam"], mu=f["mu"]).tocsr()
         if not with_mass:
             return K, None
-        M = mass_form(self.mat).assemble(self.basis).tocsr()
+        M = mass_form.assemble(self.basis, rho=f["rho"]).tocsr()
         # Half the actuator mass on each of its pads.
         act = self.rep["actuator"]
         half_t = act["mass_g"] / 2 * 1e-6

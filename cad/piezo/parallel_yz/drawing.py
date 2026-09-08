@@ -71,8 +71,10 @@ def main() -> int:
     ax.set_xlabel("Y (mm)")
     ax.set_ylabel("Z (mm)")
     variant = rep["variant"]
-    millable = p["t"] >= 0.8 and p["b"] / p["t"] <= 10.5
-    process = "CNC-millable profile (or wire EDM)" if millable else "wire-EDM profile"
+    shim = rep.get("shim", {}).get("enabled", False)
+    millable = shim or (p["t"] >= 0.8 and p["b"] / p["t"] <= 10.5)
+    process = ("CNC body + clamped shim leaves" if shim
+               else "CNC-millable profile (or wire EDM)" if millable else "wire-EDM profile")
     ax.set_title(f"Parallel YZ flexure plate {variant} - {process}, viewed along the optical axis (+X toward viewer)\n"
                  f"{rep['actuator']['name']} in the +Y and +Z legs; scale from axes; DXF is the cut file",
                  fontsize=10)
@@ -91,9 +93,15 @@ def main() -> int:
     # Leg callouts (+Y leg).
     y_leaf = d["guide_y"][1]
     n_leaves = rep["edm"]["leaves"]
-    callout(ax, (y_leaf, 18), (R + 18, 30),
-            f"{n_leaves} leaves {p['t']:.2f} x {p['L']:.0f}, R{p['r_root']:.1f} roots\n"
-            f"thickness {p['t']:.2f} +/-0.02, both faces parallel")
+    if shim:
+        callout(ax, (y_leaf, 18), (R + 18, 30),
+                f"{n_leaves} shim leaves {p['t']:.2f} x {p['b']:.0f} x {p['L'] + 2 * p['tab']:.1f} "
+                f"({p['leaf_material']['name'].split()[0]}),\nfree {p['L']:.1f} between bar edges; "
+                f"thickness +/-0.005")
+    else:
+        callout(ax, (y_leaf, 18), (R + 18, 30),
+                f"{n_leaves} leaves {p['t']:.2f} x {p['L']:.0f}, R{p['r_root']:.1f} roots\n"
+                f"thickness {p['t']:.2f} +/-0.02, both faces parallel")
     callout(ax, ((d['pocket0'] + d['pocket1']) / 2, d['pocket_h']), (R + 18, 8),
             f"APA pocket {d['pocket1'] - d['pocket0']:.1f} x {2 * d['pocket_h']:.0f}\n"
             f"pad lands 2.5 x 5 x 0.2 raised, MILLED,\ncoplanar +/-0.02 (2 per driven leg)")
@@ -118,7 +126,25 @@ def main() -> int:
     t, b = p["t"], p["b"]
     n_ties = len(r["wire_ties"])
     gap = d["pocket1"] - d["y_in1"] - 2 * p["pad_boss"]
-    if millable:
+    if shim:
+        sh = rep["shim"]
+        lm = p["leaf_material"]
+        n_leaf = rep["edm"]["leaves"]
+        process_notes = [
+            f"BODY: CNC mill the profile from the DXF (mm, 1:1) in {rep['material']['name']}; it is 4 pieces",
+            f"  (frame, 2 stages, platform) joined only by the leaves. Ledges/notches flat 0.01, no burrs.",
+            f"LEAVES: {n_leaf} x {lm['name']}, {sh['leaf_t']:.2f} +/-0.005 thick, {sh['leaf_depth']:.0f} x "
+            f"{sh['free_length'] + 2 * sh['tab']:.1f} rectangles, 2 x dia 2.4 holes per tab; shear/laser cut, deburr.",
+            f"  Free length {sh['free_length']:.1f} between clamp-bar edges. Working stress ~200 MPa, 500 MPa at the stop.",
+            f"CLAMPS: 16 bars {sh['leaf_depth']:.0f} x {sh['tab']:.1f} x {sh['bar_t']:.1f} (body material). "
+            f"{len(sh['screws'])} x M2 x 6 into taps in the body",
+            f"  (side-drilled along Y or Z) on the {len(sh['screws']) // 2} bars a driver can reach "
+            f"({sum(1 for b_ in sh['bars'] if b_['access'] == 'angled')} of them ball-end only);",
+            f"  the {sum(1 for b_ in sh['bars'] if b_['access'] == 'bond')} inner guide bars have no screw path: those tabs are EPOXY-BONDED (DP460 / EA 9460,",
+            f"  jig-cured), bar as cure fixture. Bar inner edge R0.3 defines the root. Torque 0.3 N.m + thread-locker.",
+            f"  Stop gaps {r['stop_gap']:.2f} +0.10/-0 are profile features of the body.",
+        ]
+    elif millable:
         process_notes = [
             f"PROCESS: CNC mill the through profile from the DXF (mm, 1:1) or wire EDM it, shop's choice.",
             f"  Leaves: {t:.2f} +/-0.02 thick, {b:.0f} deep ({b / t:.0f}:1 walls): finish with light passes,",
@@ -133,7 +159,7 @@ def main() -> int:
             f"  Stop gaps {r['stop_gap']:.2f} are one wire pass: do not skim them narrower.",
         ]
     notes = [
-        f"MATERIAL: 7075-T651 plate, {b:.1f} mm, both faces ground flat 0.02 before profiling.",
+        f"MATERIAL: {rep['material']['name']} plate, {b:.1f} mm, both faces ground flat 0.02 before profiling.",
         *process_notes,
         f"MILLING: 4 pad lands 2.5 x 5, raised {p['pad_boss']:.1f}, coplanar +/-0.02 per leg pair, land gap {gap:.2f} +0.05/-0",
         f"  (actuator is {p['apa_len']:.0f} +/-0.1: shim 0.05-0.15 at assembly); M2 clearance/counterbores on leg axes",

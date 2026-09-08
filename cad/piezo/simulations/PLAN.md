@@ -97,7 +97,16 @@ sheet. **Design rule (user, 2026-09-08): minimise the number of flexure cuts
 that constrain the carriage, not elegance** - 35 threaded contours and 2.4 m
 of wire is a warning, not a feature. `variants/r03` is the answer: two legs,
 8 leaves of 1.0 × 29 mm in an 8 mm plate, CNC-millable, ≥ 100 µm stroke,
-1 % coupling. The R01 sections below remain the record of the APA60S baseline.
+1 % coupling. **R04** (`variants/r04`, 2026-09-08) keeps R03's eight-leaf
+topology but makes the leaves 0.20 mm 17-7PH shims clamped on a CNC 6061 body:
+82 × 82 × 8 mm, 110 µm worst-case stroke, 0.19 % coupling, first modes
+575 / 580 Hz on the search axes, 661 Hz out of plane. It is the current
+candidate for manufacture. The assembly review of 2026-09-08 found the
+first build's coupler tabs crossing in the platform corner and 10 of 16
+clamp screws without a straight driver path; R04 now has platform arms and
+bonded tabs where screws cannot reach. Open risks: clamp/bond hysteresis and
+leaf parallelism, both bench items; the APA120S STEP is still an envelope.
+The R01 sections below remain the record of the APA60S baseline.
 
 Sections 3 and 4 below are written for the stack; for the parallel plate the
 "assembly" is the plate itself, section 3's loaded modal is done (minus mount
