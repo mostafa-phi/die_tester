@@ -74,6 +74,7 @@ RENDERS = [
     ("nest", "nest_top_exploded.step", "nest_top_exploded_iso.png", "iso"),
     ("tray", "tray_pocket_check.step", "tray_pocket_iso.png", "iso"),
     ("tray", "wafer_tray_8x14.step", "tray_iso.png", "iso"),
+    ("tray", "wafer_tray_coupon_3x4.step", "tray_coupon_iso.png", "iso"),
     ("station", "station_assembly.step", "station_iso.png", "iso"),
     ("station", "station_assembly.step", "station_plan.png", "top"),
     ("station", "station_assembly.step", "station_front.png", "front"),

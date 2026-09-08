@@ -16,6 +16,8 @@ columns run along X (the transfer direction), rows along Y.
 
 Outputs (this folder):
   STEP/wafer_tray_8x14.step, STL/wafer_tray_8x14.stl   the tray in its own frame (deck top Z 0, pocket (0,0) die origin at X 0, Y 0)
+  STEP/wafer_tray_coupon_3x4.step, STL/..._3x4.stl    print-test coupon: the same tray() cut to COUPON columns x rows (same pockets,
+                                                       channels, reliefs, rims and datum hole/slot, so every feature is tested)
   STEP/tray_pocket_check.step                          one pocket with the open gripper at the set-down height
   checks.txt                                           pocket vs die retention and vs the open jaws
 
@@ -58,19 +60,26 @@ TR = dict(
     jaw_open=1.5,                  # per-side jaw opening at the tray (of the 2.0 available)
 )
 
+# Print-test coupon: the tray generator run for a few columns x rows, nothing else changed. 3 columns so the middle
+# column has walls (and the through channel) on both sides, 4 rows so the middle rows have neighbours on both sides;
+# the rims, the datum hole and the slot are the full tray's (64 x 32.5 mm, prints in well under an hour).
+COUPON = dict(cols=3, rows=4)
 
-def extents(x_first, yc):
+
+def extents(x_first, yc, cols=None, rows=None):
     """Tray footprint for the die-origin X of column 0 and the Y of the active row centre (rows centred on yc)."""
-    nc, nr, pc, pr = TR["cols"], TR["rows"], TR["col_pitch"], TR["row_pitch"]
+    nc, nr = cols or TR["cols"], rows or TR["rows"]
+    pc, pr = TR["col_pitch"], TR["row_pitch"]
     x0 = x_first - (nc - 1) * pc - TR["rim_x"][0]
     x1 = x_first + TR["rim_x"][1]
     len_y = nr * pr + 2 * TR["rim_y"]
     return x0, x1, yc - len_y / 2, yc + len_y / 2
 
 
-def pocket_origins(x_first, yc):
+def pocket_origins(x_first, yc, cols=None, rows=None):
     """(column, row, die X, die Y) of every pocket's die origin (die corner X 0 / Y 0)."""
-    nc, nr, pc, pr = TR["cols"], TR["rows"], TR["col_pitch"], TR["row_pitch"]
+    nc, nr = cols or TR["cols"], rows or TR["rows"]
+    pc, pr = TR["col_pitch"], TR["row_pitch"]
     out = []
     for c in range(nc):
         xd = x_first - c * pc
@@ -114,13 +123,14 @@ def relief(xd, yd0, yd1, z_deck):
     return box(xd + cx0 + pl, xd + cx1 - pl, yd0 - ry, yd1 + W + ry, z_floor, z_top).val()
 
 
-def tray(x_first, yc, z_deck):
-    """The tray solid on a deck top at z_deck. Returns (tray, z_die_bottom, (x0, x1, y0, y1))."""
-    x0, x1, y0, y1 = extents(x_first, yc)
+def tray(x_first, yc, z_deck, cols=None, rows=None):
+    """The tray solid on a deck top at z_deck. Returns (tray, z_die_bottom, (x0, x1, y0, y1)).
+    cols / rows default to the full tray (TR); the print coupon passes COUPON's."""
+    x0, x1, y0, y1 = extents(x_first, yc, cols, rows)
     z_led = z_deck + TR["floor_t"] + TR["ledge_h"]
     slab = box(x0, x1, y0, y1, z_deck, z_led + TR["wall_above_die"])
     cavities, ledges = [], []
-    origins = pocket_origins(x_first, yc)
+    origins = pocket_origins(x_first, yc, cols, rows)
     for _, _, xd, yd in origins:
         cv, ld = pocket_features(xd, yd, z_deck)
         cavities += cv; ledges += ld
@@ -185,6 +195,10 @@ def main():
     yc = W / 2
     tr, z_led, ext = tray(0.0, yc, 0.0)
     C.export_part(tr, DIRS, "wafer_tray_8x14", tolerance=0.02, angular=0.2)
+    # print-test coupon: the same generator for COUPON columns x rows (pocket (0, row centre) still at the origin)
+    cc, cr = COUPON["cols"], COUPON["rows"]
+    cp, _, cext = tray(0.0, yc, 0.0, cc, cr)
+    C.export_part(cp, DIRS, f"wafer_tray_coupon_{cc}x{cr}", tolerance=0.02, angular=0.2)
 
     # ---- checks on one pocket: die retention, open jaws, bars, gripper at the set-down height ----
     xd, yd = 0.0, 0.0
@@ -208,6 +222,9 @@ def main():
         f"{TR['post_len'] - (-cx0):.1f} mm of a die corner; nose slots {sy1 - sy0:.1f} wide (contact band {C.CONTACT_Y0}..{C.CONTACT_Y1}), "
 f"through between pockets and {TR['slot_depth']} into the rims; ledges {TR['ledge_w']} wide x {TR['ledge_h']} tall under the facet-edge strips.",
         f"Die on the ledges at Z {z_led:.1f} above the deck; wall top {TR['wall_above_die'] - T:.1f} mm above the die top.",
+        f"Print coupon wafer_tray_coupon_{cc}x{cr}: {cc} x {cr} = {cc * cr} pockets of the same generator, "
+        f"{cext[1] - cext[0]:.0f} x {cext[3] - cext[2]:.1f} mm, with the full tray's rims, datum hole and slot "
+        f"(pin spacing {cext[1] - cext[0] - 2 * TR['datum_inset']:.0f} mm).",
         "",
         "pocket members vs the die on its ledges (only the ledges touch; positive = clear):",
     ]

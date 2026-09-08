@@ -64,12 +64,13 @@ Bolt lengths assume 1 mm of washer; check each against the tapped depth before o
 
 | # | File | Part | Prototype | After printing | Final |
 |---|---|---|---|---|---|
+| T0 | `wafer_tray_coupon_3x4.stl` | Print-test coupon: the tray generator cut to 3 × 4 pockets, 64 × 32.5 × 3.8 mm, with the full tray's rims and datum hole / slot (pins 57 mm apart) | **print this first**, same settings as T1 (flat, 0.16 layers, 0.4 nozzle, single-wall posts) | pin-gauge the cavities (12.0 × 6.8), the 0.7 mm posts and the 3.6 mm channel through every end wall; drop a die in every pocket (±1.0 / ±0.4 play) and two loose Ø3 pins in the hole and slot; a tight pocket is fixed with XY compensation in the slicer, then print T1 | print only |
 | T1 | `wafer_tray_8x14.stl` | 112-pocket wafer tray (corner-post pockets) | print flat, 0.16 layers, 0.4 nozzle (ledges 1.0 × 0.8 mm; the 0.7 mm corner posts are under two nozzle widths, so print them as single-wall features and check a few with a pin gauge; 0.4 mm facet clearance at the posts) | measure the ledge plane with an indicator: flat within 0.1 mm over 132 mm, else skim or reprint; check surface resistance of a coupon | print (PPA-CF), or Semitron if flatness or ESD fail |
 
 ## 6. Order of printing
 
-1. Tray, gripper bracket and arms, tower bracket, arm, deck: the hand-cycling rig and the sequence
-   rehearsal need these first. Machine the two tip blocks and the chuck in parallel.
+1. The tray coupon (T0), then the tray, gripper bracket and arms, tower bracket, arm, deck: the hand-cycling
+   rig and the sequence rehearsal need these first. Machine the two tip blocks and the chuck in parallel.
 2. X and Y risers once the LX20 actuators are in hand, so the base-hole positions can be checked against
    the real rails before tapping.
 3. NanoMax risers and nest adapters as fit checks only; order the aluminium versions with the chuck.

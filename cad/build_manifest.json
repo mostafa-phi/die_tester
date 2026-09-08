@@ -1,6 +1,6 @@
 {
  "args": [],
- "built": "2026-09-07T19:17:13Z",
+ "built": "2026-09-08T02:52:25Z",
  "outputs": {
   "gripper/STEP/bracket_6061.step": "1baffcfda52a5bd6fe852232f590583d184f681f40934bddf00f87f010bd3d64",
   "gripper/STEP/bracket_6061_h.step": "75a11a52492c1c95682c6196adb821ca14a5457dff6d94fad52ad2cbff418b89",
@@ -61,13 +61,13 @@
   "nest/renders/nest_top_no_die_iso.png": "c72495000cd09e047ee1fa28c928e2bd06eaeef654ec4f2e8aaec653300292f5",
   "station/STEP/arm_6061.step": "617e35dabaa33b33aa21782fffb0f41ec3c983701a31e9574110b02e62ff2e2d",
   "station/STEP/arm_6061_h.step": "5a85aa22b48259375400a32cdfacd84785a5d1b96b8389a3523bd1388a322b36",
-  "station/STEP/gripper_with_sensors.step": "f8989f4c23e8e927cf3f5cdeb79f1803ce172109d8c08a94ffb95d9aa0f500ae",
+  "station/STEP/gripper_with_sensors.step": "1fe030108697be0f6899e95d71f165d143491ef34c1fc7209bb796276f4dbb6f",
   "station/STEP/nanomax_riser_6061.step": "4fb5ff1b7c0c84efe872520323634a7602e0ed3ff8c03ed0aa2efc3c8e4652c0",
   "station/STEP/nest_base_plate_6061.step": "bc7babde39a93682c528d12edf82580f1db1484839b0e75e2334b5dc48c7116d",
-  "station/STEP/station_assembly.step.zip": "4f214f416e3ef5199b90ab5ba34e6cc0cac6adf40b4745e95246e639a5b449b7",
-  "station/STEP/station_assembly_h.step.zip": "b3c0bc09cf41d08d30bb285402ebfb8d3fdffbe85098086ea4008395468b01fb",
-  "station/STEP/station_far_column.step": "6e6d51695c3b9cff73b5b5b2c6114943b1c96a6093bb5c5dea61e50cf4038bda",
-  "station/STEP/station_far_column_h.step": "78a71352732992e393afc6cdb8c9796367f54b9ad136a83b6325a9ee5338e8d9",
+  "station/STEP/station_assembly.step.zip": "9366b275d9088822e75aed109f949dfeb3f48fb49eb1663503f463a1e5fc7318",
+  "station/STEP/station_assembly_h.step.zip": "3e22096853fd59b513dd50c96565e5ed055b5ea28542e8c55ab852d7bd6b949a",
+  "station/STEP/station_far_column.step": "a24205651c1cf731b5f2e490f11cbef3e4dc64508405dedbcb6fff34a7bbb0f0",
+  "station/STEP/station_far_column_h.step": "509f13d29b783803566e742462762fdc7d4c47af04b1789cb87bb5688ec90301",
   "station/STEP/tower_bracket_6061.step": "49aaa4b961b8f3359492253c217c099581b591d11d57906e6c722e46043fc3d3",
   "station/STEP/tray_deck_6061.step": "ca2cca58a94b020b3157cae0026db99d23d6ebede6f0d6ab28e4aaff6ac8a727",
   "station/STEP/x_axis_riser_6061.step": "cbe17266cd0e5f0873acfb20016dce26e51c71b6fc0f9feddca38f30a500d180",
@@ -98,19 +98,22 @@
   "station/renders/station_tower_bracket_iso.png": "5d499c5d5fd839755e019cf71a616cf3b9240868e90951ad6a5ea2b9e7bcce37",
   "station/renders/station_tray_deck_iso.png": "02dabe99bc2d59d27506f1f33e1844bc21c73aca4ad3636bf00b125ba2f457b4",
   "station/renders/station_x_riser_iso.png": "3fe20b5cb2b0d02835a40ead3605f44e2bd7e28faf642b5f9df86c3003c988c6",
-  "tray/STEP/tray_pocket_check.step": "e7be89a2720b79de888921d16e6043c7a74fd1ee38cbe98accaee97a575da797",
+  "tray/STEP/tray_pocket_check.step": "179f596de0ee58d5b2739fe9d3e8418c52b749a543d468cf9a441d87235d5e66",
   "tray/STEP/wafer_tray_8x14.step": "d175fe53736ac159358d90916638e0c103a5c8b57a0b2b99caf19df0e9663ae9",
+  "tray/STEP/wafer_tray_coupon_3x4.step": "1d1020963d2843640f57877d5db4389db8dff8c0dd58c0326e38294ad3e70223",
   "tray/STL/wafer_tray_8x14.stl": "92d7a4c3fde9dbe0d6ec74ea1ed13802fb71f8355156d574400285ee6edaaa33",
-  "tray/checks.txt": "69d9fcc18e83cf27f9f5f72b9715d5c041feb65e188647319c345d8be4914317",
+  "tray/STL/wafer_tray_coupon_3x4.stl": "209bf72e492d2aea6dcd5c41c4bddb8f64b5ef90d0aa6eb2e282119779ed2b12",
+  "tray/checks.txt": "dea1368549a0737e8e5ddcfd1e203b407e920d32b0529b0902cfa0b2ccef79c5",
+  "tray/renders/tray_coupon_iso.png": "7082aa9f792912c8823f3635abaa924964eac5c7ea93e46540523079aa023e11",
   "tray/renders/tray_iso.png": "227259c3fadaeadd2ffb5b6eea675b945a9e623edab899b7c4e470998ff7539a",
   "tray/renders/tray_pocket_iso.png": "326c777cd49e4c8fe5859bf698a4004f642aa7e127ec42c0feb39a927992c64b"
  },
  "sources": {
-  "build.py": "372fe4e3ad98f69c2207d2ae8a629cc9d5a14a90d80a8ed40fe2d7e03c605fdb",
+  "build.py": "c8b69a1402942ffd156833c4a7c60ca1251ecc991b895ba0b4f26231e13a2873",
   "common/__init__.py": "e970bed064083a4bf5dc11f157a29a75efec6eebe5bd694fb8b5e1cf470b1498",
   "gripper/model.py": "08dd6b57824f5912694a4c60949d9a50caf9c8487d4c2068bceeff68df05418e",
   "nest/model.py": "49c7cb16e2ac55a0a96ac2e673aa39d6a5fcb4a8f96b308de80d4b10e26bb89d",
   "station/model.py": "5bae2d541686ab78fea9b99c1a18d69ddd770a324be5c10eda77ea12e4ef1b39",
-  "tray/model.py": "710aaac38c540a0a19d361bac7bc67070a0b8bee3ad9905694c61c30b0716f69"
+  "tray/model.py": "98008a9492c493c0456dec2bdef2d787fbda2afc1213121cc995f5de1ba6a6ad"
  }
 }
