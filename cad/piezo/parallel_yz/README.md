@@ -148,6 +148,40 @@ allowable itself is still an open item in `cases.json`), and do not quote a digi
 - With the 70 g surrogate the block's own rocking appeared at 2.2 kHz; with the
   real holder that mode is above 4 kHz and the holder no longer sets anything.
 
+### Variant `apa120s`: the longer-stroke actuator
+
+`variants/apa120s/` is the same plate with the CEDRAT APA120S (datasheet rev
+06/2024: 140 / 130 µm nominal / min stroke, 0.33 N/µm, blocked force 46 N,
+external force limit 32 N, blocked-free resonance 1300 Hz, 7.2 g, 28.8 × 13 ×
+10 mm, same M2 pads) in a 13 mm pocket, and the leaves thinned to 0.30 mm to
+spend its larger stroke budget on range. Same holder, same gates, all converged
+(bare modal at one density only):
+
+| | R01, APA60S, 0.40 mm leaves | `apa120s`, 0.30 mm leaves |
+|---|---|---|
+| plate | 112.8 mm, 199 g | 108.8 mm, 181 g |
+| k_guide | 0.1375 N/µm | **0.0605 N/µm** |
+| loaded stroke, worst-case / nominal actuator | 62.6 / 69.1 µm | **109.6 / 118.1 µm** |
+| stiffness the moving mass sees | 1.84 N/µm | 0.39 N/µm |
+| first mode with the holder | **1200 Hz** | **572 Hz** |
+| first mode, bare / springless | 1316 / 370 Hz | 627 / 248 Hz |
+| next platform modes, loaded | 2636 X, 4280 pitch | 2349 X, 3947 roll, 3990 pitch |
+| gravity with the holder | 0.15 µm sag, 0.32 µrad, 0.16 µm tip | 0.68 µm sag, 0.41 µrad, 0.69 µm tip |
+| coupling / tip error at full stroke | 0.002 % / ±0.001 µm | 0.001 % / ±0.001 µm |
+| guide force at nominal stroke | 9.5 N | 6.6 N (limit 32 N) |
+| stress peak at nominal stroke | 30–54 MPa, not converged | 28–70 MPa, not converged |
+
+Read together: **±55 µm of capture for 572 Hz, or ±33 µm for 1200 Hz.** Both
+sit far above the 300 Hz target and above what a 100–150 Hz spiral needs, and
+the APA120S's own blocked-free resonance (1300 Hz) is above the plate's 572 Hz,
+so the plate, not the actuator, still sets the first mode. With range the
+stated shortfall and the load 5 g, the APA120S is the better fit; the price is
+2.1× on bandwidth and 0.7 µm of sag, both harmless here. Stress stays in the
+tens of MPa with the thinner leaves. Renders and the ParaView file are in
+`variants/apa120s/renders/`.
+
+![apa120s modes](variants/apa120s/renders/modes_r01.png)
+
 ### Against the stacked P0 head
 
 | | stacked P0 (`../`) | parallel R01 (this) |
