@@ -57,6 +57,31 @@ What it does and does not change, using k_guide = 0.0395 N/um from `fem_r01/`:
 Retire the 0.2 kg and 0.3 kg qualification cases. Keep 0.1 kg as a margin case
 only. The 40 mm offset stays a sensitivity case, not an approved specification.
 
+### Architecture: the stack is no longer the only candidate (2026-09-07)
+
+The design brief takes X/Y/Z nesting as given and never weighs it against a
+parallel-kinematic platform. That question is now answered numerically in
+[`../parallel_yz/`](../parallel_yz/README.md): one wire-EDM plate in the YZ
+plane, two APA60S grounded to its frame, fiber through the centre, coarse X and
+optionally the fem_r01 single-axis module as fine X underneath. Same pipeline,
+same convergence gates:
+
+| | stacked P0 | parallel R01 |
+|---|---|---|
+| guide stiffness, driven axis | 0.0395 N/µm | 0.1375 N/µm |
+| loaded stroke, worst-case APA | 66.5 µm | 62.6 µm |
+| first mode with 70 g, actuators as springs | not solved (lumped ≈ 370 Hz) | **630 Hz**, converged |
+| cross-axis coupling / tip angle at full stroke | not solved | 0.002 % / ≤ 0.2 µrad, zero by symmetry |
+| moving mass on the search axes | ~250 g | 25 g + payload |
+
+Sections 3 and 4 below are written for the stack; for the parallel plate the
+"assembly" is the plate itself, section 3's loaded modal is done (minus mount
+compliance and the real holder), and section 5's single-axis prototype becomes
+one leg of the plate. The decision between the two, and between the plate and
+its smaller / direct-drive variants, waits on two inputs that are the user's:
+the nest's placement error (sets the range actually needed) and the holder
+mass (the largest remaining lever on bandwidth).
+
 ## 1. Complete the geometry needed for meaningful FEA
 
 - Replace the rigid output land with a defined coupling, or justify direct mounting using vendor data.

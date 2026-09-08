@@ -1,0 +1,366 @@
+{
+  "case": "70 g surrogate on the platform, frame back face fixed, both APA60S as axial springs with half their mass on each pad",
+  "status": "converged",
+  "convergence_gate": "<5% drift in every sprung frequency between densities",
+  "excludes": [
+    "mount compliance",
+    "real holder",
+    "actuator off-axis stiffness and internal modes",
+    "prestress",
+    "wiring"
+  ],
+  "runs": [
+    {
+      "h_fine_mm": 0.9,
+      "h_coarse_mm": 4.5,
+      "near_mm": 0.25,
+      "far_mm": 2.5,
+      "loaded": true,
+      "leaf_boxes": 24,
+      "linear_tets": 65810,
+      "mesh_nodes": 21763,
+      "msh": "parallel_yz_r01_loaded_h0.90.msh",
+      "dofs": 390321,
+      "setup_seconds": 182.2,
+      "sprung": {
+        "frequencies_Hz": [
+          630.1,
+          630.2,
+          1243.2,
+          2230.4,
+          2230.7,
+          2740.1,
+          4503.8,
+          4533.1,
+          7095.3,
+          7135.1
+        ],
+        "modes": [
+          {
+            "label": "Y",
+            "platform_share": 0.761,
+            "t_normalised": [
+              -0.0,
+              0.761,
+              -0.53
+            ],
+            "theta_x_lever_normalised": [
+              0.0,
+              0.053,
+              0.076
+            ]
+          },
+          {
+            "label": "Z",
+            "platform_share": 0.761,
+            "t_normalised": [
+              -0.001,
+              -0.53,
+              -0.761
+            ],
+            "theta_x_lever_normalised": [
+              0.0,
+              0.076,
+              -0.053
+            ]
+          },
+          {
+            "label": "X",
+            "platform_share": 0.993,
+            "t_normalised": [
+              0.993,
+              0.001,
+              -0.0
+            ],
+            "theta_x_lever_normalised": [
+              -0.0,
+              0.0,
+              -0.001
+            ]
+          },
+          {
+            "label": "Y",
+            "platform_share": 0.542,
+            "t_normalised": [
+              -0.001,
+              0.542,
+              0.296
+            ],
+            "theta_x_lever_normalised": [
+              0.0,
+              0.252,
+              -0.462
+            ]
+          },
+          {
+            "label": "Z",
+            "platform_share": 0.542,
+            "t_normalised": [
+              -0.0,
+              0.296,
+              -0.542
+            ],
+            "theta_x_lever_normalised": [
+              -0.001,
+              -0.462,
+              -0.252
+            ]
+          },
+          {
+            "label": "rot X (roll)",
+            "platform_share": 0.862,
+            "t_normalised": [
+              0.0,
+              0.0,
+              -0.0
+            ],
+            "theta_x_lever_normalised": [
+              0.862,
+              -0.0,
+              -0.0
+            ]
+          },
+          {
+            "label": "local (leaf/stage)",
+            "platform_share": 0.019,
+            "t_normalised": [
+              -0.004,
+              -0.019,
+              -0.015
+            ],
+            "theta_x_lever_normalised": [
+              -0.0,
+              -0.012,
+              0.015
+            ]
+          },
+          {
+            "label": "local (leaf/stage)",
+            "platform_share": 0.019,
+            "t_normalised": [
+              -0.0,
+              0.015,
+              -0.019
+            ],
+            "theta_x_lever_normalised": [
+              -0.0,
+              -0.015,
+              -0.012
+            ]
+          },
+          {
+            "label": "local (leaf/stage)",
+            "platform_share": 0.011,
+            "t_normalised": [
+              0.009,
+              -0.011,
+              -0.01
+            ],
+            "theta_x_lever_normalised": [
+              -0.0,
+              -0.004,
+              0.005
+            ]
+          },
+          {
+            "label": "local (leaf/stage)",
+            "platform_share": 0.011,
+            "t_normalised": [
+              -0.0,
+              -0.009,
+              0.011
+            ],
+            "theta_x_lever_normalised": [
+              0.0,
+              0.005,
+              0.004
+            ]
+          }
+        ]
+      },
+      "solve_seconds": 30.2
+    },
+    {
+      "h_fine_mm": 0.7,
+      "h_coarse_mm": 3.5,
+      "near_mm": 0.25,
+      "far_mm": 2.5,
+      "loaded": true,
+      "leaf_boxes": 24,
+      "linear_tets": 107290,
+      "mesh_nodes": 34325,
+      "msh": "parallel_yz_r01_loaded_h0.70.msh",
+      "dofs": 624336,
+      "setup_seconds": 295.4,
+      "sprung": {
+        "frequencies_Hz": [
+          629.9,
+          630.0,
+          1241.4,
+          2226.7,
+          2227.0,
+          2739.1,
+          4503.6,
+          4528.0,
+          7089.7,
+          7126.9
+        ],
+        "modes": [
+          {
+            "label": "Z",
+            "platform_share": 0.761,
+            "t_normalised": [
+              -0.0,
+              0.599,
+              -0.761
+            ],
+            "theta_x_lever_normalised": [
+              0.0,
+              0.076,
+              0.06
+            ]
+          },
+          {
+            "label": "Y",
+            "platform_share": 0.761,
+            "t_normalised": [
+              -0.001,
+              -0.761,
+              -0.598
+            ],
+            "theta_x_lever_normalised": [
+              0.0,
+              0.06,
+              -0.076
+            ]
+          },
+          {
+            "label": "X",
+            "platform_share": 0.993,
+            "t_normalised": [
+              0.993,
+              -0.0,
+              0.0
+            ],
+            "theta_x_lever_normalised": [
+              -0.0,
+              0.0,
+              -0.0
+            ]
+          },
+          {
+            "label": "Z",
+            "platform_share": 0.543,
+            "t_normalised": [
+              -0.0,
+              0.145,
+              0.543
+            ],
+            "theta_x_lever_normalised": [
+              0.0,
+              0.461,
+              -0.123
+            ]
+          },
+          {
+            "label": "Y",
+            "platform_share": 0.543,
+            "t_normalised": [
+              0.0,
+              -0.543,
+              0.145
+            ],
+            "theta_x_lever_normalised": [
+              0.0,
+              0.123,
+              0.461
+            ]
+          },
+          {
+            "label": "rot X (roll)",
+            "platform_share": 0.861,
+            "t_normalised": [
+              -0.0,
+              0.0,
+              -0.0
+            ],
+            "theta_x_lever_normalised": [
+              0.861,
+              -0.0,
+              -0.0
+            ]
+          },
+          {
+            "label": "local (leaf/stage)",
+            "platform_share": 0.019,
+            "t_normalised": [
+              -0.004,
+              -0.019,
+              -0.019
+            ],
+            "theta_x_lever_normalised": [
+              -0.0,
+              -0.014,
+              0.014
+            ]
+          },
+          {
+            "label": "local (leaf/stage)",
+            "platform_share": 0.019,
+            "t_normalised": [
+              0.0,
+              0.019,
+              -0.019
+            ],
+            "theta_x_lever_normalised": [
+              -0.0,
+              -0.014,
+              -0.014
+            ]
+          },
+          {
+            "label": "local (leaf/stage)",
+            "platform_share": 0.011,
+            "t_normalised": [
+              -0.009,
+              0.011,
+              0.01
+            ],
+            "theta_x_lever_normalised": [
+              0.0,
+              0.004,
+              -0.005
+            ]
+          },
+          {
+            "label": "local (leaf/stage)",
+            "platform_share": 0.011,
+            "t_normalised": [
+              0.0,
+              0.01,
+              -0.011
+            ],
+            "theta_x_lever_normalised": [
+              -0.0,
+              -0.005,
+              -0.004
+            ]
+          }
+        ],
+        "change_vs_coarser_pct": [
+          0.03,
+          0.03,
+          0.14,
+          0.17,
+          0.17,
+          0.04,
+          0.0,
+          0.11,
+          0.08,
+          0.11
+        ]
+      },
+      "solve_seconds": 51.4
+    }
+  ]
+}
