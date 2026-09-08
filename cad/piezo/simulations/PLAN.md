@@ -22,6 +22,41 @@ Use the standalone Z STEP for the first study and the XYZ STEP for the assembly 
 
 `cases.json` defines the initial case inventory. Null entries are missing requirements, not zero values. The elastic material values are engineering seeds; fatigue allowables must account for the actual alloy condition, EDM surface, root finish and desired life.
 
+### Payload: 300 g is superseded (user, 2026-09-07)
+
+**The maximum probe weight is < 70 g.** This replaces the "up to 300 g" figure
+that runs through the design brief and `cases.json`. The brief is a preserved
+research note and is not edited; `cases.json` still carries the old
+`payload_kg` list and `300 g` cases because it is a tracked input to the P0
+build manifest and cannot be changed without a `build.py --fusion` rebuild.
+Update it at the next rebuild. Until then **this section is the authority**.
+
+Assumed scope, to confirm: < 70 g is everything carried on the Z carriage - the
+probe plus its holder and clamp hardware - not the probe alone. COM, inertia and
+the normal (as opposed to maximum) working mass remain unspecified, so the
+holder is still a release blocker.
+
+What it does and does not change, using k_guide = 0.0395 N/um from `fem_r01/`:
+
+- **Not gravity sag.** The APA sits in parallel with the guide leaves, so the
+  driven axis sees k_APA + k_guide = 1.74 N/um. Sag is 0.39 um at 70 g and would
+  have been 1.69 um at 300 g - negligible either way. (Guide alone it would be
+  17.4 um and 74.5 um, but the actuator is never absent.) Gravity was never the
+  binding constraint on the vertical axis.
+- **Not travel.** Stroke is set by the stiffness ratio, which the payload does
+  not enter.
+- **Yes, the payload moment.** At the 40 mm sensitivity offset the moment drops
+  from 117.7 to 27.5 N.mm, a factor of 4.3. This matters most because the APA's
+  allowable moments and off-axis stiffness are still unknown; a 4.3x smaller
+  disturbance makes that unknown far less likely to be the thing that kills the
+  design.
+- **Yes, the loaded modal target.** Less payload raises the loaded first mode
+  toward the 300 Hz preference. By how much cannot be stated without the modal
+  mass and the holder inertia.
+
+Retire the 0.2 kg and 0.3 kg qualification cases. Keep 0.1 kg as a margin case
+only. The 40 mm offset stays a sensitivity case, not an approved specification.
+
 ## 1. Complete the geometry needed for meaningful FEA
 
 - Replace the rigid output land with a defined coupling, or justify direct mounting using vendor data.
