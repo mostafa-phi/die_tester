@@ -12,6 +12,7 @@ Analysis and the numbers behind every choice: ../../README.md (section R04).
 | `base_plate.step` | mount / base | 1 | any aluminium (6061-T6 fine) | CNC: 10 mm plate, central opening 57 × 57, windows behind the two pockets, 4 × Ø4.5 | flat 0.02 where the body sits (it is the mount reference); it is a stiffness model - replace by the station's real mount if one exists |
 | `assembly_reference.step` | everything placed | - | - | reference only: body, leaves, bars, actuator envelopes | the actuators are datasheet envelopes; CEDRAT's STEP replaces them |
 | `drawing_sheet.png` | shop sheet | - | - | - | the tolerances, notes and assembly sequence in one page |
+| `BONDING.md` | bench traveller for bonding the leaves | - | - | - | materials, masking, fixture, cure, acceptance checks |
 
 ## Bought parts
 
