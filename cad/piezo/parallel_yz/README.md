@@ -414,7 +414,8 @@ wire would have to thread and the total profile length - the design rule of
 | `solve_modal.py` | modes with the actuators as springs, labelled by platform motion |
 | `figures.py` | profile, mesh, deformed shapes, von Mises, ParaView `.vtu` |
 | `figures_results.py` | convergence curves from the result files, first four loaded mode shapes |
-| `drawing.py` | R02 shop sheet: profile with dimensions, callouts and the notes the DXF cannot carry |
+| `drawing.py` | shop sheet: profile with dimensions, callouts and the notes the DXF cannot carry |
+| `export_manufacturing.py` | one file per manufactured part plus a package README (`variants/r04/manufacturing/`) |
 | `STEP/` | plate, plate + holder block, plate + two vendor APA60S |
 | `variants/<name>/` | the same layout for each named variant (STEP, report, results, renders) |
 
