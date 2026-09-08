@@ -1,0 +1,13 @@
+{
+  "status": "planned_not_solved",
+  "material_seed": {"name": "7075-T6", "E_MPa": 71000, "poisson_ratio": 0.33, "density_kg_m3": 2810, "fatigue_allowable": null},
+  "actuator": {"name": "APA60S", "axial_stiffness_N_per_um": 1.7, "nominal_free_stroke_um": 75, "minimum_free_stroke_um": 68, "voltage_range_V": [-20, 150], "off_axis_stiffness": null, "allowable_moments": null},
+  "payload_kg": [0, 0.02, 0.1, 0.2, 0.3],
+  "normal_payload_status": "0.02 kg is a provisional analysis case, not a measured user holder",
+  "payload_offset_mm": [0, 40],
+  "static_cases": ["gravity", "each_axis_full_range", "all_eight_XYZ_travel_corners", "gravity_plus_full_Z", "maximum_payload_offset", "assembly_mounting_errors"],
+  "modal_cases": ["unloaded", "each_payload_centered", "300g_at_actual_COM", "coarse_stage_and_pedestal_compliance"],
+  "required_outputs": ["tip_displacement", "tip_rotation", "guide_root_stress", "actuator_axial_force", "actuator_off_axis_force_and_moment", "first_10_modes", "mesh_convergence"],
+  "targets": {"minimum_loaded_travel_um": 60, "preferred_first_loaded_mode_Hz": 300, "tip_error_limit_um": null, "fatigue_cycles": null},
+  "blockers_for_release": ["real_holder_geometry_and_COM", "vendor_interface_load_limits", "actuator_off_axis_stiffness", "coupling_design", "root_radii_and_EDM_finish", "fatigue_allowable_and_life", "coarse_mount_stiffness", "mesh_converged_FEA", "bench_validation"]
+}

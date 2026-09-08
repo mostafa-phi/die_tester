@@ -1,0 +1,16 @@
+{
+  "status": "analytical_screening_NOT_FEA",
+  "assumptions": [
+    "Rigid frames and interfaces",
+    "Euler-Bernoulli small-deflection leaves",
+    "Equal stage displacement sharing",
+    "No parasitic or intermediate-link modes",
+    "Vendor axial spring only; full specified voltage range"
+  ],
+  "guide_stiffness_N_per_um": 0.03881195335276968,
+  "nominal_loaded_stroke_um": 73.32592794416615,
+  "minimum_actuator_loaded_stroke_um": 66.48217466937732,
+  "payload_300g_offset_40mm_moment_Nm": 0.1176798,
+  "single_spring_300g_frequency_Hz": 383.1649832264905,
+  "warning": "Frequency is a scalar screening example, NOT the loaded XYZ first mode. No 300g or sub-second rating is validated."
+}

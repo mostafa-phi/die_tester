@@ -1,0 +1,444 @@
+{
+  "source": "STEP/APA60S_Z_guide_P0.step",
+  "root_radius_mm": 0.5,
+  "filleted_edges": 32,
+  "volume_mm3": 11115.069037496673,
+  "material": "Aluminum 7075",
+  "material_properties": [
+    {
+      "id": "physmat_Comments",
+      "name": "Comments",
+      "value": "",
+      "units": null
+    },
+    {
+      "id": "physmat_Cost",
+      "name": "Cost",
+      "value": "",
+      "units": null
+    },
+    {
+      "id": "physmat_Keynote",
+      "name": "Keynote",
+      "value": "",
+      "units": null
+    },
+    {
+      "id": "physmat_Keywords",
+      "name": "Keywords",
+      "value": "",
+      "units": null
+    },
+    {
+      "id": "physmat_Label",
+      "name": "Label",
+      "value": "",
+      "units": null
+    },
+    {
+      "id": "physmat_Manufacturer",
+      "name": "Manufacturer",
+      "value": "",
+      "units": null
+    },
+    {
+      "id": "physmat_Mark",
+      "name": "Mark",
+      "value": "",
+      "units": null
+    },
+    {
+      "id": "physmat_Model",
+      "name": "Model",
+      "value": "",
+      "units": null
+    },
+    {
+      "id": "physmat_Type",
+      "name": "Type",
+      "value": "physmat_metal",
+      "units": null
+    },
+    {
+      "id": "physmat_URL",
+      "name": "URL",
+      "value": "",
+      "units": null
+    },
+    {
+      "id": "physmat_class",
+      "name": "Class",
+      "value": "",
+      "units": null
+    },
+    {
+      "id": "physmat_classification",
+      "name": "physmat_classification",
+      "value": "Autodesk.Material Classifications.Metal.Non Ferrous.Aluminum Alloy",
+      "units": null
+    },
+    {
+      "id": "common_Shared_Asset",
+      "name": "Sharing",
+      "value": "common_shared",
+      "units": null
+    },
+    {
+      "id": "structural_Behavior",
+      "name": "Behavior",
+      "value": "structural_isotropic",
+      "units": null
+    },
+    {
+      "id": "structural_Damping_coefficient",
+      "name": "Damping Coefficient",
+      "value": "0.0",
+      "units": "Unitless"
+    },
+    {
+      "id": "structural_Density",
+      "name": "Density",
+      "value": "2810.0",
+      "units": "KilogramPerCubicMeter"
+    },
+    {
+      "id": "structural_ExternalMaterialID",
+      "name": "External Material ID",
+      "value": "",
+      "units": null
+    },
+    {
+      "id": "structural_Minimum_tensile_strength",
+      "name": "Tensile Strength",
+      "value": "572000.0",
+      "units": "Kilopascal"
+    },
+    {
+      "id": "structural_Minimum_yield_stress",
+      "name": "Yield Strength",
+      "value": "503000.0",
+      "units": "Kilopascal"
+    },
+    {
+      "id": "structural_Poisson_ratio",
+      "name": "Poisson's Ratio",
+      "value": "0.33",
+      "units": "Unitless"
+    },
+    {
+      "id": "structural_Poisson_ratio_12",
+      "name": "Poisson's Ratio 12",
+      "value": "0.33",
+      "units": "Unitless"
+    },
+    {
+      "id": "structural_Poisson_ratio_23",
+      "name": "Poisson's Ratio 23",
+      "value": "0.33",
+      "units": "Unitless"
+    },
+    {
+      "id": "structural_Poisson_ratio_X",
+      "name": "Poisson's Ratio X",
+      "value": "0.33",
+      "units": "Unitless"
+    },
+    {
+      "id": "structural_Poisson_ratio_Y",
+      "name": "Poisson's Ratio Y",
+      "value": "0.33",
+      "units": "Unitless"
+    },
+    {
+      "id": "structural_Poisson_ratio_Z",
+      "name": "Poisson's Ratio Z",
+      "value": "0.33",
+      "units": "Unitless"
+    },
+    {
+      "id": "structural_Shear_modulus",
+      "name": "Shear Modulus",
+      "value": "26900000.0",
+      "units": "Kilopascal"
+    },
+    {
+      "id": "structural_Shear_modulus_12",
+      "name": "Shear Modulus 12",
+      "value": "26900000.0",
+      "units": "Kilopascal"
+    },
+    {
+      "id": "structural_Shear_modulus_X",
+      "name": "Shear Modulus X",
+      "value": "26900000.0",
+      "units": "Kilopascal"
+    },
+    {
+      "id": "structural_Shear_modulus_Y",
+      "name": "Shear Modulus Y",
+      "value": "26900000.0",
+      "units": "Kilopascal"
+    },
+    {
+      "id": "structural_Shear_modulus_Z",
+      "name": "Shear Modulus Z",
+      "value": "26900000.0",
+      "units": "Kilopascal"
+    },
+    {
+      "id": "structural_Specific_heat",
+      "name": "Specific Heat",
+      "value": "0.96",
+      "units": "JoulePerGramCelsius"
+    },
+    {
+      "id": "structural_Thermal_conductivity",
+      "name": "Thermal Conductivity",
+      "value": "173.0",
+      "units": "WattPerMeterKelvin"
+    },
+    {
+      "id": "structural_Thermal_conductivity_X",
+      "name": "Thermal Conductivity X",
+      "value": "173.0",
+      "units": "WattPerMeterKelvin"
+    },
+    {
+      "id": "structural_Thermal_conductivity_Y",
+      "name": "Thermal Conductivity Y",
+      "value": "173.0",
+      "units": "WattPerMeterKelvin"
+    },
+    {
+      "id": "structural_Thermal_conductivity_Z",
+      "name": "Thermal Conductivity Z",
+      "value": "173.0",
+      "units": "WattPerMeterKelvin"
+    },
+    {
+      "id": "structural_Thermal_expansion_coefficient",
+      "name": "Thermal Expansion Coefficient",
+      "value": "23.4",
+      "units": "MicrometerPerMeterCelsius"
+    },
+    {
+      "id": "structural_Thermal_expansion_coefficient_1",
+      "name": "Thermal Expansion Coefficient 1",
+      "value": "23.4",
+      "units": "MicrometerPerMeterCelsius"
+    },
+    {
+      "id": "structural_Thermal_expansion_coefficient_2",
+      "name": "Thermal Expansion Coefficient 2",
+      "value": "23.4",
+      "units": "MicrometerPerMeterCelsius"
+    },
+    {
+      "id": "structural_Thermal_expansion_coefficient_X",
+      "name": "Thermal Expansion Coefficient X",
+      "value": "23.4",
+      "units": "MicrometerPerMeterCelsius"
+    },
+    {
+      "id": "structural_Thermal_expansion_coefficient_Y",
+      "name": "Thermal Expansion Coefficient Y",
+      "value": "23.4",
+      "units": "MicrometerPerMeterCelsius"
+    },
+    {
+      "id": "structural_Thermal_expansion_coefficient_Z",
+      "name": "Thermal Expansion Coefficient Z",
+      "value": "23.4",
+      "units": "MicrometerPerMeterCelsius"
+    },
+    {
+      "id": "structural_Thermally_treated",
+      "name": "Thermally Treated",
+      "value": "False",
+      "units": null
+    },
+    {
+      "id": "structural_Young_modulus",
+      "name": "Young's Modulus",
+      "value": "71700000.0",
+      "units": "Kilopascal"
+    },
+    {
+      "id": "structural_Young_modulus_1",
+      "name": "Young's Modulus 1",
+      "value": "71700000.0",
+      "units": "Kilopascal"
+    },
+    {
+      "id": "structural_Young_modulus_2",
+      "name": "Young's Modulus 2",
+      "value": "71700000.0",
+      "units": "Kilopascal"
+    },
+    {
+      "id": "structural_Young_modulus_X",
+      "name": "Young's Modulus X",
+      "value": "71700000.0",
+      "units": "Kilopascal"
+    },
+    {
+      "id": "structural_Young_modulus_Y",
+      "name": "Young's Modulus Y",
+      "value": "71700000.0",
+      "units": "Kilopascal"
+    },
+    {
+      "id": "structural_Young_modulus_Z",
+      "name": "Young's Modulus Z",
+      "value": "71700000.0",
+      "units": "Kilopascal"
+    },
+    {
+      "id": "structural_source",
+      "name": "Source",
+      "value": "Autodesk",
+      "units": null
+    },
+    {
+      "id": "structural_sourceURL",
+      "name": "Source URL",
+      "value": "",
+      "units": null
+    },
+    {
+      "id": "structural_subclass",
+      "name": "Subclass",
+      "value": "Aluminum",
+      "units": null
+    },
+    {
+      "id": "common_Shared_Asset",
+      "name": "Sharing",
+      "value": "common_shared",
+      "units": null
+    },
+    {
+      "id": "thermal_Behavior",
+      "name": "Behavior",
+      "value": "thermal_isotropic",
+      "units": null
+    },
+    {
+      "id": "thermal_Density",
+      "name": "Density",
+      "value": "2810.0",
+      "units": "KilogramPerCubicMeter"
+    },
+    {
+      "id": "thermal_Electrical_resistivity",
+      "name": "Electrical Resistivity",
+      "value": "2.82e-08",
+      "units": "OhmMeter"
+    },
+    {
+      "id": "thermal_Emissivity",
+      "name": "Emissivity",
+      "value": "0.2",
+      "units": "Unitless"
+    },
+    {
+      "id": "thermal_Permeability",
+      "name": "Permeability",
+      "value": "0.0",
+      "units": "NanogramPerPascalSecondSquareMeter"
+    },
+    {
+      "id": "thermal_Porosity",
+      "name": "Porosity",
+      "value": "0.001",
+      "units": "Unitless"
+    },
+    {
+      "id": "thermal_Reflectivity",
+      "name": "Reflectivity",
+      "value": "0.0",
+      "units": "Unitless"
+    },
+    {
+      "id": "thermal_Specific_heat",
+      "name": "Specific Heat",
+      "value": "0.96",
+      "units": "JoulePerGramCelsius"
+    },
+    {
+      "id": "thermal_Thermal_conductivity",
+      "name": "Thermal Conductivity",
+      "value": "173.0",
+      "units": "WattPerMeterKelvin"
+    },
+    {
+      "id": "thermal_Thermal_conductivity_X",
+      "name": "Thermal Conductivity X",
+      "value": "173.0",
+      "units": "WattPerMeterKelvin"
+    },
+    {
+      "id": "thermal_Thermal_conductivity_Y",
+      "name": "Thermal Conductivity Y",
+      "value": "173.0",
+      "units": "WattPerMeterKelvin"
+    },
+    {
+      "id": "thermal_Thermal_conductivity_Z",
+      "name": "Thermal Conductivity Z",
+      "value": "173.0",
+      "units": "WattPerMeterKelvin"
+    },
+    {
+      "id": "thermal_Transmits_light",
+      "name": "Transmits Light",
+      "value": "False",
+      "units": null
+    },
+    {
+      "id": "thermal_source",
+      "name": "Source",
+      "value": "Autodesk",
+      "units": null
+    },
+    {
+      "id": "thermal_sourceURL",
+      "name": "Source URL",
+      "value": "",
+      "units": null
+    },
+    {
+      "id": "thermal_subclass",
+      "name": "Subclass",
+      "value": "Metal",
+      "units": null
+    }
+  ],
+  "force_patch_mm": {
+    "x": [
+      -1.25,
+      1.25
+    ],
+    "y": -9.5,
+    "z": [
+      12.5,
+      17.5
+    ]
+  },
+  "fixture_patch_mm": {
+    "x": [
+      -8,
+      8
+    ],
+    "y": -25,
+    "z": [
+      0,
+      6
+    ]
+  },
+  "notes": [
+    "Guide only plus bonded output-land surrogate",
+    "Local Y is driven axis, local Z is depth",
+    "No payload, no gravity, no APA stiffness in initial compliance study"
+  ]
+}

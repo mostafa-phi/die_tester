@@ -1,0 +1,66 @@
+[
+  {
+    "script": "design.py",
+    "result": {
+      "meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n    \"message\": \"{\\\"document\\\": \\\"Untitled\\\", \\\"root\\\": \\\"APA60S XYZ - P0 Packaging and Guide Concept\\\", \\\"components\\\": 36, \\\"occurrences\\\": 34, \\\"bodies\\\": 25, \\\"timeline\\\": 113}\\n\",\n    \"success\": true\n}",
+          "annotations": null,
+          "meta": null
+        }
+      ],
+      "structuredContent": null,
+      "isError": false
+    }
+  },
+  {
+    "script": "export_verify.py",
+    "result": {
+      "meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n    \"message\": \"{\\\"body_count\\\": 25, \\\"interferences\\\": [], \\\"timeline\\\": 113}\\n\",\n    \"success\": true\n}",
+          "annotations": null,
+          "meta": null
+        }
+      ],
+      "structuredContent": null,
+      "isError": false
+    }
+  },
+  {
+    "script": "validate_archive.py",
+    "result": {
+      "meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n    \"message\": \"{\\\"archive_reopened\\\": true, \\\"components\\\": 8, \\\"bodies\\\": 5, \\\"timeline\\\": 25}\\n\",\n    \"success\": true\n}",
+          "annotations": null,
+          "meta": null
+        }
+      ],
+      "structuredContent": null,
+      "isError": false
+    }
+  },
+  {
+    "script": "capture.py",
+    "result": {
+      "meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n    \"message\": \"Captured assembled and isolated-Z views; restored assembly visibility.\\n\",\n    \"success\": true\n}",
+          "annotations": null,
+          "meta": null
+        }
+      ],
+      "structuredContent": null,
+      "isError": false
+    }
+  }
+]

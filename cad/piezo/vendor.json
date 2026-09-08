@@ -1,0 +1,13 @@
+{
+  "file": "APA60S.step",
+  "sha256": "6dc8c7fae3efa6bf4021a3fc7f1bea8ca4ecfcfcb859f16f8d4198f6176d45a4",
+  "text_sha256_lf": "6f041c44312fac777a6428b0deb26e17d997faeea2238578462f9a03b88b9953",
+  "source": "User-supplied CEDRAT download; original file retained at its original path",
+  "datasheet": "https://cedrat-technologies.com/wp-content/uploads/products/datasheets/APA60S-1.pdf",
+  "measured_bounds_mm": [-14.641335471153289, -7.5000001, -5.0, 14.641335471153289, 7.5000001, 5.0],
+  "measurement_scope": "Main actuator envelope inspected using CadQuery; Fusion imports the complete supplied STEP",
+  "local_motion_axis": "Y, across opposing pads at +/-7.5 mm",
+  "nominal_mass_g": 8.5,
+  "license": "Manufacturer geometry; no redistribution license inferred. Preserve applicable CEDRAT terms.",
+  "unresolved": ["M2 mounting torque and engagement", "off-axis stiffness and allowable moments", "ordered revision contractual limits"]
+}

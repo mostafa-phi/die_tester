@@ -12,8 +12,11 @@ Frame, die, contact rules and shared helpers are in `common/`; the rules for wor
 | [`station/`](station/README.md) | full station: nest, gripper, MISUMI LX20 X/Z/Y actuators with their risers, tower bracket and arm, NanoMax fiber stages, microscope, tray; clearance checks; layout and movement pattern | all of the above | `checks[_h].txt`, renders (assemblies ignored, ~100 MB) |
 | [`blender/`](blender/README.md) | Blender scene built from the station assembly STEP: the real vendor geometry with materials, cameras and the 14-step exchange animated | `station` (its assembly STEP) | `.blend` scene + animation, stills and preview video (scene files ignored) |
 | `vendor/` | manufacturer STEP (tracked) and the fetch script; see `vendor/README.md` | | |
+| [`piezo/`](piezo/README.md) | experimental APA60S XYZ replacement head; P0 Fusion concept, not integrated into the station | supplied APA60S STEP; independent Fusion build | native archives, STEP, renders, provenance checks and simulation plan |
 
 ## Build
+
+The experimental piezo head has a separate [build and verification workflow](piezo/README.md#build-and-verify). The commands below validate the current station, not that unintegrated concept.
 
 ```bash
 python cad/build.py            # incremental: gripper (+ _h) -> nest -> tray -> station (+ _h) + renders; unchanged

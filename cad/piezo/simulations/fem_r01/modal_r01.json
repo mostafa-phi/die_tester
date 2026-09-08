@@ -1,0 +1,86 @@
+{
+  "case": "unloaded modal, guide alone, fixture patch fixed",
+  "status": "converged",
+  "convergence_gate": "<5% drift in every reported frequency between densities",
+  "excludes": [
+    "payload",
+    "APA stiffness and mass",
+    "mount compliance",
+    "prestress"
+  ],
+  "not_the_stage_resonance": "Guide-only modes. The 300 Hz target in cases.json is a loaded first mode and requires actuator, holder and mount properties (PLAN.md section 3).",
+  "material": {
+    "name": "Aluminum 7075",
+    "E_MPa": 71700.0,
+    "nu": 0.33,
+    "rho_kg_m3": 2810.0,
+    "rho_t_mm3": 2.81e-09
+  },
+  "linear_solver": "MKL PARDISO (pypardiso)",
+  "runs": [
+    {
+      "h_fine_mm": 0.6,
+      "h_coarse_mm": 3.5999999999999996,
+      "refined_faces": 60,
+      "leaf_faces": 24,
+      "fillet_faces": 36,
+      "linear_tets": 32396,
+      "mesh_nodes": 10440,
+      "msh": "guide_r01_h0.60.msh",
+      "dofs": 187788,
+      "free_dofs": 187587,
+      "frequencies_Hz": [
+        334.43,
+        393.03,
+        470.85,
+        1071.17,
+        1282.9,
+        1300.92,
+        1621.64,
+        1719.1,
+        1838.41,
+        2282.17
+      ],
+      "solve_seconds": 99.3,
+      "mesh_seconds": 12.8
+    },
+    {
+      "h_fine_mm": 0.45,
+      "h_coarse_mm": 2.7,
+      "refined_faces": 60,
+      "leaf_faces": 24,
+      "fillet_faces": 36,
+      "linear_tets": 68932,
+      "mesh_nodes": 19703,
+      "msh": "guide_r01_h0.45.msh",
+      "dofs": 372129,
+      "free_dofs": 371808,
+      "frequencies_Hz": [
+        330.73,
+        391.23,
+        469.27,
+        1066.2,
+        1269.78,
+        1288.01,
+        1615.95,
+        1715.2,
+        1833.62,
+        2275.91
+      ],
+      "solve_seconds": 180.4,
+      "mesh_seconds": 16.5,
+      "change_vs_coarser_pct": [
+        1.11,
+        0.46,
+        0.34,
+        0.46,
+        1.02,
+        0.99,
+        0.35,
+        0.23,
+        0.26,
+        0.27
+      ]
+    }
+  ]
+}

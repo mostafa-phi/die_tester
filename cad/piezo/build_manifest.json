@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "design_revision": "P0",
+  "status": "concept_not_manufacturing_release",
+  "built_utc": "2026-09-08T00:54:37.028398+00:00",
+  "inputs": {
+    "APA60S.step": "6f041c44312fac777a6428b0deb26e17d997faeea2238578462f9a03b88b9953",
+    "build.py": "f9333afb863600ed93d54d94959e6aea2a22e6501256bc15754a99864054c411",
+    "fusion/capture.py": "0fd0321a597fb32110494500552e73887a2bfd3e3b1ae8f7cfc798ab62abf578",
+    "fusion/design.py": "f134d47d860a67ef90bf35c2c8b86be075f5ff97c1c4194cef449f57093d41d2",
+    "fusion/export_verify.py": "94532f1f1893b4eda2505c13206d10203b84b3ed4cf2b298d03b8b278fc7ab20",
+    "fusion/validate_archive.py": "39fb771cfba7b317a8554ff68f39e9009f59201a60bb80339d97bc1cfe873836",
+    "parameters.json": "4df0f6ad4c50bae1d835173cd6fd914c52a361c4ff344805594c3e3425bf4598",
+    "prepare_geometry.py": "4e133fc961ee5f8902a0098a5ab0733fcb134e2b5bd686d8baa60d170323b40c",
+    "requirements.txt": "f496186909aca6577b36e709e23874c94f15ffa9c31afd2a1b21764bb8277c4a",
+    "simulations/cases.json": "f5ff1ae1169185bcf7c63708027ce32a0813db9bb779e0f189d024f68d665f6f",
+    "simulations/screening.py": "6aacd180f707bac4bd1d2d3d6fe3c683c334e9360d15925851d95fb0c81a7316",
+    "vendor.json": "29c54f1caf3bcd400b4a08fa32790a59149baa4ee4c70a8dbcbc0ddb6a37af6a"
+  },
+  "outputs": {
+    "generated/geometry.json": "f45aca6dc6df54b22d422828f26dfa7272bc5c8160bf00c5174fb70c5a332429",
+    "native/APA60S_XYZ_P0.f3d": "bc4e0589c56cdbe9e8dcb0b6a335a193d7ebc86cce2850d18a693d0c5c556252",
+    "native/APA60S_Z_axis_P0.f3d": "0f0b0b79d89484ad1a081028067f4e1252297a8f09995644192abf3d992f886b",
+    "STEP/APA60S_XYZ_P0.step": "caed02182e5588480abb54ed3507c93648bce2f0845eeeb70a99192840793de2",
+    "STEP/APA60S_Z_axis_P0.step": "7fbe84c5fb714adc114bbb40c1224e83c19acf8e3b5f16acbc7d0dde5f395a73",
+    "STEP/APA60S_Z_guide_P0.step": "7114dfedb7bd68d1826045cd5d319ced537f43d95f6b5cf5b81d2609e2fdc62d",
+    "renders/assembly_preview.png": "a643b01c6c3427082f59516c73bd03c7fa2447220edaba411847fb6b8cab2b84",
+    "renders/single_axis_preview.png": "f4d9e7af522552a9b476abb39137bc3b6c43f6d230f4383fe3fbd224cb9dc55c",
+    "reports/verification.json": "9f8478e00461840ae94d22f00b24286f9f48988bf1b2ad957e7eacf542c052e5",
+    "reports/screening.json": "667790e510d8a1d520247897c54873eb3a7fc3e5b61db4e2869965f967279877",
+    "reports/archive_check.json": "e4bbb2d44591e58399097ab8a05d894ea07d9b4b8be30ef9f01480062f8b55d9"
+  },
+  "validation_scope": "Nominal interference, archive export, analytical screening; no FEA or station sweep."
+}

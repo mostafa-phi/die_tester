@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+# Unanchored so it catches every revision folder's scratch, e.g.
+# simulations/fem_r01/work/. An anchored "simulations/work/" would not.
+work/
