@@ -144,10 +144,28 @@ class Model:
         self.facets = {}
         for name, pad in rep["pads"].items():
             self.facets[name] = m.facets_satisfying(lambda x, pad=pad: in_box(x, pad), boundaries_only=True)
-        half = rep["fixture"]["outside_square_half"]
-        self.facets["fixture"] = m.facets_satisfying(
-            lambda x: (np.abs(x[0]) < 0.05) & (np.maximum(np.abs(x[1]), np.abs(x[2])) > half),
-            boundaries_only=True)
+        mounted = rep.get("fixture_mounted") if loaded else None
+        if mounted:
+            # R02 on its base plate: fixed only under the four bolt washers.
+            pts = np.array(mounted["points"])
+            x_fix, radius = mounted["x"], mounted["radius"]
+
+            def at_bolts(x):
+                d2 = np.min([(x[1] - py) ** 2 + (x[2] - pz) ** 2 for py, pz in pts], axis=0)
+                return (np.abs(x[0] - x_fix) < 0.05) & (d2 < radius ** 2)
+            self.facets["fixture"] = m.facets_satisfying(at_bolts, boundaries_only=True)
+        elif "outside_box" in rep["fixture"]:
+            by0, by1, bz0, bz1 = rep["fixture"]["outside_box"]
+            self.facets["fixture"] = m.facets_satisfying(
+                lambda x: (np.abs(x[0]) < 0.05)
+                          & ((x[1] < by0) | (x[1] > by1) | (x[2] < bz0) | (x[2] > bz1)),
+                boundaries_only=True)
+        else:
+            half = rep["fixture"]["outside_square_half"]
+            self.facets["fixture"] = m.facets_satisfying(
+                lambda x: (np.abs(x[0]) < 0.05) & (np.maximum(np.abs(x[1]), np.abs(x[2])) > half),
+                boundaries_only=True)
+        self.mounted = bool(mounted)
         self.facets["platform"] = m.facets_satisfying(
             lambda x: (np.abs(x[0] - p["b"]) < 0.05) & (np.abs(x[1]) < p["a_p"] + 0.05)
                       & (np.abs(x[2]) < p["a_p"] + 0.05), boundaries_only=True)

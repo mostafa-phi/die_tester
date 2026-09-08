@@ -182,6 +182,105 @@ tens of MPa with the thinner leaves. Renders and the ParaView file are in
 
 ![apa120s modes](variants/apa120s/renders/modes_r01.png)
 
+### R02: the APA120S plate detailed for manufacture
+
+`variants/r02/` is the `apa120s` plate with everything a shop and an assembler
+need, and it is solved **on its mount**: the loaded STEP carries the plate, the
+holder and a 10 mm base plate with an 80 mm central opening, fixed only under
+the four M4 washers, so mount compliance is in the numbers for the first time.
+
+![r02](variants/r02/renders/assembly_front.png)
+
+What R02 adds (dict `R02` in `model.py`; every item is in the DXF or on the sheet):
+
+| item | detail |
+|---|---|
+| actuator screws | M2 clearance Ø2.2 on each driven leg's axis through the input stage (Ø4 × 2.2 counterbore on the inner face, M2 × 8 SHCS from the coupler void: ball-end key at ≤ 25° through the front opening, or a stud and nut from the front) and through the frame wall (Ø4 × 3 counterbore on the outer edge, M2 × 5) |
+| hard stops | tongue-and-fork in every coupler void: a 2 mm tongue from the input stage between two posts on the platform edge, **0.30 mm gaps** = one EDM wire kerf = 5× the nominal travel. Each leg's stop limits the *other* axis (the Y stage does not move in Z), so all four together bound the platform to ±0.3 mm in Y and Z. At contact the leaves see ~5× the working stress, still below yield; the actuator's blocked force (46 N) on a 0.9 mm post is ~110 MPa |
+| holder | 2 × M2 tapped 6 deep at Y ±3.5 on the front face; fiber hole chamfered 0.5 × 45° both faces |
+| wire ties | 4 × Ø3 through holes beside the driven pockets; the APA leads leave the pocket at the back face |
+| lightening | 4 corner windows 11 mm square: plate 181 → **170 g** |
+| mount | 4 × Ø4.5 on a 96.8 mm square (bolt inset 6, not 7, to clear the windows) |
+| cut file | `STEP/parallel_yz_r02_profile.dxf`, mm 1:1, the back face only, 208 lines / 148 arcs / 9 circles |
+| sheet | `renders/drawing_r02.png`: material 7075-T651, leaves 0.30 ± 0.02, rough + 2 skim passes, recast ≤ 5 µm at the roots, lands milled coplanar ± 0.02, assembly notes |
+
+Converged on the base (statics 0.11 %, loaded modal ≤ 0.12 % between densities,
+1.17 M / 1.26 M dofs): **k_guide 0.0585 N/µm both axes, loaded stroke
+110.2 / 118.6 µm, coupling 0.001 %, tip error 2 nm; gravity 0.75 µm sag,
+0.39 µrad pitch; first mode 549 / 550 Hz (Z / Y), then 2105 Hz X, 3304 Hz
+roll.** Against the same plate fixed at its back face (`apa120s`: 572 Hz) the
+bolted base costs 4 % of the first mode and 0.07 µm of sag. Stress at stroke
+25–64 MPa across densities, not converged, as before.
+
+![r02 drawing](variants/r02/renders/drawing_r02.png)
+
+Not in R02, deliberately: the base plate's own design (it is a stiffness model,
+80 mm opening and four bolts, not a part), the holder beyond a block with two
+holes, and the station placement transform. EDM shops need the DXF, the sheet
+and the STEP; SendCutSend's laser cannot make it (their minimum web at any 7075
+thickness they stock is 1.6 mm, ours is 0.30).
+
+### R03: the minimum-cut version (design rule of 2026-09-08)
+
+R02's 24 leaves, 33 threaded contours and 2.4 m of wire are a design warning,
+not an achievement: two of its four legs exist only for symmetry and half of
+its guide leaves only cancel a 0.3 µm arc error the optical loop never sees.
+`variants/r03/` keeps what actually constrains the platform and nothing else:
+
+```
+frame ==[2 guide leaves]== Y stage ==[2 coupler leaves]== platform ==[2 coupler leaves]== Z stage ==[2 guide leaves]== frame
+                APA120S                                                                  APA120S
+```
+
+**8 leaves, two legs, 6 flexure contours** (11 threaded contours in all with
+the holes, 1.6 m of cut), and the leaves are **1.0 × 29 mm in an 8 mm plate**,
+i.e. 8:1 walls that a CNC mill makes — the part no longer needs EDM at all.
+The price of dropping the passive legs is that nothing balances the coupler's
+bending moment on the other leg's input stage, so that stage's own rotational
+stiffness sets the cross-axis coupling; it is bought with a wider stage (16 mm)
+and the guide pair spread to ±7 mm (stiffness ∝ spacing²). Plate 99 × 99 × 8,
+135 g; base 136 g; same R02 detailing (stops, screw access, holder taps, wire
+ties), same bolted base in the loaded model.
+
+![r03](variants/r03/renders/assembly_front.png)
+
+Converged (statics 0.1 %, loaded modal ≤ 0.15 % between densities), on the
+bolted base with the 4.9 g holder:
+
+| | R02 (24 leaves, EDM) | **R03 (8 leaves, CNC)** | `r03b` (R03 in 10 mm) |
+|---|---|---|---|
+| plate | 109 × 109 × 10, 172 g | 99 × 99 × 8, 135 g | 101 × 101 × 10, 173 g |
+| cuts | 33 contours, 2.37 m | 13 contours, 1.62 m; leaves 1.0 × 29 × 8 | 13 contours, 1.68 m; leaves 1.0 × 31 × 10 |
+| k_guide Y / Z | 0.0585 / 0.0585 N/µm | **0.0938 / 0.0938** | 0.097 / 0.097 |
+| loaded stroke, worst-case / nominal | 110.2 / 118.6 µm | **101.0 / 108.8 µm** | 100.3 / 108.0 µm |
+| coupling Y→Z, Z→Y at full stroke | 0.001 % | **1.01 %** (1.0 µm at the tip) | 0.98 % |
+| platform roll about the fiber at full stroke | 0.1 µrad | 138 µrad (a round fiber does not care) | 126 µrad |
+| gravity | 0.75 µm sag, 0.39 µrad | 0.60 µm sag, 4.6 µrad, 0.74 µm at the tip | 0.72 µm sag, 2.9 µrad |
+| **first mode, loaded, on the base** | **549 Hz Y/Z**, 2105 X | **326 Hz — X, the out-of-plane bounce**; 606 Z, 620 Y, 747 yaw | 371 Hz X; 563 Z, 572 Y, 875 yaw |
+| first mode, bare, back face fixed | 600 Hz | 400 Hz X, 678 Z, 684 Y | 444 Hz X, 614 Y, 620 Z |
+| guide force at stroke | 7.0 N | 10.2 N (limit 32 N) | 10.5 N |
+| stress at stroke | 25–64 MPa, not converged | 28 MPa | 25 MPa |
+
+The one number to weigh: **R03's first mode is the platform bouncing along the
+optical axis at 326 Hz**, not a search axis. Eight-millimetre-deep, 29 mm
+leaves are soft out of plane (stiffness ∝ b³/L³) and only four couplers carry
+the platform in X. It clears the 300 Hz floor without margin. The Y/Z search
+modes themselves (606 / 620 Hz) are where R02 sits. `r03b` shows that depth is
+a weak lever: a 10 mm plate lifts X only to 371 Hz because the leaves grow with
+it and the moving mass with them, while Y/Z fall to 563 / 572 Hz. The honest
+knob for X is shorter couplers (their out-of-plane bending is what carries the
+platform), paid for in stroke; or accept 326 Hz on an axis the search never
+excites.
+
+![r03 modes](variants/r03/renders/modes_r01.png)
+
+What R03 gives up against R02, in numbers: coupling 1 % instead of 0.002 %
+(1 µm of Z per 100 µm of Y, a systematic and repeatable offset the optical
+servo absorbs), gravity pitch 4.5 µrad instead of 0.4, and a first mode that
+the modal table above quantifies. What it buys: a CNC part instead of a wire-EDM
+part, one-third of the cut length, and a mechanism whose every leaf can be
+pointed at on a drawing.
+
 ### Against the stacked P0 head
 
 | | stacked P0 (`../`) | parallel R01 (this) |
@@ -218,7 +317,17 @@ $py = "C:\Users\<user>\pythonEnvs\pic-env\Scripts\python.exe"
 # names), and every solver takes the same --variant. Names are in model.VARIANTS.
 & C:\Users\<user>\pythonEnvs\cad\Scripts\python.exe -u model.py --variant apa120s
 & $py -B solve_static.py --variant apa120s
+
+# R02 (manufacturing detail on the apa120s plate, solved on its bolted base),
+# R03 (two legs, 8 millable leaves) and r03b (R03 in a 10 mm plate): same commands.
+& C:\Users\<user>\pythonEnvs\cad\Scripts\python.exe -u model.py --variant r03   # + DXF cut file
+& $py -B solve_static.py --variant r03; & $py -B solve_modal.py --variant r03 --loaded
+& $py -B drawing.py --variant r03                # renders/drawing_r02.png, the shop sheet
 ```
+
+`model.py` prints, for every build, the number of leaves, the closed contours a
+wire would have to thread and the total profile length - the design rule of
+2026-09-08 made those first-class outputs (`geometry_report.json` → `edm`).
 
 | file | role |
 |---|---|
@@ -230,6 +339,7 @@ $py = "C:\Users\<user>\pythonEnvs\pic-env\Scripts\python.exe"
 | `solve_modal.py` | modes with the actuators as springs, labelled by platform motion |
 | `figures.py` | profile, mesh, deformed shapes, von Mises, ParaView `.vtu` |
 | `figures_results.py` | convergence curves from the result files, first four loaded mode shapes |
+| `drawing.py` | R02 shop sheet: profile with dimensions, callouts and the notes the DXF cannot carry |
 | `STEP/` | plate, plate + holder block, plate + two vendor APA60S |
 | `variants/<name>/` | the same layout for each named variant (STEP, report, results, renders) |
 

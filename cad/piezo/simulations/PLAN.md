@@ -88,6 +88,17 @@ same convergence gates:
 | cross-axis coupling / tip angle at full stroke | not solved | 0.002 % / ≤ 0.2 µrad, zero by symmetry |
 | moving mass on the search axes | ~250 g | 25 g + payload |
 
+Decisions since (user, 2026-09-07/08): **≥ 50 µm of range is required**, so the
+plate carries the **APA120S** (`variants/apa120s`: 109.6 µm worst-case loaded
+stroke, 572 Hz first mode with the holder); **R02** (`variants/r02`) is that
+plate detailed for wire EDM - screw access, stops, holder taps, wire ties,
+windows - and solved on a bolted base plate, with the DXF cut file and a shop
+sheet. **Design rule (user, 2026-09-08): minimise the number of flexure cuts
+that constrain the carriage, not elegance** - 35 threaded contours and 2.4 m
+of wire is a warning, not a feature. `variants/r03` is the answer: two legs,
+8 leaves of 1.0 × 29 mm in an 8 mm plate, CNC-millable, ≥ 100 µm stroke,
+1 % coupling. The R01 sections below remain the record of the APA60S baseline.
+
 Sections 3 and 4 below are written for the stack; for the parallel plate the
 "assembly" is the plate itself, section 3's loaded modal is done (minus mount
 compliance and the real holder), and section 5's single-axis prototype becomes

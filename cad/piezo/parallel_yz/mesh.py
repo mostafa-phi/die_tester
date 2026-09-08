@@ -47,9 +47,10 @@ def build(path_msh: Path, h_fine: float, loaded: bool = False, h_coarse: float |
         gmsh.model.occ.synchronize()
         volumes = gmsh.model.getEntities(3)
         if loaded:
-            if len(volumes) != 2:
-                raise RuntimeError(f"loaded STEP should hold 2 solids, found {len(volumes)}")
-            gmsh.model.occ.fragment([volumes[0]], [volumes[1]])
+            if len(volumes) < 2:
+                raise RuntimeError(f"loaded STEP should hold 2 or more solids, found {len(volumes)}")
+            # Plate + holder (+ base plate for R02): make every contact conformal.
+            gmsh.model.occ.fragment(volumes[:1], volumes[1:])
             gmsh.model.occ.synchronize()
             volumes = gmsh.model.getEntities(3)
 
@@ -76,6 +77,39 @@ def build(path_msh: Path, h_fine: float, loaded: bool = False, h_coarse: float |
                 gmsh.model.mesh.field.setNumber(f, f"{axis.upper()}Max", hi + 0.5)
             gmsh.model.mesh.field.setNumber(f, "Thickness", far)
             fields.append(f)
+        # Extra boxes the model asks to resolve (R02: the 0.3 mm stop gaps).
+        for box in rep.get("refine_boxes", []):
+            f = gmsh.model.mesh.field.add("Box")
+            gmsh.model.mesh.field.setNumber(f, "VIn", min(h_fine, 0.5))
+            gmsh.model.mesh.field.setNumber(f, "VOut", h_coarse)
+            for axis in "xyz":
+                lo, hi = box[axis]
+                gmsh.model.mesh.field.setNumber(f, f"{axis.upper()}Min", lo - 0.5)
+                gmsh.model.mesh.field.setNumber(f, f"{axis.upper()}Max", hi + 0.5)
+            gmsh.model.mesh.field.setNumber(f, "Thickness", far)
+            fields.append(f)
+        # Every small cylindrical surface (screw holes, counterbores, wire ties,
+        # the fiber hole) needs elements no larger than its diameter, or the
+        # surface mesh overlaps on it. Found from the geometry, not the report.
+        small_cyls = []
+        for dim, tag in gmsh.model.getEntities(2):
+            if gmsh.model.getType(dim, tag) != "Cylinder":
+                continue
+            bb = gmsh.model.getBoundingBox(dim, tag)
+            extents = sorted(bb[i + 3] - bb[i] for i in range(3))
+            if extents[1] < 6.0:                     # diameter ~ the two small extents
+                small_cyls.append(tag)
+        if small_cyls:
+            dist = gmsh.model.mesh.field.add("Distance")
+            gmsh.model.mesh.field.setNumbers(dist, "SurfacesList", small_cyls)
+            gmsh.model.mesh.field.setNumber(dist, "Sampling", 100)
+            thr = gmsh.model.mesh.field.add("Threshold")
+            gmsh.model.mesh.field.setNumber(thr, "InField", dist)
+            gmsh.model.mesh.field.setNumber(thr, "SizeMin", min(h_fine, 0.7))
+            gmsh.model.mesh.field.setNumber(thr, "SizeMax", h_coarse)
+            gmsh.model.mesh.field.setNumber(thr, "DistMin", 0.5)
+            gmsh.model.mesh.field.setNumber(thr, "DistMax", far)
+            fields.append(thr)
         # ... and the dia 3 fiber hole cannot be tiled by h_coarse elements either.
         hole = rep["parameters"]["fiber_hole"]
         f = gmsh.model.mesh.field.add("Box")
