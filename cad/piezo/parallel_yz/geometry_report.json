@@ -1,5 +1,6 @@
 {
   "concept": "parallel-kinematic YZ platform, four P-P legs, two APA60S grounded to the frame",
+  "variant": "R01 baseline",
   "frame": "X optical (plate thickness, +X toward the die), Y lateral, Z up; mm",
   "parameters": {
     "t": 0.4,
@@ -13,8 +14,7 @@
     "g": 1.5,
     "r_root": 0.5,
     "wall": 6.0,
-    "apa_len": 15.0,
-    "apa_long": 29.3,
+    "actuator": "APA60S",
     "apa_clear": 1.5,
     "pad": [
       2.5,
@@ -24,21 +24,26 @@
     "fiber_hole": 3.0,
     "bolt": 4.5,
     "bolt_inset": 7.0,
-    "payload_g": 70.0,
-    "payload_len": 30.0,
-    "payload_side": 16.0,
-    "tip_ahead": 45.0,
+    "payload_len": 25.0,
+    "payload_wy": 10.0,
+    "payload_wz": 7.0,
+    "payload_rho_kg_m3": 2810.0,
+    "payload_E_MPa": 71700.0,
+    "payload_nu": 0.33,
+    "tip_ahead": 30.0,
     "E_MPa": 71700.0,
     "nu": 0.33,
     "rho_kg_m3": 2810.0,
-    "payload_E_MPa": 200000.0,
-    "payload_nu": 0.3,
+    "apa_len": 15.0,
+    "apa_long": 29.3,
     "apa_mass_g": 8.5,
     "apa_k_N_per_um": 1.7,
     "apa_free_um": [
       75.0,
       68.0
-    ]
+    ],
+    "apa_force_limit_N": null,
+    "apa_blocked_free_Hz": null
   },
   "derived": {
     "y_in0": 27.0,
@@ -75,33 +80,33 @@
     "rho_kg_m3": 2810.0
   },
   "payload": {
-    "mass_g": 70.0,
+    "mass_g": 4.9174999999999995,
     "box": {
       "x": [
         10.0,
-        40.0
+        35.0
       ],
       "y": [
-        -8.0,
-        8.0
+        -5.0,
+        5.0
       ],
       "z": [
-        -8.0,
-        8.0
+        -3.5,
+        3.5
       ]
     },
-    "rho_kg_m3": 9114.583333333334,
-    "E_MPa": 200000.0,
-    "nu": 0.3,
+    "rho_kg_m3": 2810.0,
+    "E_MPa": 71700.0,
+    "nu": 0.33,
     "com": [
-      25.0,
+      22.5,
       0.0,
       0.0
     ],
-    "assumed": "70 g is everything on the platform; COM 15 mm ahead of the front face"
+    "source": "user 2026-09-07: aluminium block 25 x 10 x 7 mm; orientation (25 along the fiber) and mounting on the front face assumed"
   },
   "tip": [
-    55.0,
+    40.0,
     0.0,
     0.0
   ],
@@ -172,12 +177,15 @@
     }
   },
   "actuator": {
+    "name": "APA60S",
     "k_N_per_um": 1.7,
     "mass_g": 8.5,
     "free_stroke_um": {
       "nominal": 75.0,
       "minimum": 68.0
-    }
+    },
+    "force_limit_N": null,
+    "blocked_free_Hz": null
   },
   "leaf_boxes": [
     {

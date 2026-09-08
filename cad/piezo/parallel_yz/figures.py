@@ -26,7 +26,6 @@ import mesh as meshing  # noqa: E402
 import solve_static as S  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
-RENDERS = HERE / "renders"
 FIGURE_SIZE_MM = 0.9
 DEFORM_SCALE = 300.0
 VIEW = (28, -55)
@@ -113,7 +112,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--size", type=float, default=FIGURE_SIZE_MM)
     parser.add_argument("--scale", type=float, default=DEFORM_SCALE)
+    F.add_variant_argument(parser)
     args = parser.parse_args()
+    F.set_variant(args.variant)
+    RENDERS = F.ROOT / "renders"
     RENDERS.mkdir(exist_ok=True)
     rep = F.report()
     k_apa = rep["actuator"]["k_N_per_um"] * 1e3

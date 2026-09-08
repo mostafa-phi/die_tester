@@ -55,7 +55,7 @@ brief makes, applied to a two-plus-one split instead of a three-deep stack.
 | APA pockets | 15.4 × 33 mm, pad lands 2.5 × 5 mm raised 0.2 mm (vendor pad footprint, one M2 each) |
 | moving mass per axis | ≈ 25 g (platform 11 g, two input stages 9 g, leaves, half an APA) |
 | mounting | back face on a base with a central opening, four M4 at the corners |
-| payload surrogate | 70 g block, COM 15 mm ahead of the front face (assumed), tip 45 mm ahead |
+| payload | the fiber holder: aluminium block 25 × 10 × 7 mm, **4.9 g** (user, 2026-09-07), 25 mm along the fiber on the front face (orientation assumed), tip 30 mm ahead |
 
 The leaf section is chosen from the stroke budget: the guide may take at most
 \(k_\text{max} = k_\text{APA}(d_\text{free,min}/60 - 1) = 0.227\) N/µm before the
@@ -104,21 +104,22 @@ fem_r01, and is quoted with that caveat.
 | tip off-axis error at nominal stroke | ±0.001 µm, rotations ≤ 0.16 µrad | nominal zero by symmetry |
 | other actuator's pad during a stroke | 0.000 µm | decoupling works as drawn |
 | peak von Mises at nominal stroke | 31–54 MPa across densities | **no** (fillet peak, quadrature-sampled) |
-| gravity, 70 g on the platform | 0.55 µm sag, 5.2 µrad pitch, **0.78 µm tip drop**; Z APA carries 0.83 N | yes |
+| gravity, 4.9 g holder on the platform | 0.15 µm sag, 0.32 µrad pitch, **0.16 µm tip drop**; Z APA carries 0.24 N | yes |
 | first mode, bare plate, actuators as springs | **1316 Hz** (Y/Z pair) | yes, 0.02 % |
 | first mode, bare plate, no springs | 370 Hz | the guide alone, cf. fem_r01's 331 Hz |
-| **first mode, 70 g on the platform** | **630 Hz** (Y/Z pair), then 1241 Hz X, 2227 Hz payload rocking, 2739 Hz roll | yes, 0.03 % |
+| **first mode, holder on the platform** | **1200 Hz** (Y/Z pair), then 2636 Hz X, 4280 Hz pitch, 4330 Hz yaw, 4477 Hz roll | yes, 0.03 % |
+| same with the earlier 70 g surrogate (first solve, kept for the record) | 630 Hz; gravity 0.55 µm sag, 5.2 µrad pitch, 0.78 µm tip drop | yes |
 
 ![convergence](renders/convergence_r01.png)
 
 ### Convergence
 
-| h_fine | tets | dofs | k_guide Y (N/µm) | vM at stroke Y / Z (MPa) | f₁ bare (Hz) | f₁ 70 g (Hz) | static / modal solve |
+| h_fine | tets | dofs | k_guide Y (N/µm) | vM at stroke Y / Z (MPa) | f₁ bare (Hz) | f₁ with holder (Hz) | static / modal solve |
 |---|---|---|---|---|---|---|---|
-| 1.20 mm | 40 058 | 240 219 | 0.1406 | 29.0 / 29.5 | 1317 | 630 | 79 s / 30 s |
-| 0.90 mm | 64 794 | 385 968 | 0.1401 | 31.4 / 53.9 | 1316.4 | 630.1 | 109 s / 121 s |
-| 0.70 mm | 105 586 | 616 692 | 0.1401 | 40.3 / 39.7 | 1316.1 | 629.9 | 179 s / 205 s |
-| 0.55 mm | 169 951 | 975 357 | 0.1375 | 41.4 / 31.0 | – | – | 295 s / – |
+| 1.20 mm | 40 058 | 240 219 | 0.1406 | 29.0 / 29.5 | 1317 | 1200 | 79 s / 30 s |
+| 0.90 mm | 64 794 | 385 968 | 0.1401 | 31.4 / 53.9 | 1316.4 | 1200.0 | 105 s / 39 s |
+| 0.70 mm | 105 586 | 616 692 | 0.1401 | 40.3 / 39.7 | 1316.1 | 1199.6 | 172 s / 205 s |
+| 0.55 mm | 169 951 | 975 357 | 0.1375 | 41.4 / 31.0 | – | – | 312 s / – |
 
 Stiffness and frequencies are flat from the coarsest mesh: they are global
 quantities set by the leaf sections. The stress peak wanders between 30 and
@@ -132,17 +133,20 @@ allowable itself is still an open item in `cases.json`), and do not quote a digi
 ![modes](renders/modes_r01.png)
 
 - The driven pair (Y, Z) is the platform and its two input stages riding on the
-  actuator spring: 1316 Hz bare, **630 Hz with 70 g** - the payload triples the
-  moving mass. The lumped estimate √(k/m)/2π with k = 1.84 N/µm gives 1.3 kHz
-  at 27 g and 690 Hz at 97 g, so the FE says the leaves and stages behave as the
-  simple model assumes.
+  actuator spring: 1316 Hz bare, **1200 Hz with the 4.9 g holder** (and 630 Hz
+  with the 70 g surrogate of the first solve, which tripled the moving mass).
+  The lumped estimate √(k/m)/2π with k = 1.84 N/µm gives 1.3 kHz at 27 g,
+  1.2 kHz at 32 g and 690 Hz at 97 g, so the FE says the leaves and stages
+  behave as the simple model assumes.
 - Without the springs the same pair sits at 370 Hz: the actuator provides 92 % of
   the driven-axis stiffness, so **the actuator, not the flexure, sets the
   bandwidth**, and the flexure's job is only to stay below the stroke budget.
-- Platform X (out of plane) is 3.1 kHz bare, 1.24 kHz loaded; roll 4.6 / 2.7 kHz;
-  pitch and yaw 6.8 kHz bare. Nothing local (leaf or stage) below 4.4 kHz.
-- The 2.2 kHz loaded pair is the surrogate block rocking on the platform - the
-  first mode that depends on the holder's shape rather than its mass.
+- Platform X (out of plane) is 3.1 kHz bare, 2.6 kHz with the holder; pitch
+  and yaw 4.3 kHz, roll 4.5 kHz. Nothing local (leaf or stage) below 4.4 kHz.
+  With the holder in place there is a factor of 2.2 between the driven pair and
+  the next platform mode, so the search axes are cleanly the first two modes.
+- With the 70 g surrogate the block's own rocking appeared at 2.2 kHz; with the
+  real holder that mode is above 4 kHz and the holder no longer sets anything.
 
 ### Against the stacked P0 head
 
@@ -151,14 +155,14 @@ allowable itself is still an open item in `cases.json`), and do not quote a digi
 | moving mass on the search axes | X carries Y, Z and the payload: ~250 g | 25 g + payload |
 | guide stiffness on the driven axis | 0.0395 N/µm (fem_r01) | 0.1375 N/µm |
 | loaded stroke, worst-case APA | 66.5 µm | 62.6 µm |
-| loaded first mode | not solved; lumped √(1.74 N/µm / 0.32 kg) ≈ 370 Hz before series compliance | **630 Hz** at 70 g, FE, converged |
+| loaded first mode | not solved; lumped √(1.74 N/µm / 0.25 kg) ≈ 420 Hz before series compliance | **1200 Hz** with the 4.9 g holder (630 Hz at 70 g), FE, converged |
 | envelope | 84 × 70 × 106 mm, optical centre 81 mm up | 113 × 113 × 10 mm |
 | mass excl. payload | 255 g | 199 g plate + 17 g actuators |
 | actuators | 3 APA60S, two of them moving | 2 APA60S, both grounded |
 | bolted joints in the moving path | 6 | 0 |
 
 The parallel plate spends 3.5× more of the stroke budget on the guide and
-gets a ~1.7× higher loaded first mode for it, with the coupling and tip-angle
+gets a ~3× higher loaded first mode for it, with the coupling and tip-angle
 questions answered by symmetry rather than by stacking tolerances. Its cost is
 footprint and a first article that is the whole mechanism.
 
@@ -172,14 +176,19 @@ footprint and a first article that is the whole mechanism.
 $py = "C:\Users\<user>\pythonEnvs\pic-env\Scripts\python.exe"
 & $py -B solve_static.py                        # density sweep -> static_r01.json
 & $py -B solve_modal.py                         # bare plate    -> modal_r01.json
-& $py -B solve_modal.py --loaded                # 70 g surrogate -> modal_loaded_r01.json
+& $py -B solve_modal.py --loaded                # holder on the platform -> modal_loaded_r01.json
 & $py -B figures.py                             # renders/*.png + static_r01.vtu
 & $py -B figures_results.py                     # convergence curves, mode shapes
+
+# Variants: model.py --variant <name> builds into variants/<name>/ (same file
+# names), and every solver takes the same --variant. Names are in model.VARIANTS.
+& C:\Users\<user>\pythonEnvs\cad\Scripts\python.exe -u model.py --variant apa120s
+& $py -B solve_static.py --variant apa120s
 ```
 
 | file | role |
 |---|---|
-| `model.py` | the parametric plate (`P`), pad lands, payload surrogate; writes `STEP/` and `geometry_report.json` |
+| `model.py` | the parametric plate (`P`), the actuator table (`ACTUATORS`), named variants (`VARIANTS`), pad lands, holder block; writes `STEP/` and `geometry_report.json` |
 | `geometry_report.json` | every box the FE needs: leaves, pads, fixture rule, platform, payload, tip |
 | `mesh.py` | gmsh, Box size fields on the recorded leaf boxes, Delaunay |
 | `fe_common.py` | materials by position, patches, actuator springs (Woodbury), rigid-body fit |
@@ -187,7 +196,8 @@ $py = "C:\Users\<user>\pythonEnvs\pic-env\Scripts\python.exe"
 | `solve_modal.py` | modes with the actuators as springs, labelled by platform motion |
 | `figures.py` | profile, mesh, deformed shapes, von Mises, ParaView `.vtu` |
 | `figures_results.py` | convergence curves from the result files, first four loaded mode shapes |
-| `STEP/` | plate, plate + payload surrogate, plate + two vendor APA60S |
+| `STEP/` | plate, plate + holder block, plate + two vendor APA60S |
+| `variants/<name>/` | the same layout for each named variant (STEP, report, results, renders) |
 
 The actuator is an axial spring between its two pad lands (1.7 N/µm) plus half
 its mass on each; it is applied through the Woodbury identity so the plate is
@@ -198,7 +208,8 @@ base plate with a central opening would carry it.
 ## What this does not tell you
 
 No actuator off-axis stiffness or internal modes (a spring has neither), no
-mount compliance below the back face, no real holder (the surrogate's COM is an
-assumption), no fatigue allowable, no station integration, no manufacturing
+mount compliance below the back face, the holder is a plain block whose
+orientation on the platform is assumed, no fatigue allowable, no station
+integration, no manufacturing
 asymmetry - the nominal coupling is zero by symmetry, so the coupling a real
 part shows is set by EDM tolerance, not by this model.

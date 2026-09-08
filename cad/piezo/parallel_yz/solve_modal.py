@@ -1,7 +1,7 @@
 """Modal analysis of the parallel YZ platform, actuators as springs.
 
     python -B solve_modal.py                       # bare plate, default densities
-    python -B solve_modal.py --loaded --sizes 0.7  # 70 g surrogate on the platform
+    python -B solve_modal.py --loaded --sizes 0.7  # holder block on the platform
 
 Frame back face fixed outside the leg region; both APA60S as 1.7 N/um axial
 springs between their pads plus half their mass on each pad. The bare plate is
@@ -99,10 +99,12 @@ def main() -> int:
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--sizes", type=float, nargs="+", default=list(DEFAULT_SIZES))
     parser.add_argument("--modes", type=int, default=DEFAULT_MODES)
-    parser.add_argument("--loaded", action="store_true", help="70 g surrogate on the platform")
+    parser.add_argument("--loaded", action="store_true", help="fiber holder block on the platform")
+    F.add_variant_argument(parser)
     args = parser.parse_args()
+    F.set_variant(args.variant)
     rep = F.report()
-    results_path = HERE / ("modal_loaded_r01.json" if args.loaded else "modal_r01.json")
+    results_path = F.ROOT / ("modal_loaded_r01.json" if args.loaded else "modal_r01.json")
 
     runs = []
     for h in args.sizes:
@@ -125,7 +127,8 @@ def main() -> int:
         converged = False
 
     results = {
-        "case": ("70 g surrogate on the platform, " if args.loaded else "bare plate, ")
+        "variant": args.variant or "R01 baseline",
+        "case": ("holder block on the platform, " if args.loaded else "bare plate, ")
                 + "frame back face fixed, both APA60S as axial springs with half their mass on each pad",
         "status": "converged" if converged else "not_converged",
         "convergence_gate": "<5% drift in every sprung frequency between densities",
@@ -134,7 +137,7 @@ def main() -> int:
         "runs": runs,
     }
     results_path.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
-    print(f"\nstatus: {results['status']}\nwrote {results_path.name}")
+    print(f"\nstatus: {results['status']}\nwrote {results_path}")
     return 0
 
 

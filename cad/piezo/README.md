@@ -22,7 +22,7 @@ The two original research notes and the user-supplied `APA60S.step` remain uncha
 | `generated/` | Planform data consumed by Fusion; regenerate rather than edit |
 | `simulations/` | Planned cases, assumptions, release gates and analytical screening code |
 | `simulations/fem_r01/` | [Single-axis FEM revision](simulations/fem_r01/README.md): filleted guide, gmsh + scikit-fem pipeline, mesh-converged stiffness, renders |
-| `parallel_yz/` | [Parallel-kinematic YZ platform, concept R01](parallel_yz/README.md): CadQuery plate with two grounded APA60S, converged statics, coupling, gravity and loaded modal (630 Hz at 70 g), renders |
+| `parallel_yz/` | [Parallel-kinematic YZ platform, concept R01](parallel_yz/README.md): CadQuery plate with two grounded APA60S, converged statics, coupling, gravity and loaded modal (1200 Hz with the 4.9 g holder), APA120S variant, renders |
 | `vendor.json` | Original STEP identity, measured envelope, source and unresolved interface requirements |
 | `build_manifest.json` | SHA256 provenance of the current source and output set |
 | `archive/P0_session/` | Original session exports and evidence, retained unchanged for comparison |

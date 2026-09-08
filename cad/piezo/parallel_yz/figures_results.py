@@ -28,13 +28,12 @@ import mesh as meshing  # noqa: E402
 import solve_modal as SM  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
-RENDERS = HERE / "renders"
 MODE_SIZE_MM = 1.2
 N_SHAPES = 4
 
 
 def convergence(path: Path):
-    static = json.loads((HERE / "static_r01.json").read_text())
+    static = json.loads((F.ROOT / "static_r01.json").read_text())
     fig, axes = plt.subplots(1, 3, figsize=(13, 4), dpi=160)
 
     dofs = [r["dofs"] for r in static["runs"]]
@@ -49,8 +48,8 @@ def convergence(path: Path):
     axes[1].set_title("static: stress peak (quadrature-sampled)")
 
     for name, label, marker in (("modal_r01.json", "bare plate", "o"),
-                                ("modal_loaded_r01.json", "70 g on the platform", "s")):
-        p = HERE / name
+                                ("modal_loaded_r01.json", "holder on the platform", "s")):
+        p = F.ROOT / name
         if not p.exists():
             continue
         modal = json.loads(p.read_text())
@@ -106,7 +105,7 @@ def mode_shapes(path: Path, h: float, rep: dict):
         ax.add_collection3d(Poly3DCollection(polys, facecolors=plt.get_cmap("viridis")(norm(facet_mag)),
                                              edgecolor="none"))
         FIG._style(ax, points, f"mode {i + 1}: {freqs[i]:.0f} Hz  ({label})\n"
-                               f"70 g on the platform, actuators as springs; h = {h:.1f} mm")
+                               f"holder on the platform, actuators as springs; h = {h:.1f} mm")
     fig.suptitle("parallel YZ R01 - first modes, exaggerated (frequencies from this coarse solve; "
                  "converged values in modal_loaded_r01.json)", fontsize=10)
     fig.tight_layout()
@@ -117,7 +116,10 @@ def mode_shapes(path: Path, h: float, rep: dict):
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--size", type=float, default=MODE_SIZE_MM)
+    F.add_variant_argument(parser)
     args = parser.parse_args()
+    F.set_variant(args.variant)
+    RENDERS = F.ROOT / "renders"
     RENDERS.mkdir(exist_ok=True)
     convergence(RENDERS / "convergence_r01.png")
     print("wrote renders/convergence_r01.png", flush=True)

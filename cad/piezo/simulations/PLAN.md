@@ -22,9 +22,23 @@ Use the standalone Z STEP for the first study and the XYZ STEP for the assembly 
 
 `cases.json` defines the initial case inventory. Null entries are missing requirements, not zero values. The elastic material values are engineering seeds; fatigue allowables must account for the actual alloy condition, EDM surface, root finish and desired life.
 
-### Payload: 300 g is superseded (user, 2026-09-07)
+### Payload and range, as of 2026-09-07 (user)
 
-**The maximum probe weight is < 70 g.** This replaces the "up to 300 g" figure
+Two statements from the user later the same day supersede the paragraph below
+and everything in the brief:
+
+- **The holder is an aluminium block 25 × 10 × 7 mm - 4.9 g.** Not 300 g, not
+  70 g. The parallel plate's loaded cases use exactly this block (25 mm along the
+  fiber, standing on the platform's front face; that orientation is assumed).
+- **A large range of motion is required; ±8 µm is not remotely enough.** That
+  rules out the direct-drive (unamplified stack) variant for good and keeps the
+  amplified APA60S with its ≥ 60 µm loaded stroke as the actuator. The exact
+  range the nest's placement error demands is still to be measured.
+
+### Payload: 300 g is superseded (user, 2026-09-07, earlier that day)
+
+**The maximum probe weight is < 70 g** (now further reduced to the 4.9 g block
+above). This replaces the "up to 300 g" figure
 that runs through the design brief and `cases.json`. The brief is a preserved
 research note and is not edited; `cases.json` still carries the old
 `payload_kg` list and `300 g` cases because it is a tracked input to the P0
@@ -70,7 +84,7 @@ same convergence gates:
 |---|---|---|
 | guide stiffness, driven axis | 0.0395 N/µm | 0.1375 N/µm |
 | loaded stroke, worst-case APA | 66.5 µm | 62.6 µm |
-| first mode with 70 g, actuators as springs | not solved (lumped ≈ 370 Hz) | **630 Hz**, converged |
+| first mode with the 4.9 g holder, actuators as springs | not solved (lumped ≈ 420 Hz) | **1200 Hz**, converged (630 Hz with the earlier 70 g surrogate) |
 | cross-axis coupling / tip angle at full stroke | not solved | 0.002 % / ≤ 0.2 µrad, zero by symmetry |
 | moving mass on the search axes | ~250 g | 25 g + payload |
 

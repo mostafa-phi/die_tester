@@ -1,6 +1,6 @@
 """Shared finite-element pieces for the parallel YZ concept.
 
-Materials from geometry_report.json (plate and payload surrogate by position),
+Materials from geometry_report.json (plate and payload block by position),
 the boundary patches the model recorded (pads, fixture, platform front face),
 the actuator represented as an axial spring between its two pads, a PARDISO
 factorisation reused across right-hand sides, and the rigid-body fit that turns
@@ -29,11 +29,31 @@ except ImportError:
     pypardiso = None
 
 HERE = Path(__file__).resolve().parent
+# Where a run reads its geometry and writes its results. The baseline (R01,
+# APA60S) lives in this folder; a variant lives in variants/<name>/ with the
+# same file names, so every script takes --variant and calls set_variant().
+ROOT = HERE
 REPORT = HERE / "geometry_report.json"
 WORK = HERE / "work"
 
 G_MM_S2 = 9806.65
 AXIS = {"x": 0, "y": 1, "z": 2}
+
+
+def set_variant(name: str | None) -> Path:
+    """Point REPORT / WORK / ROOT at a variant folder (or back at the baseline)."""
+    global ROOT, REPORT, WORK
+    ROOT = HERE if not name else HERE / "variants" / name
+    REPORT = ROOT / "geometry_report.json"
+    WORK = ROOT / "work"
+    if not REPORT.exists():
+        raise FileNotFoundError(f"{REPORT} - build it first: model.py --variant {name}")
+    return ROOT
+
+
+def add_variant_argument(parser) -> None:
+    parser.add_argument("--variant", default=None,
+                        help="name under variants/ (built by model.py --variant); default: the R01 baseline")
 
 
 def report() -> dict:
@@ -55,7 +75,7 @@ def in_box(points: np.ndarray, box: dict, tol: float = 0.05) -> np.ndarray:
 
 
 class Materials:
-    """Plate everywhere, payload surrogate inside its box (loaded meshes only)."""
+    """Plate everywhere, payload block inside its box (loaded meshes only)."""
 
     def __init__(self, rep: dict, loaded: bool):
         self.loaded = loaded

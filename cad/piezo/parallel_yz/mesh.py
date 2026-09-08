@@ -15,14 +15,16 @@ from pathlib import Path
 
 import gmsh
 
-HERE = Path(__file__).resolve().parent
-REPORT = HERE / "geometry_report.json"
-STEP_PLATE = HERE / "STEP" / "parallel_yz_r01.step"
-STEP_LOADED = HERE / "STEP" / "parallel_yz_r01_loaded.step"
+import fe_common as F
 
 
 def report() -> dict:
-    return json.loads(REPORT.read_text(encoding="utf-8"))
+    return F.report()
+
+
+def step_paths() -> tuple[Path, Path]:
+    """Plate and plate+payload STEP of the active variant (see fe_common.set_variant)."""
+    return F.ROOT / "STEP" / "parallel_yz_r01.step", F.ROOT / "STEP" / "parallel_yz_r01_loaded.step"
 
 
 def _inside(box: dict, centre) -> bool:
@@ -40,7 +42,8 @@ def build(path_msh: Path, h_fine: float, loaded: bool = False, h_coarse: float |
     try:
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.model.add("parallel_yz_r01")
-        gmsh.model.occ.importShapes(str(STEP_LOADED if loaded else STEP_PLATE))
+        step_plate, step_loaded = step_paths()
+        gmsh.model.occ.importShapes(str(step_loaded if loaded else step_plate))
         gmsh.model.occ.synchronize()
         volumes = gmsh.model.getEntities(3)
         if loaded:

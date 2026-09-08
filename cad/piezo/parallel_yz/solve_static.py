@@ -11,7 +11,7 @@ Per density, on the bare plate (no payload):
     the fiber-tip error at full stroke;
   * the same with both actuators present as 1.7 N/um axial springs (Woodbury,
     same factorisation) - the as-built response.
-On the loaded mesh (70 g surrogate on the platform):
+On the loaded mesh (the fiber holder block on the platform):
   * gravity, both springs present: sag, pitch and tip drop.
 
 Signs: a leg's actuator "extends" when its pads move apart, which pushes the
@@ -32,7 +32,6 @@ import fe_common as F
 import mesh as meshing
 
 HERE = Path(__file__).resolve().parent
-RESULTS = HERE / "static_r01.json"
 DEFAULT_SIZES = (0.70, 0.55)
 LEG_AXIS = {"Y": 1, "Z": 2}
 LEG_SIGN = {"Y": -1.0, "Z": -1.0}          # platform motion on extension, along the axis
@@ -161,7 +160,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--sizes", type=float, nargs="+", default=list(DEFAULT_SIZES))
+    F.add_variant_argument(parser)
     args = parser.parse_args()
+    F.set_variant(args.variant)
+    results_path = F.ROOT / "static_r01.json"
     rep = F.report()
 
     runs = []
@@ -196,6 +198,7 @@ def main() -> int:
 
     results = {
         "concept": rep["concept"],
+        "variant": args.variant or "R01 baseline",
         "status": "converged" if converged else "not_converged",
         "convergence_gate": "<5% change in pad-to-pad stiffness between densities (PLAN.md section 2)",
         "excludes": ["actuator off-axis stiffness", "mount compliance below the frame's back face",
@@ -203,8 +206,8 @@ def main() -> int:
         "sign_convention": __doc__.split("Signs:")[1].strip(),
         "runs": runs,
     }
-    RESULTS.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
-    print(f"\nstatus: {results['status']}\nwrote {RESULTS.name}")
+    results_path.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
+    print(f"\nstatus: {results['status']}\nwrote {results_path}")
     return 0
 
 

@@ -29,9 +29,26 @@ from pathlib import Path
 import cadquery as cq
 
 HERE = Path(__file__).resolve().parent
-STEP_DIR = HERE / "STEP"
-REPORT = HERE / "geometry_report.json"
 VENDOR = HERE.parent / "APA60S.step"
+
+# Amplified actuators that fit the pocket: pad-to-pad length along the leg,
+# shell length across it, and the spring the FE uses. Values from the CEDRAT
+# datasheets (APA60S: vendor STEP + cases.json; APA120S: datasheet rev 06/2024,
+# ICD 000620-ICD-01: 28.8 x 13 x 10, M2 pads 2.5 x 5, 1.9 deep).
+ACTUATORS = {
+    "APA60S": dict(apa_len=15.0, apa_long=29.3, apa_mass_g=8.5, apa_k_N_per_um=1.7,
+                   apa_free_um=(75.0, 68.0), apa_force_limit_N=None, apa_blocked_free_Hz=None),
+    "APA120S": dict(apa_len=13.0, apa_long=28.8, apa_mass_g=7.2, apa_k_N_per_um=0.33,
+                    apa_free_um=(140.0, 130.0), apa_force_limit_N=32.0, apa_blocked_free_Hz=1300.0),
+}
+
+# Named variants: overrides on P. The baseline (no variant) is R01 with the APA60S.
+VARIANTS = {
+    # APA120S with thinner leaves: spend the larger stroke budget on range.
+    "apa120s": dict(actuator="APA120S", t=0.30),
+    # APA120S on the unchanged R01 leaves, to separate the actuator's effect from the leaves'.
+    "apa120s_t040": dict(actuator="APA120S", t=0.40),
+}
 
 # Every number of the concept, in one place. Change here, rebuild, re-solve.
 P = dict(
@@ -46,26 +63,28 @@ P = dict(
     g=1.5,           # void margin beyond the input stage's outer face
     r_root=0.5,      # root fillet on every profile vertex
     wall=6.0,        # frame wall beyond the APA pocket
-    apa_len=15.0,    # APA60S pad-to-pad length (vendor STEP: pads at y = +/-7.5)
-    apa_long=29.3,   # APA60S length along its shell (vendor STEP: +/-14.64)
+    actuator="APA60S",   # key into ACTUATORS; sets apa_len, apa_long, mass, spring, stroke
     apa_clear=1.5,   # pocket clearance beyond the shell, each side
     pad=(2.5, 5.0),  # APA pad: 2.5 along the shell, 5.0 through the thickness (vendor STEP)
     pad_boss=0.2,    # raised land the pad bolts to, so the FE patch is an exact face
     fiber_hole=3.0,  # through the platform, along X
     bolt=4.5,        # corner clearance holes (M4) in the frame
     bolt_inset=7.0,
-    # Payload surrogate for the loaded cases: a block on the platform's front
-    # face. <70 g (user, 2026-09-07) with an ASSUMED COM 15 mm in front of the
-    # plate; the real holder is still a release blocker (PLAN.md section 1).
-    payload_g=70.0,
-    payload_len=30.0,
-    payload_side=16.0,
-    tip_ahead=45.0,  # fiber tip ahead of the plate's front face (40 mm chuck + 5 mm)
+    # Payload for the loaded cases: the fiber holder, an aluminium block
+    # 25 x 10 x 7 mm (user, 2026-09-07; 25 along the fiber, 10 across, 7 up),
+    # standing on the platform's front face. 4.9 g at aluminium density; it
+    # replaces the 70 g surrogate of the first solve. Fiber tip 5 mm beyond it.
+    payload_len=25.0,                                  # along X
+    payload_wy=10.0, payload_wz=7.0,                   # across, up
+    payload_rho_kg_m3=2810.0, payload_E_MPa=71700.0, payload_nu=0.33,
+    tip_ahead=30.0,  # fiber tip ahead of the plate's front face (25 mm holder + 5 mm)
     E_MPa=71700.0, nu=0.33, rho_kg_m3=2810.0,        # 7075-T6, as fem_r01
-    payload_E_MPa=200000.0, payload_nu=0.30,          # rigid-ish steel surrogate
-    apa_mass_g=8.5, apa_k_N_per_um=1.7,               # vendor.json / cases.json
-    apa_free_um=(75.0, 68.0),                          # nominal, minimum
 )
+
+
+def resolve(p: dict) -> dict:
+    """P with the chosen actuator's numbers folded in."""
+    return {**p, **ACTUATORS[p["actuator"]]}
 
 
 def derived(p: dict) -> dict:
@@ -184,22 +203,22 @@ def build(p: dict) -> tuple[cq.Workplane, cq.Workplane, dict]:
              .circle(p["bolt"] / 2).extrude(p["b"]))
     plate = plate.cut(holes)
 
-    # Payload surrogate on the front face.
-    half = p["payload_side"] / 2
+    # Payload block on the front face, centred on the fiber.
+    hy, hz = p["payload_wy"] / 2, p["payload_wz"] / 2
     payload = (cq.Workplane("XY")
-               .box(p["payload_len"], p["payload_side"], p["payload_side"], centered=False)
-               .translate((p["b"], -half, -half)))
+               .box(p["payload_len"], p["payload_wy"], p["payload_wz"], centered=False)
+               .translate((p["b"], -hy, -hz)))
 
     info = {"derived": d, "legs": per_leg, "pads": pads,
             "payload_box": {"x": [p["b"], p["b"] + p["payload_len"]],
-                            "y": [-half, half], "z": [-half, half]}}
+                            "y": [-hy, hy], "z": [-hz, hz]}}
     return plate, payload, info
 
 
 def place_apa(p: dict, d: dict, leg: str) -> cq.Workplane | None:
     """Vendor APA60S dropped into a driven leg's pocket, for the assembly STEP."""
-    if not VENDOR.exists():
-        return None
+    if not VENDOR.exists() or p["actuator"] != "APA60S":
+        return None                         # only the APA60S STEP is on hand
     apa = cq.importers.importStep(str(VENDOR)).val()
     centre = (d["y_in1"] + d["pocket1"]) / 2
     origin, y_axis, z_axis, x_axis = cq.Vector(0, 0, 0), cq.Vector(0, 1, 0), cq.Vector(0, 0, 1), cq.Vector(1, 0, 0)
@@ -216,7 +235,16 @@ def place_apa(p: dict, d: dict, leg: str) -> cq.Workplane | None:
 
 
 def main() -> int:
-    STEP_DIR.mkdir(exist_ok=True)
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--variant", default=None, choices=sorted(VARIANTS),
+                        help="build a named variant into variants/<name>/ instead of the baseline")
+    args = parser.parse_args()
+
+    P = resolve({**globals()["P"], **VARIANTS.get(args.variant, {})})
+    root = HERE if args.variant is None else HERE / "variants" / args.variant
+    step_dir = root / "STEP"
+    step_dir.mkdir(parents=True, exist_ok=True)
     plate, payload, info = build(P)
     d = info["derived"]
 
@@ -225,7 +253,7 @@ def main() -> int:
     rho = P["rho_kg_m3"] * 1e-6                        # g/mm3
     plate_mass_g = vol * rho
     payload_vol = payload.val().Volume()
-    payload_rho_kg_m3 = P["payload_g"] / payload_vol * 1e6
+    payload_g = payload_vol * P["payload_rho_kg_m3"] * 1e-6
 
     # Moving-mass bookkeeping from the profile rectangles (leaves at half weight,
     # a beam's effective mass); the FE modal is the real answer.
@@ -236,15 +264,15 @@ def main() -> int:
     leaf_g = leaf_mm2 * P["b"] * rho
     moving_one_axis_g = platform_g + 2 * stage_g + 0.5 * (8 + 4) * leaf_g + P["apa_mass_g"] / 2
 
-    cq.exporters.export(plate, str(STEP_DIR / "parallel_yz_r01.step"))
+    cq.exporters.export(plate, str(step_dir /"parallel_yz_r01.step"))
     loaded = cq.Workplane("XY").add(plate.val()).add(payload.val())
-    cq.exporters.export(loaded, str(STEP_DIR / "parallel_yz_r01_loaded.step"))
+    cq.exporters.export(loaded, str(step_dir /"parallel_yz_r01_loaded.step"))
     assembly = cq.Workplane("XY").add(plate.val())
     for leg in DRIVEN:
         apa = place_apa(P, d, leg)
         if apa is not None:
             assembly = assembly.add(apa.val())
-    cq.exporters.export(assembly, str(STEP_DIR / "parallel_yz_r01_assembly.step"))
+    cq.exporters.export(assembly, str(step_dir /"parallel_yz_r01_assembly.step"))
 
     leaf_boxes = []
     for leg, parts in info["legs"].items():
@@ -254,7 +282,8 @@ def main() -> int:
                    for leg, r in ((leg, parts["stage"]) for leg, parts in info["legs"].items())}
 
     report = {
-        "concept": "parallel-kinematic YZ platform, four P-P legs, two APA60S grounded to the frame",
+        "concept": f"parallel-kinematic YZ platform, four P-P legs, two {P['actuator']} grounded to the frame",
+        "variant": args.variant or "R01 baseline",
         "frame": "X optical (plate thickness, +X toward the die), Y lateral, Z up; mm",
         "parameters": P,
         "derived": d,
@@ -268,15 +297,17 @@ def main() -> int:
         },
         "material": {"name": "7075-T6 (Fusion 'Aluminum 7075' values, as fem_r01)",
                      "E_MPa": P["E_MPa"], "nu": P["nu"], "rho_kg_m3": P["rho_kg_m3"]},
-        "payload": {"mass_g": P["payload_g"], "box": info["payload_box"],
-                    "rho_kg_m3": payload_rho_kg_m3, "E_MPa": P["payload_E_MPa"],
+        "payload": {"mass_g": payload_g, "box": info["payload_box"],
+                    "rho_kg_m3": P["payload_rho_kg_m3"], "E_MPa": P["payload_E_MPa"],
                     "nu": P["payload_nu"],
                     "com": [P["b"] + P["payload_len"] / 2, 0.0, 0.0],
-                    "assumed": "70 g is everything on the platform; COM 15 mm ahead of the front face"},
+                    "source": "user 2026-09-07: aluminium block 25 x 10 x 7 mm; "
+                              "orientation (25 along the fiber) and mounting on the front face assumed"},
         "tip": [P["b"] + P["tip_ahead"], 0.0, 0.0],
         "pads": info["pads"],
-        "actuator": {"k_N_per_um": P["apa_k_N_per_um"], "mass_g": P["apa_mass_g"],
-                     "free_stroke_um": {"nominal": P["apa_free_um"][0], "minimum": P["apa_free_um"][1]}},
+        "actuator": {"name": P["actuator"], "k_N_per_um": P["apa_k_N_per_um"], "mass_g": P["apa_mass_g"],
+                     "free_stroke_um": {"nominal": P["apa_free_um"][0], "minimum": P["apa_free_um"][1]},
+                     "force_limit_N": P["apa_force_limit_N"], "blocked_free_Hz": P["apa_blocked_free_Hz"]},
         "leaf_boxes": leaf_boxes,
         "stage_boxes": stage_boxes,
         "platform_box": {"x": [0.0, P["b"]], "y": [-P["a_p"], P["a_p"]], "z": [-P["a_p"], P["a_p"]]},
@@ -285,10 +316,11 @@ def main() -> int:
         "outputs": ["STEP/parallel_yz_r01.step", "STEP/parallel_yz_r01_loaded.step",
                     "STEP/parallel_yz_r01_assembly.step"],
     }
-    REPORT.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    (root / "geometry_report.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    print(f"[{report['variant']}] {P['actuator']}, leaves {P['t']} mm -> {root}")
     print(f"plate {P['b']:.0f} x {2 * d['R']:.1f} x {2 * d['R']:.1f} mm, "
           f"{vol:.0f} mm3, {plate_mass_g:.1f} g; moving per axis ~{moving_one_axis_g:.1f} g")
-    print(f"payload surrogate {payload_vol:.0f} mm3 at {payload_rho_kg_m3:.0f} kg/m3 = {P['payload_g']:.0f} g")
+    print(f"payload block {payload_vol:.0f} mm3 at {P['payload_rho_kg_m3']:.0f} kg/m3 = {payload_g:.2f} g")
     print("wrote", ", ".join(report["outputs"]), "and geometry_report.json")
     return 0
 
