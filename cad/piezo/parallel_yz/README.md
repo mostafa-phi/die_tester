@@ -480,16 +480,22 @@ it from this checkout:
 
 What makes it fast there (2026-09-08, all three measured on R05):
 
-| | laptop, sequential | host, sequential | host, parallel, PARDISO | host, parallel, cuDSS |
-|---|---|---|---|---|
-| loaded modal 0.45 mm (1.38 M dofs): setup / solve | 999 / 354 s | 999 / 354 s | 123 / 175 s | **117 / 27 s** |
-| statics 0.45 mm: solve | 494 s | 494 s | 98 s | **62 s** |
-| whole chain (statics + loaded modal at 0.70/0.55/0.45, bare modal, figures, sheet) | ~2.5 h for 2 densities | 20 min for 2 densities | 10 min | **6 min** |
+| | laptop, sequential | host, sequential | host, parallel, PARDISO | host, parallel, cuDSS | + mesh stage, overlapped tail |
+|---|---|---|---|---|---|
+| loaded modal 0.45 mm (1.38 M dofs): setup / solve | 999 / 354 s | 999 / 354 s | 123 / 175 s | 117 / 27 s | **73 / 27 s** |
+| statics 0.45 mm: mesh (+ load and basis) + solve | 44 + 494 s | 44 + 494 s | 42 + 98 s | 43 + 62 s | **18 (cached) + 62 s** |
+| whole chain (statics + loaded modal at 0.70/0.55/0.45, bare modal, figures, sheet) | ~2.5 h for 2 densities | 20 min for 2 densities | 10 min | 6 min | **4 min 25 s** |
 
 Every column gives the same numbers (559 / 569 / 630 Hz, 0.0451 N/µm,
-114.2 / 123.0 µm). The R05 result files in `variants/r05/` are the cuDSS run
-of 2026-09-08 18:04 (three densities); what is left of a fine job is gmsh
-(43 s, single-threaded) and the mesh-to-basis setup.
+114.2 / 123.0 µm). The R05 result files in `variants/r05/` are the last
+column's run (2026-09-08 18:30, three densities). Stages of that run:
+model.py 20 s; all ten meshes at once 28 s (gmsh is single-threaded, the
+finest loaded mesh takes 28 s alone, so this stage costs one mesh); the seven
+solve jobs plus figures.py and drawing.py 3 min 40 s, set by the 0.45 mm
+jobs; merge and figures_results.py 45 s. What is left in a fine job is
+scikit-fem's basis and DOF setup (15 s), assembly (30 s), the reductions and
+the eigensolve; the mesh cache (`mesh.py`, sidecar `<msh>.json` keyed by the
+STEP's hash and the size parameters) means no job ever re-meshes.
 
 - **One process per (case, density)** (`remote/run_chain.sh`): the statics, the
   loaded modal and the bare modal at every density all start at once, each
@@ -509,9 +515,16 @@ of 2026-09-08 18:04 (three densities); what is left of a fine job is gmsh
   them. Results agree with PARDISO to 1e-10 (`remote/test_gpu_backend.py`);
   anything that fails on the GPU (no CUDA, memory) falls back to PARDISO with
   a printed note. Jobs alternate between the two GPUs.
+- **Mesh once, overlap the tail.** `mesh.py --sizes ...` builds every mesh a
+  chain needs (the solve densities plus figures' 0.9 and 1.2 mm) in parallel
+  gmsh processes before the solves start; figures.py and drawing.py, which
+  only need coarse meshes, run alongside the solve jobs instead of after them.
+  Only figures_results.py (convergence curves) waits for the merge.
 - Per core the host is no faster than the laptop; the whole gain is parallel
   work and the GPU. With 3 TB a fourth density (0.35 mm, ~3 M dofs) is
-  affordable when a convergence question needs it.
+  affordable when a convergence question needs it. Caching the scikit-fem
+  basis was measured and rejected: the Model pickles to 9 GB and loads in
+  12 s, no faster than building it (15 s).
 
 The host is shared: everything stays under `~/mostafa`, nothing is installed
 system-wide, and each job is capped at `-Threads` cores. `remote/remote_env.sh`

@@ -22,7 +22,7 @@
       "mesh_nodes": 25579,
       "msh": "parallel_yz_r01_h0.70.msh",
       "dofs": 482163,
-      "setup_seconds": 49.4,
+      "setup_seconds": 37.4,
       "sprung": {
         "frequencies_Hz": [
           640.6,
@@ -55,56 +55,56 @@
             "label": "Z",
             "platform_share": 0.992,
             "t_normalised": [
-              0.002,
-              0.65,
-              0.992
+              -0.002,
+              -0.65,
+              -0.992
             ],
             "theta_x_lever_normalised": [
-              -0.001,
-              -0.0,
-              0.0
+              0.001,
+              0.0,
+              -0.0
             ]
           },
           {
             "label": "X",
             "platform_share": 0.704,
             "t_normalised": [
-              0.704,
-              0.06,
-              0.06
+              -0.704,
+              -0.06,
+              -0.06
             ],
             "theta_x_lever_normalised": [
-              0.0,
-              -0.152,
-              0.152
+              -0.0,
+              0.152,
+              -0.152
             ]
           },
           {
             "label": "rot Y (pitch)",
             "platform_share": 0.238,
             "t_normalised": [
-              0.002,
-              -0.095,
-              0.095
+              -0.002,
+              0.095,
+              -0.095
             ],
             "theta_x_lever_normalised": [
-              0.002,
-              -0.238,
-              -0.237
+              -0.002,
+              0.238,
+              0.237
             ]
           },
           {
             "label": "X",
             "platform_share": 0.363,
             "t_normalised": [
-              -0.363,
-              -0.059,
-              -0.059
+              0.363,
+              0.059,
+              0.059
             ],
             "theta_x_lever_normalised": [
-              0.0,
-              0.145,
-              -0.146
+              -0.0,
+              -0.145,
+              0.146
             ]
           },
           {
@@ -125,14 +125,14 @@
             "label": "rot Z (yaw)",
             "platform_share": 0.482,
             "t_normalised": [
-              0.0,
-              0.192,
-              -0.191
+              -0.0,
+              -0.192,
+              0.191
             ],
             "theta_x_lever_normalised": [
-              -0.01,
-              0.482,
-              0.482
+              0.01,
+              -0.482,
+              -0.482
             ]
           },
           {
@@ -167,14 +167,14 @@
             "label": "local (leaf/stage)",
             "platform_share": 0.036,
             "t_normalised": [
-              0.0,
-              -0.006,
-              0.006
+              -0.0,
+              0.006,
+              -0.006
             ],
             "theta_x_lever_normalised": [
-              0.036,
-              -0.0,
-              -0.0
+              -0.036,
+              0.0,
+              0.0
             ]
           }
         ]
@@ -253,14 +253,14 @@
             "label": "X",
             "platform_share": 0.363,
             "t_normalised": [
-              0.363,
-              0.059,
-              0.059
+              -0.363,
+              -0.059,
+              -0.059
             ],
             "theta_x_lever_normalised": [
-              -0.0,
-              -0.145,
-              0.146
+              0.0,
+              0.145,
+              -0.146
             ]
           },
           {

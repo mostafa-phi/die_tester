@@ -6,10 +6,18 @@ grown by `near` to catch the root fillets, blending to h_coarse over `far`),
 combined with a Min field. The payload block of the loaded STEP is fragmented
 against the plate so the two solids share a conformal interface.
 
-Importable only; run through solve_static.py / solve_modal.py.
+Normally imported by solve_static.py / solve_modal.py, which call build() as
+they need meshes. A mesh is cached: build() writes a sidecar <msh>.json with a
+key made of the STEP file's hash and the size parameters, and returns the
+recorded description without running gmsh when the key matches. So meshes can
+be made ahead of time, all densities in parallel:
+
+    python -B mesh.py --variant r05 --sizes 0.70 0.55 0.45 0.9 1.2 --jobs 10
 """
 from __future__ import annotations
 
+import argparse
+import hashlib
 import json
 from pathlib import Path
 
@@ -20,6 +28,15 @@ import fe_common as F
 
 def report() -> dict:
     return F.report()
+
+
+def _cache_key(step: Path, h_fine: float, h_coarse: float, near: float, far: float, loaded: bool) -> str:
+    digest = hashlib.sha256(step.read_bytes()).hexdigest()[:16]
+    return f"{digest}:{h_fine:.4f}:{h_coarse:.4f}:{near:.3f}:{far:.3f}:{int(loaded)}"
+
+
+def _sidecar(path_msh: Path) -> Path:
+    return path_msh.with_suffix(path_msh.suffix + ".json")
 
 
 def step_paths() -> tuple[Path, Path]:
@@ -37,12 +54,18 @@ def build(path_msh: Path, h_fine: float, loaded: bool = False, h_coarse: float |
     if h_coarse is None:
         h_coarse = 5.0 * h_fine
     rep = report()
+    step_plate, step_loaded = step_paths()
+    key = _cache_key(step_loaded if loaded else step_plate, h_fine, h_coarse, near, far, loaded)
+    sidecar = _sidecar(path_msh)
+    if path_msh.exists() and sidecar.exists():
+        cached = json.loads(sidecar.read_text(encoding="utf-8"))
+        if cached.get("key") == key:
+            return cached["info"]
 
     gmsh.initialize()
     try:
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.model.add("parallel_yz_r01")
-        step_plate, step_loaded = step_paths()
         gmsh.model.occ.importShapes(str(step_loaded if loaded else step_plate))
         gmsh.model.occ.synchronize()
         volumes = gmsh.model.getEntities(3)
@@ -150,12 +173,49 @@ def build(path_msh: Path, h_fine: float, loaded: bool = False, h_coarse: float |
         gmsh.write(str(path_msh))
 
         _, tags, _ = gmsh.model.mesh.getElements(dim=3)
-        return {
+        info = {
             "h_fine_mm": h_fine, "h_coarse_mm": h_coarse, "near_mm": near, "far_mm": far,
             "loaded": loaded, "leaf_boxes": len(rep["leaf_boxes"]),
             "linear_tets": int(sum(len(t) for t in tags)),
             "mesh_nodes": int(len(gmsh.model.mesh.getNodes()[0])),
             "msh": path_msh.name,
         }
+        sidecar.write_text(json.dumps({"key": key, "info": info}, indent=2) + "\n", encoding="utf-8")
+        return info
     finally:
         gmsh.finalize()
+
+
+def _build_one(args) -> str:
+    """Worker for the CLI: (variant, h, loaded) -> one line of report."""
+    import time
+    variant, h, loaded = args
+    F.set_variant(variant)
+    tag = "_loaded" if loaded else ""
+    msh = F.WORK / f"parallel_yz_r01{tag}_h{h:.2f}.msh"
+    t = time.time()
+    info = build(msh, h, loaded=loaded)
+    return f"  {msh.name}: {info['linear_tets']:,} tets  [{time.time() - t:.1f}s]"
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--sizes", type=float, nargs="+", required=True)
+    parser.add_argument("--jobs", type=int, default=8, help="gmsh processes at once (each single-threaded)")
+    parser.add_argument("--only", choices=("bare", "loaded"), default=None)
+    F.add_variant_argument(parser)
+    args = parser.parse_args()
+    F.set_variant(args.variant)
+    F.WORK.mkdir(exist_ok=True)
+    jobs = [(args.variant, h, loaded) for h in args.sizes for loaded in (False, True)
+            if args.only is None or (args.only == "loaded") == loaded]
+    import multiprocessing as mp
+    ctx = mp.get_context("fork") if hasattr(__import__("os"), "fork") else mp.get_context("spawn")
+    with ctx.Pool(min(args.jobs, len(jobs))) as pool:
+        for line in pool.imap_unordered(_build_one, jobs):
+            print(line, flush=True)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
