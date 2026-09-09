@@ -111,6 +111,17 @@ def build(path_msh: Path, h_fine: float, loaded: bool = False, h_coarse: float |
                 gmsh.model.mesh.field.setNumber(f, f"{axis.upper()}Max", hi + 0.5)
             gmsh.model.mesh.field.setNumber(f, "Thickness", far)
             fields.append(f)
+        # Wire struts (R07): dia 0.4 wires need a few elements across.
+        for box in rep.get("wire_boxes", []):
+            f = gmsh.model.mesh.field.add("Box")
+            gmsh.model.mesh.field.setNumber(f, "VIn", box["size"])
+            gmsh.model.mesh.field.setNumber(f, "VOut", h_coarse)
+            for axis in "xyz":
+                lo, hi = box[axis]
+                gmsh.model.mesh.field.setNumber(f, f"{axis.upper()}Min", lo - 0.3)
+                gmsh.model.mesh.field.setNumber(f, f"{axis.upper()}Max", hi + 0.3)
+            gmsh.model.mesh.field.setNumber(f, "Thickness", 1.5)
+            fields.append(f)
         # Every small cylindrical surface (screw holes, counterbores, wire ties,
         # the fiber hole) needs elements no larger than its diameter, or the
         # surface mesh overlaps on it. Found from the geometry, not the report.

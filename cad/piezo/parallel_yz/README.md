@@ -564,6 +564,40 @@ depth. Modelling them as geometry, re-sizing the 10:1 leaves for ≥ 105 µm wit
 the struts' share (L ≈ 25.5, ~92 mm plate) and re-running the chain is the
 R07 candidate; the swept "m" plates and R06 stand as the no-strut record.
 
+### R07: the economical plate with wire struts (2026-09-09)
+
+`variants/r07/`: the 10:1 monolithic plate (0.8 × 25.3 mm leaves, k18 sizing,
+91 × 91 × 8 mm, 96 g, pin stops, edge-drilled pad screws) plus three Ø0.4 mm
+music-wire struts along X from the platform's back face to a hub on the base
+(`struts=True`: wires as steel solids in the loaded STEP with their own
+material region and 0.13 mm mesh, seats cut in platform and hub, a ring on
+three 6 × 8 spokes folded into a 23 mm base). FE at 0.90 mm on the laptop
+(single density, host unreachable):
+
+| | R07 | R06 (m8t50k12) | R05 |
+|---|---|---|---|
+| walls | 0.8 mm, **10:1** | 0.5 mm, 16:1 | shims |
+| plate | 91 × 91 × 8, one piece + 3 wires | 84 × 84 × 8, one piece | 82 × 82 × 8, 4 pieces + 8 shims + 16 bars |
+| guide stiffness | 0.081 N/µm (+0.003 wires) | 0.061 | 0.045 |
+| stroke min/nom | 104 / 112 µm | 110 / 118 | 114 / 123 |
+| coupling | 0.7 % | 0.35 % | 0.11 % |
+| tip off-axis at stroke | 0.7 µm | 0.4 µm | 0.1 µm |
+| first modes, loaded | **617 Y, 632 Z**, 905 pitch, 1805 X | 431 X, 597, 616 | 559, 569, 630 |
+
+The meshed wires reproduce the point-spring test: the out-of-plane mode is
+gone to 1.8 kHz and the first mode is the Y/Z pair at 617 Hz, above R05, on a
+plate that needs no thin-wall milling, no EDM and no bonding of leaves. What
+R07 gives up against R05 is coupling and off-axis tip motion (0.7 % / 0.7 µm
+against 0.1 % / 0.1 µm), both inherent to the single-guided two-leg plate and
+both far inside what the alignment loop corrects.
+
+Open: the converged three-density run on the host, the R07 manufacturing
+package (the R06 one plus the hub on the base plate and the wire assembly
+note: set the wires with epoxy or soft solder in the Ø0.45 seats, hub end
+first, platform end with the plate on the jig at nominal), and whether the
+hub should be part of the station's real mount rather than of this base
+model.
+
 ### Against the stacked P0 head
 
 | | stacked P0 (`../`) | parallel R01 (this) |

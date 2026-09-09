@@ -1,0 +1,813 @@
+{
+  "concept": "parallel-kinematic YZ platform, 2 P-P legs, two APA120S grounded to the frame",
+  "variant": "r07",
+  "frame": "X optical (plate thickness, +X toward the die), Y lateral, Z up; mm",
+  "parameters": {
+    "t": 0.8,
+    "L": 25.4,
+    "b": 8,
+    "a_p": 10.0,
+    "s_c": 8.0,
+    "w_in": 16.0,
+    "h_in": 10.0,
+    "s_g": 7.0,
+    "g": 1.5,
+    "r_root": 1.0,
+    "wall": 6.5,
+    "actuator": "APA120S",
+    "r02": true,
+    "legs": [
+      "+Y",
+      "+Z"
+    ],
+    "guide_sides": "plus",
+    "wall_free": 8.0,
+    "windows": false,
+    "shim": false,
+    "tab": 3.5,
+    "bar_t": 2.0,
+    "leaf_material": {
+      "name": "17-7PH CH900 precision shim",
+      "E_MPa": 204000.0,
+      "nu": 0.3,
+      "rho_kg_m3": 7800.0
+    },
+    "body_material": null,
+    "bond_all": false,
+    "bar_edge_r": 0.3,
+    "post_w": [
+      1.0,
+      1.0
+    ],
+    "stop": "pin",
+    "pockets": false,
+    "pocket_wall": 2.0,
+    "stage_cbore": false,
+    "struts": true,
+    "strut_n": 3,
+    "strut_d": 0.4,
+    "strut_len": 15.0,
+    "strut_r": 8.0,
+    "strut_angles": [
+      90.0,
+      210.0,
+      330.0
+    ],
+    "strut_embed": 2.0,
+    "strut_material": {
+      "name": "music wire (ASTM A228)",
+      "E_MPa": 200000.0,
+      "nu": 0.3,
+      "rho_kg_m3": 7850.0
+    },
+    "hub_r": [
+      3.5,
+      7.0
+    ],
+    "hub_spoke_w": 6.0,
+    "hub_t": 8.0,
+    "base_t": 23.0,
+    "pocket_web": 3.2,
+    "lightening": true,
+    "lightening_wall": 1.75,
+    "apa_clear": 1.5,
+    "apa_fit": 0.15,
+    "pad": [
+      2.5,
+      5.0
+    ],
+    "pad_boss": 0.2,
+    "fiber_hole": 3.0,
+    "bolt": 4.5,
+    "bolt_inset": 5.5,
+    "payload_len": 25.0,
+    "payload_wy": 10.0,
+    "payload_wz": 7.0,
+    "payload_rho_kg_m3": 2810.0,
+    "payload_E_MPa": 71700.0,
+    "payload_nu": 0.33,
+    "tip_ahead": 30.0,
+    "E_MPa": 71700.0,
+    "nu": 0.33,
+    "rho_kg_m3": 2810.0,
+    "base_margin": 1.0,
+    "wire_tie_pos": [
+      58.4,
+      24.0
+    ],
+    "apa_len": 13.0,
+    "apa_long": 28.8,
+    "apa_mass_g": 7.2,
+    "apa_k_N_per_um": 0.33,
+    "apa_free_um": [
+      140.0,
+      130.0
+    ],
+    "apa_force_limit_N": 32.0,
+    "apa_blocked_free_Hz": 1300.0
+  },
+  "derived": {
+    "y_in0": 35.4,
+    "y_in1": 51.4,
+    "w_in": 16.0,
+    "c0": 35.4,
+    "pocket0": 51.4,
+    "pocket1": 64.95000000000002,
+    "arm": 0.0,
+    "a_leg": 10.0,
+    "R": 71.45000000000002,
+    "pocket_h": 15.9,
+    "void_out": 52.9,
+    "void_lo": -11.5,
+    "box": [
+      -19.5,
+      71.45000000000002,
+      -19.5,
+      71.45000000000002
+    ],
+    "inner": [
+      -11.5,
+      52.9,
+      -11.5,
+      52.9
+    ],
+    "guide_y": [
+      36.4,
+      50.4
+    ]
+  },
+  "plate_mm": [
+    8,
+    90.95000000000002,
+    90.95000000000002
+  ],
+  "edm": {
+    "closed_contours_to_thread": 16,
+    "body_pieces": 1,
+    "cut_length_mm": 1548.0212253330794,
+    "leaves": 8
+  },
+  "plate_volume_mm3": 34057.54731662959,
+  "plate_mass_g": 95.70170795972915,
+  "mass_estimates_g": {
+    "platform": 8.8330983778,
+    "input_stage": 7.1936,
+    "leaf": 0.4567936,
+    "moving_per_axis_incl_half_apa": 29.5610599778,
+    "note": "profile-rectangle estimates; the FE modal carries the real mass"
+  },
+  "material": {
+    "name": "7075-T6 (Fusion 'Aluminum 7075' values, as fem_r01)",
+    "E_MPa": 71700.0,
+    "nu": 0.33,
+    "rho_kg_m3": 2810.0
+  },
+  "material_regions": [
+    {
+      "box": {
+        "x": [
+          -17.05,
+          2.05
+        ],
+        "y": [
+          -0.2499999999999995,
+          0.2500000000000005
+        ],
+        "z": [
+          7.75,
+          8.25
+        ]
+      },
+      "name": "music wire (ASTM A228)",
+      "E_MPa": 200000.0,
+      "nu": 0.3,
+      "rho_kg_m3": 7850.0
+    },
+    {
+      "box": {
+        "x": [
+          -17.05,
+          2.05
+        ],
+        "y": [
+          -7.178203230275509,
+          -6.678203230275509
+        ],
+        "z": [
+          -4.250000000000001,
+          -3.750000000000001
+        ]
+      },
+      "name": "music wire (ASTM A228)",
+      "E_MPa": 200000.0,
+      "nu": 0.3,
+      "rho_kg_m3": 7850.0
+    },
+    {
+      "box": {
+        "x": [
+          -17.05,
+          2.05
+        ],
+        "y": [
+          6.678203230275507,
+          7.178203230275507
+        ],
+        "z": [
+          -4.2500000000000036,
+          -3.7500000000000036
+        ]
+      },
+      "name": "music wire (ASTM A228)",
+      "E_MPa": 200000.0,
+      "nu": 0.3,
+      "rho_kg_m3": 7850.0
+    }
+  ],
+  "wire_boxes": [
+    {
+      "x": [
+        -17.0,
+        2.0
+      ],
+      "y": [
+        -0.1999999999999995,
+        0.2000000000000005
+      ],
+      "z": [
+        7.8,
+        8.2
+      ],
+      "size": 0.13333333333333333
+    },
+    {
+      "x": [
+        -17.0,
+        2.0
+      ],
+      "y": [
+        -7.128203230275509,
+        -6.728203230275509
+      ],
+      "z": [
+        -4.200000000000001,
+        -3.8000000000000007
+      ],
+      "size": 0.13333333333333333
+    },
+    {
+      "x": [
+        -17.0,
+        2.0
+      ],
+      "y": [
+        6.728203230275507,
+        7.128203230275507
+      ],
+      "z": [
+        -4.200000000000004,
+        -3.8000000000000034
+      ],
+      "size": 0.13333333333333333
+    }
+  ],
+  "struts": {
+    "n": 3,
+    "d": 0.4,
+    "free_length": 15.0,
+    "radius": 8.0,
+    "points": [
+      [
+        4.898587196589413e-16,
+        8.0
+      ],
+      [
+        -6.928203230275509,
+        -4.000000000000001
+      ],
+      [
+        6.928203230275507,
+        -4.0000000000000036
+      ]
+    ],
+    "material": {
+      "name": "music wire (ASTM A228)",
+      "E_MPa": 200000.0,
+      "nu": 0.3,
+      "rho_kg_m3": 7850.0
+    },
+    "k_axial_each_N_per_um": 1.6755160819145565,
+    "k_lateral_each_N_per_um": 0.0008936085770210969,
+    "hub": {
+      "r": [
+        3.5,
+        7.0
+      ],
+      "spoke_w": 6.0,
+      "t": 8.0
+    }
+  },
+  "shim": {
+    "enabled": false
+  },
+  "payload": {
+    "mass_g": 4.9174999999999995,
+    "box": {
+      "x": [
+        8,
+        33.0
+      ],
+      "y": [
+        -5.0,
+        5.0
+      ],
+      "z": [
+        -3.5,
+        3.5
+      ]
+    },
+    "rho_kg_m3": 2810.0,
+    "E_MPa": 71700.0,
+    "nu": 0.33,
+    "com": [
+      20.5,
+      0.0,
+      0.0
+    ],
+    "source": "user 2026-09-07: aluminium block 25 x 10 x 7 mm; orientation (25 along the fiber) and mounting on the front face assumed"
+  },
+  "tip": [
+    38.0,
+    0.0,
+    0.0
+  ],
+  "pads": {
+    "Y_stage": {
+      "x": [
+        1.5,
+        6.5
+      ],
+      "y": 51.6,
+      "z": [
+        -1.25,
+        1.25
+      ],
+      "normal": {
+        "y": 1
+      },
+      "leg": "+Y",
+      "side": "stage"
+    },
+    "Y_frame": {
+      "x": [
+        1.5,
+        6.5
+      ],
+      "y": 64.75000000000001,
+      "z": [
+        -1.25,
+        1.25
+      ],
+      "normal": {
+        "y": -1
+      },
+      "leg": "+Y",
+      "side": "frame"
+    },
+    "Z_stage": {
+      "x": [
+        1.5,
+        6.5
+      ],
+      "z": 51.6,
+      "y": [
+        -1.25,
+        1.25
+      ],
+      "normal": {
+        "z": 1
+      },
+      "leg": "+Z",
+      "side": "stage"
+    },
+    "Z_frame": {
+      "x": [
+        1.5,
+        6.5
+      ],
+      "z": 64.75000000000001,
+      "y": [
+        -1.25,
+        1.25
+      ],
+      "normal": {
+        "z": -1
+      },
+      "leg": "+Z",
+      "side": "frame"
+    }
+  },
+  "actuator": {
+    "name": "APA120S",
+    "k_N_per_um": 0.33,
+    "mass_g": 7.2,
+    "free_stroke_um": {
+      "nominal": 140.0,
+      "minimum": 130.0
+    },
+    "force_limit_N": 32.0,
+    "blocked_free_Hz": 1300.0
+  },
+  "leaf_boxes": [
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        10.0,
+        35.4
+      ],
+      "z": [
+        -8.4,
+        -7.6
+      ],
+      "leg": "+Y"
+    },
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        10.0,
+        35.4
+      ],
+      "z": [
+        7.6,
+        8.4
+      ],
+      "leg": "+Y"
+    },
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        36.0,
+        36.8
+      ],
+      "z": [
+        10.0,
+        35.4
+      ],
+      "leg": "+Y"
+    },
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        50.0,
+        50.8
+      ],
+      "z": [
+        10.0,
+        35.4
+      ],
+      "leg": "+Y"
+    },
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        -8.4,
+        -7.6
+      ],
+      "z": [
+        10.0,
+        35.4
+      ],
+      "leg": "+Z"
+    },
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        7.6,
+        8.4
+      ],
+      "z": [
+        10.0,
+        35.4
+      ],
+      "leg": "+Z"
+    },
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        10.0,
+        35.4
+      ],
+      "z": [
+        36.0,
+        36.8
+      ],
+      "leg": "+Z"
+    },
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        10.0,
+        35.4
+      ],
+      "z": [
+        50.0,
+        50.8
+      ],
+      "leg": "+Z"
+    }
+  ],
+  "stage_boxes": {
+    "+Y": {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        35.4,
+        51.4
+      ],
+      "z": [
+        -10.0,
+        10.0
+      ]
+    },
+    "+Z": {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        -10.0,
+        10.0
+      ],
+      "z": [
+        35.4,
+        51.4
+      ]
+    }
+  },
+  "platform_box": {
+    "x": [
+      0.0,
+      8
+    ],
+    "y": [
+      -10.0,
+      10.0
+    ],
+    "z": [
+      -10.0,
+      10.0
+    ]
+  },
+  "fixture": {
+    "face": "x = 0 (back face)",
+    "outside_square_half": 52.9,
+    "outside_box": [
+      -11.5,
+      52.9,
+      -11.5,
+      52.9
+    ],
+    "rule": "back-face facets outside the inner box (y0, y1, z0, z1) are fixed"
+  },
+  "outputs": [
+    "STEP/parallel_yz_r01.step",
+    "STEP/parallel_yz_r01_loaded.step",
+    "STEP/parallel_yz_r01_assembly.step",
+    "STEP/parallel_yz_r02_profile.dxf"
+  ],
+  "r02": {
+    "screw_hole": 2.2,
+    "cbore": 4.0,
+    "cbore_stage": 2.2,
+    "cbore_frame": 3.0,
+    "stop_gap": 0.3,
+    "tongue": [
+      3.5,
+      5.5
+    ],
+    "tongue_len": 15.0,
+    "post_len": 4.0,
+    "post_w": [
+      0.9,
+      0.7
+    ],
+    "holder_tap": 1.6,
+    "holder_tap_depth": 6.0,
+    "holder_tap_y": 3.5,
+    "fiber_chamfer": 0.5,
+    "wire_tie": 3.0,
+    "wire_tie_pos": [
+      42.0,
+      21.0
+    ],
+    "window": [
+      33.5,
+      44.5
+    ],
+    "base_t": 10.0,
+    "base_margin": 3.5,
+    "bolt_washer_r": 6.0,
+    "stops": [
+      {
+        "x": [
+          0.0,
+          8
+        ],
+        "y": [
+          42.1,
+          44.699999999999996
+        ],
+        "z": [
+          -10.1,
+          -6.0
+        ],
+        "leg": "+Y"
+      },
+      {
+        "x": [
+          0.0,
+          8
+        ],
+        "y": [
+          -10.1,
+          -6.0
+        ],
+        "z": [
+          42.1,
+          44.699999999999996
+        ],
+        "leg": "+Z"
+      }
+    ],
+    "screw_holes": [
+      {
+        "leg": "+Y",
+        "frame": "M2 x 5 SHCS from the outer edge",
+        "stage": "M2 x 8 SHCS from the coupler void, head on the inner face (no counterbore); hole drilled from the outer edge in line with the frame hole"
+      },
+      {
+        "leg": "+Z",
+        "frame": "M2 x 5 SHCS from the outer edge",
+        "stage": "M2 x 8 SHCS from the coupler void, head on the inner face (no counterbore); hole drilled from the outer edge in line with the frame hole"
+      }
+    ],
+    "wire_ties": [
+      [
+        58.4,
+        24.0
+      ],
+      [
+        24.0,
+        58.4
+      ]
+    ],
+    "windows": [
+      {
+        "y": [
+          54.65,
+          61.95000000000002
+        ],
+        "z": [
+          54.65,
+          61.95000000000002
+        ]
+      },
+      {
+        "y": [
+          54.65,
+          63.20000000000002
+        ],
+        "z": [
+          27.25,
+          51.15
+        ]
+      },
+      {
+        "y": [
+          27.25,
+          51.15
+        ],
+        "z": [
+          54.65,
+          63.20000000000002
+        ]
+      }
+    ],
+    "holder_taps": [
+      [
+        -3.5,
+        0.0
+      ],
+      [
+        3.5,
+        0.0
+      ]
+    ],
+    "pins": [
+      {
+        "leg": "+Y",
+        "dia": 2.0,
+        "hole": "H7 press fit, drilled from the outer edge",
+        "length": 12.0,
+        "travel_to_stop": 0.3
+      },
+      {
+        "leg": "+Z",
+        "dia": 2.0,
+        "hole": "H7 press fit, drilled from the outer edge",
+        "length": 12.0,
+        "travel_to_stop": 0.3
+      }
+    ]
+  },
+  "base": {
+    "t": 23.0,
+    "opening_mm": [
+      66.4,
+      66.4
+    ],
+    "mass_g": 199.5545334516767,
+    "material": "same elastic constants as the plate (aluminium)"
+  },
+  "fixture_mounted": {
+    "x": -23.0,
+    "radius": 6.0,
+    "points": [
+      [
+        65.95000000000002,
+        65.95000000000002
+      ],
+      [
+        -14.0,
+        -14.0
+      ],
+      [
+        43.4,
+        -14.0
+      ],
+      [
+        -14.0,
+        43.4
+      ]
+    ],
+    "rule": "base back-face facets within radius of a bolt centre are fixed (washer footprint)"
+  },
+  "refine_boxes": [
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        42.1,
+        44.699999999999996
+      ],
+      "z": [
+        -10.1,
+        -6.0
+      ],
+      "leg": "+Y"
+    },
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        -10.1,
+        -6.0
+      ],
+      "z": [
+        42.1,
+        44.699999999999996
+      ],
+      "leg": "+Z"
+    }
+  ]
+}

@@ -22,6 +22,7 @@ Runs in the `cad` environment (CadQuery 2.8); the FE scripts beside it run in
 from __future__ import annotations
 
 import json
+import math
 import os
 import sys
 from pathlib import Path
@@ -136,6 +137,11 @@ VARIANTS["r06"] = cnc_variant(8, 0.5, 12, stage_cbore=False)
 # guide's swing? Same leaves as m8t80k21 (10:1 walls) with guide pairs on
 # both sides of each stage; the plate grows by L on the two free sides.
 VARIANTS["m8t80k21g"] = cnc_variant(8, 0.8, 21, guide_sides="both")
+# R07 (2026-09-09): the economical monolithic plate (0.8 x 8 leaves, 10:1) with
+# three wire struts along X from the platform's back to a hub on the base, so
+# the out-of-plane mode is carried by axial wires instead of thin walls. Leaves
+# re-sized (k18) for the struts' 3 % share: >= 105 um worst case.
+VARIANTS["r07"] = cnc_variant(8, 0.8, 18, stage_cbore=False, struts=True, base_t=23.0)
 
 # R02 detailing, all in the frame of the +Y leg (rotated onto the others).
 R02 = dict(
@@ -200,6 +206,17 @@ P = dict(
     pockets=False,
     pocket_wall=2.0,
     stage_cbore=True,    # counterbore on the stage's inner face (False on a monolithic plate: unreachable)
+    # R07 wire struts: n music wires of dia strut_d along X from the platform's
+    # back face to a hub on the base plate, at radius strut_r around the fiber
+    # hole. Axial they pin X (E A / l each); lateral they are d^4-soft. The hub
+    # is a ring (r_in..r_out) on hub_n spokes, hub_t thick, at the base's back;
+    # the base grows to strut_len + hub_t so the wires have their free length.
+    struts=False,
+    strut_n=3, strut_d=0.4, strut_len=15.0, strut_r=8.0, strut_angles=(90.0, 210.0, 330.0),
+    strut_embed=2.0,
+    strut_material=dict(name="music wire (ASTM A228)", E_MPa=200000.0, nu=0.30, rho_kg_m3=7850.0),
+    hub_r=(3.5, 7.0), hub_spoke_w=6.0, hub_t=8.0,
+    base_t=None,         # override of R02["base_t"] (struts set it)
     pocket_web=3.2,      # stage web left around the pad screw / platform front plate
     # Two-leg plates: lightening windows in the +Y+Z corner block and in the
     # frame beside each pocket (the frame is fixed, so this is weight only).
@@ -594,17 +611,63 @@ def build_jig(p: dict, d: dict, per_leg: dict) -> cq.Workplane:
     return jig
 
 
+def base_thickness(p: dict) -> float:
+    return p.get("base_t") or R02["base_t"]
+
+
+def strut_points(p: dict) -> list[tuple[float, float]]:
+    return [(p["strut_r"] * math.cos(math.radians(a)), p["strut_r"] * math.sin(math.radians(a)))
+            for a in p["strut_angles"][:p["strut_n"]]]
+
+
+def build_hub(p: dict, d: dict) -> cq.Workplane:
+    """Ring on spokes at the back of the base, the anchor of the wire struts.
+    The fiber loop passes through the ring."""
+    t = base_thickness(p)
+    x0, x1 = -t, -t + p["hub_t"]
+    r_in, r_out = p["hub_r"]
+    hub = (cq.Workplane("XY").add(cq.Solid.makeCylinder(r_out, x1 - x0, cq.Vector(x0, 0, 0), cq.Vector(1, 0, 0)))
+           .cut(cq.Workplane("XY").add(cq.Solid.makeCylinder(r_in, x1 - x0 + 2, cq.Vector(x0 - 1, 0, 0), cq.Vector(1, 0, 0)))))
+    iy0, iy1, iz0, iz1 = d["inner"]
+    m = p.get("base_margin", R02["base_margin"])
+    reach = max(abs(iy0), abs(iy1), abs(iz0), abs(iz1)) + m + 3.0
+    w = p["hub_spoke_w"]
+    for a in p["strut_angles"][:p["strut_n"]]:
+        spoke = (cq.Workplane("XY").box(x1 - x0, reach, w, centered=False)
+                 .translate((x0, 0.0, -w / 2))
+                 .rotate((0, 0, 0), (1, 0, 0), a))
+        hub = hub.union(spoke)
+    return hub
+
+
+def build_struts(p: dict) -> list[cq.Workplane]:
+    """The wires: from strut_embed inside the hub's front face to strut_embed inside the platform."""
+    t = base_thickness(p)
+    x0 = -t + p["hub_t"] - p["strut_embed"]
+    x1 = p["strut_embed"]
+    return [cq.Workplane("XY").add(cq.Solid.makeCylinder(p["strut_d"] / 2, x1 - x0, cq.Vector(x0, y, z),
+                                                          cq.Vector(1, 0, 0)))
+            for y, z in strut_points(p)]
+
+
 def build_base(p: dict, d: dict) -> cq.Workplane:
     """Mount model: a plate of the same outline behind the flexure, with a central
     opening for the fiber loop and the four bolt holes; fixed at the bolts."""
     r = R02
-    t = r["base_t"]
+    t = base_thickness(p)
     y0, y1, z0, z1 = d["box"]
     base = cq.Workplane("XY").box(t, y1 - y0, z1 - z0, centered=False).translate((-t, y0, z0))
     # Opening: the moving region plus a margin, so the base touches frame only.
     iy0, iy1, iz0, iz1 = d["inner"]
     m = p.get("base_margin", r["base_margin"])
     base = base.cut(_box((iy0 - m, iy1 + m, iz0 - m, iz1 + m), -t - 1.0, 1.0))
+    if p.get("struts"):
+        hub = build_hub(p, d)
+        # the spokes' ends land on base material; the ring floats in the opening
+        base = base.union(hub.intersect(cq.Workplane("XY").box(t, y1 - y0, z1 - z0, centered=False)
+                                        .translate((-t, y0, z0))))
+        for y, z in strut_points(p):
+            base = base.cut(_cyl_through(y, z, p["strut_d"], -t + p["hub_t"] - p["strut_embed"], -t + p["hub_t"] + 0.1))
     # Windows behind the actuator pockets: the APA leads leave through the back
     # face, and the actuator is 2 mm thicker than an 8 mm plate anyway.
     for leg in [leg for leg in DRIVEN if leg in p["legs"]]:
@@ -843,19 +906,33 @@ def main() -> int:
         loaded = loaded.add(s.val())
     loaded = loaded.add(payload.val())
     base_info = None
+    strut_solids = []
+    if P.get("struts"):
+        # Wire seats in the platform's back face; the wires themselves are
+        # separate solids in the loaded STEP (steel, see material_regions).
+        for y, z in strut_points(P):
+            body_solids = [s.cut(_cyl_through(y, z, P["strut_d"], -0.1, P["strut_embed"]).val())
+                           if s.BoundingBox().xmin > -0.5 and s.isInside(cq.Vector(P["b"] / 2, y, z)) else s
+                           for s in body_solids]
+        strut_solids = [w.val() for w in build_struts(P)]
+        loaded = cq.Workplane("XY").add(body_solids).add(payload.val())
+        for s in info["leaf_solids"]:
+            loaded = loaded.add(s.val())
+        for s in strut_solids:
+            loaded = loaded.add(s)
     if P.get("r02"):
         base = build_base(P, d)
         loaded = loaded.add(base.val())
         iy0, iy1, iz0, iz1 = d["inner"]
         margin = P.get("base_margin", R02["base_margin"])
         base_info = {
-            "t": R02["base_t"],
+            "t": base_thickness(P),
             "opening_mm": [iy1 - iy0 + 2 * margin, iz1 - iz0 + 2 * margin],
             "mass_g": base.val().Volume() * rho,
             "material": "same elastic constants as the plate (aluminium)",
         }
         fixture_mounted = {
-            "x": -R02["base_t"], "radius": R02["bolt_washer_r"],
+            "x": -base_thickness(P), "radius": R02["bolt_washer_r"],
             "points": [list(pt) for pt in bolt_points(P, d)],
             "rule": "base back-face facets within radius of a bolt centre are fixed (washer footprint)",
         }
@@ -878,6 +955,10 @@ def main() -> int:
     pin_solids = info["r02"].pop("_pin_solids", []) if info.get("r02") else []
     for s in info["leaf_solids"] + info["bar_solids"] + pin_solids:
         assembly = assembly.add(s.val())
+    if P.get("struts"):
+        for s in strut_solids:
+            assembly = assembly.add(s)
+        assembly = assembly.add(build_hub(P, d).val())
     for leg in [leg for leg in DRIVEN if leg in P["legs"]]:
         apa = place_apa(P, d, leg)
         if apa is not None:
@@ -912,10 +993,28 @@ def main() -> int:
         "material": body,
         # Regions with a material other than the body's: the shim leaves. The
         # holder is handled separately (loaded meshes only).
-        "material_regions": [
+        "material_regions": ([
             {"box": {"x": [0.0, P["b"]], "y": [y0, y1], "z": [z0, z1]}, **P["leaf_material"]}
             for parts in info["legs"].values() for (y0, y1, z0, z1) in parts["leaves"]
-        ] if P["shim"] else [],
+        ] if P["shim"] else []) + ([
+            {"box": {"x": [-base_thickness(P) + P["hub_t"] - P["strut_embed"] - 0.05, P["strut_embed"] + 0.05],
+                     "y": [y - P["strut_d"] / 2 - 0.05, y + P["strut_d"] / 2 + 0.05],
+                     "z": [z - P["strut_d"] / 2 - 0.05, z + P["strut_d"] / 2 + 0.05]},
+             **P["strut_material"]}
+            for y, z in strut_points(P)
+        ] if P.get("struts") else []),
+        "wire_boxes": [
+            {"x": [-base_thickness(P) + P["hub_t"] - P["strut_embed"], P["strut_embed"]],
+             "y": [y - P["strut_d"] / 2, y + P["strut_d"] / 2],
+             "z": [z - P["strut_d"] / 2, z + P["strut_d"] / 2], "size": P["strut_d"] / 3}
+            for y, z in strut_points(P)
+        ] if P.get("struts") else [],
+        "struts": ({"n": P["strut_n"], "d": P["strut_d"], "free_length": P["strut_len"], "radius": P["strut_r"],
+                    "points": strut_points(P), "material": P["strut_material"],
+                    "k_axial_each_N_per_um": P["strut_material"]["E_MPa"] * math.pi * P["strut_d"] ** 2 / 4 / P["strut_len"] / 1e3,
+                    "k_lateral_each_N_per_um": 12 * P["strut_material"]["E_MPa"] * math.pi * P["strut_d"] ** 4 / 64 / P["strut_len"] ** 3 / 1e3,
+                    "hub": {"r": P["hub_r"], "spoke_w": P["hub_spoke_w"], "t": P["hub_t"]}}
+                   if P.get("struts") else {"enabled": False}),
         "shim": {"enabled": P["shim"], "tab": P["tab"], "bar_t": P["bar_t"], "leaf_t": P["t"],
                  "free_length": P["L"], "leaf_depth": P["b"], "leaves_g": leaves_g, "bars_g": bars_g,
                  "bars": [{"y": [r[0], r[1]], "z": [r[2], r[3]], "leg": leg, "role": role,
