@@ -31,6 +31,7 @@ HERE = Path(__file__).resolve().parent
 DEFAULT_SIZES = (0.70, 0.55)
 DEFAULT_MODES = 10
 SHIFT_HZ = 30.0
+STRUT_L = 15.0          # wire strut free length (mm) for the --strut what-if
 LABELS = ("X", "Y", "Z", "rot X (roll)", "rot Y (pitch)", "rot Z (yaw)")
 
 
@@ -70,7 +71,7 @@ def solve_modes(model: F.Model, Kc, Mc, U, k, n_modes: int, rep: dict) -> tuple[
     return [round(float(f), 1) for f in freqs], labels
 
 
-def modes_at(h: float, rep: dict, n_modes: int, loaded: bool) -> dict:
+def modes_at(h: float, rep: dict, n_modes: int, loaded: bool, strut_k_N_per_um: float = 0.0) -> dict:
     tag = "_loaded" if loaded else ""
     msh = F.WORK / f"parallel_yz_r01{tag}_h{h:.2f}.msh"
     t0 = time.time()
@@ -81,6 +82,33 @@ def modes_at(h: float, rep: dict, n_modes: int, loaded: bool) -> dict:
     vectors = model.actuator_vectors()
     U = np.column_stack([vectors["Y"], vectors["Z"]])[model.free]
     k = np.array([rep["actuator"]["k_N_per_um"] * 1e3] * 2)
+    if strut_k_N_per_um:
+        # Wire struts along X from the platform's back face to ground: three
+        # Ø d wires of length l at radius 8 around the fiber hole, each an
+        # axial spring E A / l on X and a lateral spring 12 E I / l^3 on Y and Z
+        # at the nearest back-face node. strut_k_N_per_um is the TOTAL axial
+        # stiffness; d follows from it for l = STRUT_L (music wire, E = 200 GPa).
+        E_w = 200e3
+        n_w, l_w, r_w = 3, STRUT_L, 8.0
+        area = strut_k_N_per_um * 1e3 * l_w / (n_w * E_w)          # mm^2 per wire
+        d_w = 2 * np.sqrt(area / np.pi)
+        k_ax = E_w * area / l_w
+        k_lat = 12 * E_w * (np.pi * d_w ** 4 / 64) / l_w ** 3
+        cols, ks = [], []
+        back = np.abs(model.mesh.p[0]) < 0.05
+        for ang in (90.0, 210.0, 330.0):
+            y, z = r_w * np.cos(np.radians(ang)), r_w * np.sin(np.radians(ang))
+            d2 = np.where(back, (model.mesh.p[1] - y) ** 2 + (model.mesh.p[2] - z) ** 2, np.inf)
+            node = int(np.argmin(d2))
+            for comp, kk in ((0, k_ax), (1, k_lat), (2, k_lat)):
+                e = np.zeros(model.N)
+                e[model.basis.nodal_dofs[comp, node]] = 1.0
+                cols.append(e[model.free])
+                ks.append(kk)
+        U = np.column_stack([U, *cols])
+        k = np.concatenate([k, ks])
+        print(f"  struts: {n_w} x dia {d_w:.2f} x {l_w:.0f} mm, axial {k_ax / 1e3:.2f} N/um each, "
+              f"lateral {k_lat / 1e3:.4f} N/um each ({3 * k_lat / 1e3:.4f} total)", flush=True)
     t_setup = time.time() - t0
 
     out = {**mesh_info, "dofs": int(model.N), "setup_seconds": round(t_setup, 1)}
@@ -100,6 +128,9 @@ def main() -> int:
     parser.add_argument("--sizes", type=float, nargs="+", default=list(DEFAULT_SIZES))
     parser.add_argument("--modes", type=int, default=DEFAULT_MODES)
     parser.add_argument("--loaded", action="store_true", help="fiber holder block on the platform")
+    parser.add_argument("--strut", type=float, default=0.0, metavar="K",
+                        help="what-if: axial X struts from the platform to ground, total K N/um "
+                             "(results go to modal_loaded_strut_r01.json, nothing else changes)")
     parser.add_argument("--partial", type=Path, default=None,
                         help="write the single-density run to this JSON instead of the result file "
                              "(one process per density; combine with --merge)")
@@ -110,6 +141,8 @@ def main() -> int:
     F.set_variant(args.variant)
     rep = F.report()
     results_path = F.ROOT / ("modal_loaded_r01.json" if args.loaded else "modal_r01.json")
+    if args.strut:
+        results_path = F.ROOT / "modal_loaded_strut_r01.json"
 
     if args.merge:
         runs = [json.loads(p.read_text(encoding="utf-8")) for p in args.merge]
@@ -118,7 +151,7 @@ def main() -> int:
         runs = []
         for h in args.sizes:
             print(f"--- h_fine = {h:.2f} mm{' loaded' if args.loaded else ''}", flush=True)
-            run = modes_at(h, rep, args.modes, args.loaded)
+            run = modes_at(h, rep, args.modes, args.loaded, args.strut)
             runs.append(run)
             print(f"  {run['dofs']:,} dofs  setup {run['setup_seconds']}s  solve {run['solve_seconds']}s")
             for key in ("sprung", "springless"):

@@ -132,6 +132,10 @@ VARIANTS["m8t60k12p"] = cnc_variant(8, 0.6, 12, pockets=True)
 # hole (through the wall, across the pocket, into the stage), so the stage
 # gets no counterbore: on a monolithic plate its inner face is inside a void.
 VARIANTS["r06"] = cnc_variant(8, 0.5, 12, stage_cbore=False)
+# Mechanism test (2026-09-09): is the out-of-plane mode the single-sided
+# guide's swing? Same leaves as m8t80k21 (10:1 walls) with guide pairs on
+# both sides of each stage; the plate grows by L on the two free sides.
+VARIANTS["m8t80k21g"] = cnc_variant(8, 0.8, 21, guide_sides="both")
 
 # R02 detailing, all in the frame of the +Y leg (rotated onto the others).
 R02 = dict(
@@ -254,13 +258,16 @@ def derived(p: dict) -> dict:
     void_lo = -c0 if p["guide_sides"] == "both" else -(p["h_in"] + p["g"])
     # Outer box: a leg's side reaches R, a leg-less side is a bare wall beyond
     # the voids that touch it (the neighbouring leg's stage clearance).
-    free = p["h_in"] + p["g"] + p["wall_free"]
+    # With guide leaves on both sides of the stage (two-leg plate), the minus
+    # side needs frame out at c0 for the second pair to anchor into.
+    both = p["guide_sides"] == "both"
+    free = (c0 if both else p["h_in"] + p["g"]) + p["wall_free"]
     legs = set(p["legs"])
     box = (-R if "-Y" in legs else -free, R if "+Y" in legs else R,
            -R if "-Z" in legs else -free, R if "+Z" in legs else R)
     # The moving region (nothing outside it may be fixed): a leg's void reaches
     # void_out along its axis; a leg-less side is just the stage clearance.
-    clear = p["h_in"] + p["g"]
+    clear = c0 if both else p["h_in"] + p["g"]
     inner = (-void_out if "-Y" in legs else -clear, void_out if "+Y" in legs else clear,
              -void_out if "-Z" in legs else -clear, void_out if "+Z" in legs else clear)
     return dict(y_in0=y_in0, y_in1=y_in1, w_in=y_in1 - y_in0, c0=c0, pocket0=pocket0, pocket1=pocket1,

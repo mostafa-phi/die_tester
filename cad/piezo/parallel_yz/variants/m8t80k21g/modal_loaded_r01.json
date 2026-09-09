@@ -1,0 +1,185 @@
+{
+  "variant": "m8t80k21g",
+  "case": "holder block on the platform, frame back face fixed, both APA60S as axial springs with half their mass on each pad",
+  "status": "not_converged",
+  "convergence_gate": "<5% drift in every sprung frequency between densities",
+  "excludes": [
+    "mount compliance",
+    "real holder",
+    "actuator off-axis stiffness and internal modes",
+    "prestress",
+    "wiring"
+  ],
+  "runs": [
+    {
+      "h_fine_mm": 0.9,
+      "h_coarse_mm": 4.5,
+      "near_mm": 0.25,
+      "far_mm": 2.5,
+      "loaded": true,
+      "leaf_boxes": 12,
+      "linear_tets": 91638,
+      "mesh_nodes": 28342,
+      "msh": "parallel_yz_r01_loaded_h0.90.msh",
+      "dofs": 519930,
+      "setup_seconds": 175.8,
+      "sprung": {
+        "frequencies_Hz": [
+          650.7,
+          671.6,
+          748.1,
+          2492.2,
+          2731.4,
+          3252.5,
+          3355.1,
+          3769.4,
+          4027.1,
+          4208.9
+        ],
+        "modes": [
+          {
+            "label": "Z",
+            "platform_share": 0.611,
+            "t_normalised": [
+              0.602,
+              0.593,
+              0.611
+            ],
+            "theta_x_lever_normalised": [
+              0.0,
+              -0.15,
+              0.149
+            ]
+          },
+          {
+            "label": "Y",
+            "platform_share": 0.939,
+            "t_normalised": [
+              -0.012,
+              -0.939,
+              0.917
+            ],
+            "theta_x_lever_normalised": [
+              -0.012,
+              -0.014,
+              -0.02
+            ]
+          },
+          {
+            "label": "X",
+            "platform_share": 0.692,
+            "t_normalised": [
+              -0.692,
+              0.211,
+              0.21
+            ],
+            "theta_x_lever_normalised": [
+              0.0,
+              0.156,
+              -0.156
+            ]
+          },
+          {
+            "label": "rot Y (pitch)",
+            "platform_share": 0.311,
+            "t_normalised": [
+              0.16,
+              -0.015,
+              -0.011
+            ],
+            "theta_x_lever_normalised": [
+              -0.0,
+              0.311,
+              -0.298
+            ]
+          },
+          {
+            "label": "rot Z (yaw)",
+            "platform_share": 0.336,
+            "t_normalised": [
+              -0.001,
+              -0.018,
+              0.012
+            ],
+            "theta_x_lever_normalised": [
+              0.017,
+              -0.331,
+              -0.336
+            ]
+          },
+          {
+            "label": "rot Y (pitch)",
+            "platform_share": 0.308,
+            "t_normalised": [
+              0.025,
+              0.014,
+              -0.011
+            ],
+            "theta_x_lever_normalised": [
+              -0.004,
+              0.308,
+              0.215
+            ]
+          },
+          {
+            "label": "rot Z (yaw)",
+            "platform_share": 0.336,
+            "t_normalised": [
+              0.121,
+              -0.02,
+              -0.006
+            ],
+            "theta_x_lever_normalised": [
+              0.001,
+              0.202,
+              -0.336
+            ]
+          },
+          {
+            "label": "rot X (roll)",
+            "platform_share": 0.185,
+            "t_normalised": [
+              0.004,
+              0.019,
+              -0.026
+            ],
+            "theta_x_lever_normalised": [
+              -0.185,
+              -0.135,
+              -0.16
+            ]
+          },
+          {
+            "label": "local (leaf/stage)",
+            "platform_share": 0.097,
+            "t_normalised": [
+              -0.003,
+              -0.019,
+              0.02
+            ],
+            "theta_x_lever_normalised": [
+              -0.097,
+              0.027,
+              0.034
+            ]
+          },
+          {
+            "label": "local (leaf/stage)",
+            "platform_share": 0.035,
+            "t_normalised": [
+              0.035,
+              -0.005,
+              0.001
+            ],
+            "theta_x_lever_normalised": [
+              0.002,
+              0.022,
+              -0.025
+            ]
+          }
+        ]
+      },
+      "solve_seconds": 43.3
+    }
+  ]
+}

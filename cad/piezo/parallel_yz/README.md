@@ -528,6 +528,42 @@ last, alternating sides, hand deburr only); if the shop declines, m8t60k12
 (0.60 walls, 13:1, 375 Hz) is the same drawing set with the fallback numbers.
 Order a spare plate: thin walls are the one thing a shop can scrap.
 
+### What the X mode really is, and two ways around the wall-aspect limit (2026-09-09)
+
+Xometry's economical-machining guide (0.8 mm walls, ≤ 10:1) sits at m8t80k21:
+368 Hz. Before accepting that, the mechanism was checked. Eight 0.8 × 8 mm
+leaves bending out of plane would give ~17 N/µm and a 3.5 kHz X mode; the FE's
+368 Hz corresponds to 0.19 N/µm. The X mode is therefore not leaf bending but
+a **swing**: on the two-leg plate each stage hangs from a single guide pair on
+one side and the platform hangs from the stages, and the mode shape carries
+pitch and yaw. Tall thin leaves resist the swing at their roots, which is why
+the mode tracked b/t. Two tests at 0.90 mm (single density, laptop, host down):
+
+| m8t80k21 (0.8 × 24 leaves, 10:1) | stroke min/nom | coupling | first modes |
+|---|---|---|---|
+| as swept (single-sided guides) | 101 / 109 µm | 0.85 % | **368 X**, 604 Y, 626 Z |
+| `m8t80k21g`: guide pairs on both sides of each stage (12 leaves, 112 mm plate) | 90 / 97 µm | 0.24 % | 651 Z, 672 Y, **748 X** |
+| + three Ø0.4 × 15 mm steel wire struts along X, platform back face to ground (`solve_modal --strut 5`) | ~98 / 106 µm (struts add 3 % lateral stiffness) | 0.85 % | **611 Z, 627 Y**, 938 pitch, 2744 X |
+
+- **Symmetric guiding** kills the swing kinematically (X 368 → 748 Hz at the
+  same 10:1 leaves) and halves the coupling, but the second pair doubles the
+  guide stiffness and needs frame beyond it: 112 mm here, ~125 mm once the
+  leaves are re-sized for 110 µm. It is R02's answer in CNC form, at R02's size.
+- **Axial struts** move the X constraint off the leaves entirely. Three music
+  wires (E A / l = 1.7 N/µm each axially, 0.0009 N/µm laterally: d⁴ against d²)
+  from the platform's back face to a fixed spider pin X, pitch and yaw at
+  a cost of 3 % of the in-plane stiffness and 0.1 µm of second-order X
+  foreshortening at full stroke. The 10:1 monolithic plate then has its first
+  mode at 611 Hz, above R05's 559, with no thin-wall milling anywhere.
+
+The struts are modelled as point springs at three back-face nodes (axial on
+X, lateral on Y and Z); the real parts are a three-spoke hub on the base
+plate behind the platform (the fiber loop passes through its ring), three
+Ø0.4 × 15 wires set in Ø0.45 holes with epoxy or solder, and 5 mm more base
+depth. Modelling them as geometry, re-sizing the 10:1 leaves for ≥ 105 µm with
+the struts' share (L ≈ 25.5, ~92 mm plate) and re-running the chain is the
+R07 candidate; the swept "m" plates and R06 stand as the no-strut record.
+
 ### Against the stacked P0 head
 
 | | stacked P0 (`../`) | parallel R01 (this) |

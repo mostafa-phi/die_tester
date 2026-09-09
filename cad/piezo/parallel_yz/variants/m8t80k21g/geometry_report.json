@@ -1,0 +1,713 @@
+{
+  "concept": "parallel-kinematic YZ platform, 2 P-P legs, two APA120S grounded to the frame",
+  "variant": "m8t80k21g",
+  "frame": "X optical (plate thickness, +X toward the die), Y lateral, Z up; mm",
+  "parameters": {
+    "t": 0.8,
+    "L": 24.1,
+    "b": 8,
+    "a_p": 10.0,
+    "s_c": 8.0,
+    "w_in": 16.0,
+    "h_in": 10.0,
+    "s_g": 7.0,
+    "g": 1.5,
+    "r_root": 1.0,
+    "wall": 6.5,
+    "actuator": "APA120S",
+    "r02": true,
+    "legs": [
+      "+Y",
+      "+Z"
+    ],
+    "guide_sides": "both",
+    "wall_free": 8.0,
+    "windows": false,
+    "shim": false,
+    "tab": 3.5,
+    "bar_t": 2.0,
+    "leaf_material": {
+      "name": "17-7PH CH900 precision shim",
+      "E_MPa": 204000.0,
+      "nu": 0.3,
+      "rho_kg_m3": 7800.0
+    },
+    "body_material": null,
+    "bond_all": false,
+    "bar_edge_r": 0.3,
+    "post_w": [
+      1.0,
+      1.0
+    ],
+    "stop": "pin",
+    "pockets": false,
+    "pocket_wall": 2.0,
+    "stage_cbore": true,
+    "pocket_web": 3.2,
+    "lightening": true,
+    "lightening_wall": 1.75,
+    "apa_clear": 1.5,
+    "apa_fit": 0.15,
+    "pad": [
+      2.5,
+      5.0
+    ],
+    "pad_boss": 0.2,
+    "fiber_hole": 3.0,
+    "bolt": 4.5,
+    "bolt_inset": 5.5,
+    "payload_len": 25.0,
+    "payload_wy": 10.0,
+    "payload_wz": 7.0,
+    "payload_rho_kg_m3": 2810.0,
+    "payload_E_MPa": 71700.0,
+    "payload_nu": 0.33,
+    "tip_ahead": 30.0,
+    "E_MPa": 71700.0,
+    "nu": 0.33,
+    "rho_kg_m3": 2810.0,
+    "base_margin": 1.0,
+    "wire_tie_pos": [
+      57.1,
+      24.0
+    ],
+    "apa_len": 13.0,
+    "apa_long": 28.8,
+    "apa_mass_g": 7.2,
+    "apa_k_N_per_um": 0.33,
+    "apa_free_um": [
+      140.0,
+      130.0
+    ],
+    "apa_force_limit_N": 32.0,
+    "apa_blocked_free_Hz": 1300.0
+  },
+  "derived": {
+    "y_in0": 34.1,
+    "y_in1": 50.1,
+    "w_in": 16.0,
+    "c0": 34.1,
+    "pocket0": 50.1,
+    "pocket1": 63.65,
+    "arm": 0.0,
+    "a_leg": 10.0,
+    "R": 70.15,
+    "pocket_h": 15.9,
+    "void_out": 51.6,
+    "void_lo": -34.1,
+    "box": [
+      -42.1,
+      70.15,
+      -42.1,
+      70.15
+    ],
+    "inner": [
+      -34.1,
+      51.6,
+      -34.1,
+      51.6
+    ],
+    "guide_y": [
+      35.1,
+      49.1
+    ]
+  },
+  "plate_mm": [
+    8,
+    112.25,
+    112.25
+  ],
+  "edm": {
+    "closed_contours_to_thread": 22,
+    "body_pieces": 1,
+    "cut_length_mm": 1962.7451151369262,
+    "leaves": 12
+  },
+  "plate_volume_mm3": 55130.079008497436,
+  "plate_mass_g": 154.9155220138778,
+  "mass_estimates_g": {
+    "platform": 8.8330983778,
+    "input_stage": 7.1936,
+    "leaf": 0.43341440000000003,
+    "moving_per_axis_incl_half_apa": 29.4207847778,
+    "note": "profile-rectangle estimates; the FE modal carries the real mass"
+  },
+  "material": {
+    "name": "7075-T6 (Fusion 'Aluminum 7075' values, as fem_r01)",
+    "E_MPa": 71700.0,
+    "nu": 0.33,
+    "rho_kg_m3": 2810.0
+  },
+  "material_regions": [],
+  "shim": {
+    "enabled": false
+  },
+  "payload": {
+    "mass_g": 4.9174999999999995,
+    "box": {
+      "x": [
+        8,
+        33.0
+      ],
+      "y": [
+        -5.0,
+        5.0
+      ],
+      "z": [
+        -3.5,
+        3.5
+      ]
+    },
+    "rho_kg_m3": 2810.0,
+    "E_MPa": 71700.0,
+    "nu": 0.33,
+    "com": [
+      20.5,
+      0.0,
+      0.0
+    ],
+    "source": "user 2026-09-07: aluminium block 25 x 10 x 7 mm; orientation (25 along the fiber) and mounting on the front face assumed"
+  },
+  "tip": [
+    38.0,
+    0.0,
+    0.0
+  ],
+  "pads": {
+    "Y_stage": {
+      "x": [
+        1.5,
+        6.5
+      ],
+      "y": 50.300000000000004,
+      "z": [
+        -1.25,
+        1.25
+      ],
+      "normal": {
+        "y": 1
+      },
+      "leg": "+Y",
+      "side": "stage"
+    },
+    "Y_frame": {
+      "x": [
+        1.5,
+        6.5
+      ],
+      "y": 63.449999999999996,
+      "z": [
+        -1.25,
+        1.25
+      ],
+      "normal": {
+        "y": -1
+      },
+      "leg": "+Y",
+      "side": "frame"
+    },
+    "Z_stage": {
+      "x": [
+        1.5,
+        6.5
+      ],
+      "z": 50.300000000000004,
+      "y": [
+        -1.25,
+        1.25
+      ],
+      "normal": {
+        "z": 1
+      },
+      "leg": "+Z",
+      "side": "stage"
+    },
+    "Z_frame": {
+      "x": [
+        1.5,
+        6.5
+      ],
+      "z": 63.449999999999996,
+      "y": [
+        -1.25,
+        1.25
+      ],
+      "normal": {
+        "z": -1
+      },
+      "leg": "+Z",
+      "side": "frame"
+    }
+  },
+  "actuator": {
+    "name": "APA120S",
+    "k_N_per_um": 0.33,
+    "mass_g": 7.2,
+    "free_stroke_um": {
+      "nominal": 140.0,
+      "minimum": 130.0
+    },
+    "force_limit_N": 32.0,
+    "blocked_free_Hz": 1300.0
+  },
+  "leaf_boxes": [
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        10.0,
+        34.1
+      ],
+      "z": [
+        -8.4,
+        -7.6
+      ],
+      "leg": "+Y"
+    },
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        10.0,
+        34.1
+      ],
+      "z": [
+        7.6,
+        8.4
+      ],
+      "leg": "+Y"
+    },
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        34.7,
+        35.5
+      ],
+      "z": [
+        10.0,
+        34.1
+      ],
+      "leg": "+Y"
+    },
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        34.7,
+        35.5
+      ],
+      "z": [
+        -34.1,
+        -10.0
+      ],
+      "leg": "+Y"
+    },
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        48.7,
+        49.5
+      ],
+      "z": [
+        10.0,
+        34.1
+      ],
+      "leg": "+Y"
+    },
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        48.7,
+        49.5
+      ],
+      "z": [
+        -34.1,
+        -10.0
+      ],
+      "leg": "+Y"
+    },
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        -8.4,
+        -7.6
+      ],
+      "z": [
+        10.0,
+        34.1
+      ],
+      "leg": "+Z"
+    },
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        7.6,
+        8.4
+      ],
+      "z": [
+        10.0,
+        34.1
+      ],
+      "leg": "+Z"
+    },
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        10.0,
+        34.1
+      ],
+      "z": [
+        34.7,
+        35.5
+      ],
+      "leg": "+Z"
+    },
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        -34.1,
+        -10.0
+      ],
+      "z": [
+        34.7,
+        35.5
+      ],
+      "leg": "+Z"
+    },
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        10.0,
+        34.1
+      ],
+      "z": [
+        48.7,
+        49.5
+      ],
+      "leg": "+Z"
+    },
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        -34.1,
+        -10.0
+      ],
+      "z": [
+        48.7,
+        49.5
+      ],
+      "leg": "+Z"
+    }
+  ],
+  "stage_boxes": {
+    "+Y": {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        34.1,
+        50.1
+      ],
+      "z": [
+        -10.0,
+        10.0
+      ]
+    },
+    "+Z": {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        -10.0,
+        10.0
+      ],
+      "z": [
+        34.1,
+        50.1
+      ]
+    }
+  },
+  "platform_box": {
+    "x": [
+      0.0,
+      8
+    ],
+    "y": [
+      -10.0,
+      10.0
+    ],
+    "z": [
+      -10.0,
+      10.0
+    ]
+  },
+  "fixture": {
+    "face": "x = 0 (back face)",
+    "outside_square_half": 51.6,
+    "outside_box": [
+      -34.1,
+      51.6,
+      -34.1,
+      51.6
+    ],
+    "rule": "back-face facets outside the inner box (y0, y1, z0, z1) are fixed"
+  },
+  "outputs": [
+    "STEP/parallel_yz_r01.step",
+    "STEP/parallel_yz_r01_loaded.step",
+    "STEP/parallel_yz_r01_assembly.step",
+    "STEP/parallel_yz_r02_profile.dxf"
+  ],
+  "r02": {
+    "screw_hole": 2.2,
+    "cbore": 4.0,
+    "cbore_stage": 2.2,
+    "cbore_frame": 3.0,
+    "stop_gap": 0.3,
+    "tongue": [
+      3.5,
+      5.5
+    ],
+    "tongue_len": 15.0,
+    "post_len": 4.0,
+    "post_w": [
+      0.9,
+      0.7
+    ],
+    "holder_tap": 1.6,
+    "holder_tap_depth": 6.0,
+    "holder_tap_y": 3.5,
+    "fiber_chamfer": 0.5,
+    "wire_tie": 3.0,
+    "wire_tie_pos": [
+      42.0,
+      21.0
+    ],
+    "window": [
+      33.5,
+      44.5
+    ],
+    "base_t": 10.0,
+    "base_margin": 3.5,
+    "bolt_washer_r": 6.0,
+    "stops": [
+      {
+        "x": [
+          0.0,
+          8
+        ],
+        "y": [
+          40.800000000000004,
+          43.4
+        ],
+        "z": [
+          -10.1,
+          -6.0
+        ],
+        "leg": "+Y"
+      },
+      {
+        "x": [
+          0.0,
+          8
+        ],
+        "y": [
+          -10.1,
+          -6.0
+        ],
+        "z": [
+          40.800000000000004,
+          43.4
+        ],
+        "leg": "+Z"
+      }
+    ],
+    "screw_holes": [
+      {
+        "leg": "+Y",
+        "frame": "M2 x 5 SHCS from the outer edge",
+        "stage": "M2 x 8 SHCS from the coupler void"
+      },
+      {
+        "leg": "+Z",
+        "frame": "M2 x 5 SHCS from the outer edge",
+        "stage": "M2 x 8 SHCS from the coupler void"
+      }
+    ],
+    "wire_ties": [
+      [
+        57.1,
+        -24.0
+      ],
+      [
+        57.1,
+        24.0
+      ],
+      [
+        -24.0,
+        57.1
+      ],
+      [
+        24.0,
+        57.1
+      ]
+    ],
+    "windows": [
+      {
+        "y": [
+          53.35,
+          60.650000000000006
+        ],
+        "z": [
+          53.35,
+          60.650000000000006
+        ]
+      },
+      {
+        "y": [
+          53.35,
+          61.9
+        ],
+        "z": [
+          27.25,
+          49.85
+        ]
+      },
+      {
+        "y": [
+          27.25,
+          49.85
+        ],
+        "z": [
+          53.35,
+          61.9
+        ]
+      }
+    ],
+    "holder_taps": [
+      [
+        -3.5,
+        0.0
+      ],
+      [
+        3.5,
+        0.0
+      ]
+    ],
+    "pins": [
+      {
+        "leg": "+Y",
+        "dia": 2.0,
+        "hole": "H7 press fit, drilled from the outer edge",
+        "length": 34.6,
+        "travel_to_stop": 0.3
+      },
+      {
+        "leg": "+Z",
+        "dia": 2.0,
+        "hole": "H7 press fit, drilled from the outer edge",
+        "length": 34.6,
+        "travel_to_stop": 0.3
+      }
+    ]
+  },
+  "base": {
+    "t": 10.0,
+    "opening_mm": [
+      87.7,
+      87.7
+    ],
+    "mass_g": 111.70245042119552,
+    "material": "same elastic constants as the plate (aluminium)"
+  },
+  "fixture_mounted": {
+    "x": -10.0,
+    "radius": 6.0,
+    "points": [
+      [
+        64.65,
+        64.65
+      ],
+      [
+        -36.6,
+        -36.6
+      ],
+      [
+        42.1,
+        -36.6
+      ],
+      [
+        -36.6,
+        42.1
+      ]
+    ],
+    "rule": "base back-face facets within radius of a bolt centre are fixed (washer footprint)"
+  },
+  "refine_boxes": [
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        40.800000000000004,
+        43.4
+      ],
+      "z": [
+        -10.1,
+        -6.0
+      ],
+      "leg": "+Y"
+    },
+    {
+      "x": [
+        0.0,
+        8
+      ],
+      "y": [
+        -10.1,
+        -6.0
+      ],
+      "z": [
+        40.800000000000004,
+        43.4
+      ],
+      "leg": "+Z"
+    }
+  ]
+}
