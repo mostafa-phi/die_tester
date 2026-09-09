@@ -356,6 +356,69 @@ flexure - is a bench measurement; the leaf-to-leaf parallelism is whatever the
 milled ledges give (±0.01 mm over 8 mm is ordinary), and the 0.2 mm shim
 thickness tolerance is ±7.5 % on stiffness per leaf.
 
+### R05: the machining and assembly pass
+
+A machining review of R04 (2026-09-08) held it up on five points, all valid:
+angled *screwdriver* access says nothing about *drill and tap* access; the
+0.30 mm stop gaps are assembled clearances between parts, not a cutter size,
+but every fork and notch inside a single part must still accept a tool; parts
+need individual drawings and exports; shim holes and clamp-edge geometry were
+incomplete; and the fixture that sets leaf alignment and free length was not
+defined. `variants/r05/` is R04 with those closed:
+
+- **Bonded, not screwed.** The frame's leaf-anchor taps sat inside enclosed
+  voids with their axes in the plane - no drill reaches them from any side.
+  Machining the four body pieces separately fixes the stage and platform holes
+  (their ledges become external faces) but not the frame's, so R05 has **no
+  clamp screws and no taps at all**: every tab is epoxy-bonded, the bars are
+  bonded backup blocks with chamfered root edges, the shims are plain
+  rectangles. The only in-plane holes left are the actuator pad screws, each
+  drilled from an external face of its loose part (`manufacturing/README.md`
+  lists every hole with the face it is reached from).
+- **CNC radii.** Every internal profile corner is R1.0 (Ø2 cutter, 4:1 in
+  8 mm) instead of the EDM R0.5; ledges and notches run 1.0 mm past the tab so
+  the tab end never rides the corner radius; the stop posts are 1.0 mm (the
+  fork slot is 2.6 wide, a Ø2 cutter feature).
+- **Per-part exports and sheets:** `frame`, `stage` (×2, the second turned
+  over), `platform`, `clamp_bar`, `shim_leaf` (+ flat DXF), `base_plate`,
+  `assembly_jig` - each as STEP with its own `part_*.png` drawing carrying the
+  dimensions, the tool-access statement and the tolerances.
+- **The jig.** `assembly_jig.step`: an 8 mm plate with 3 mm pockets (0.02
+  clearance) for the platform-with-arms and both stages and dowel seats on the
+  frame's bolt pattern. It, not the operator, sets leaf alignment and free
+  length during the cure; `BONDING.md` is the traveller.
+- **Lightening.** Three windows in the frame's solid quadrant (corner block
+  and beside each pocket, 1.75 mm walls): 98.5 → 90.5 g. The frame is the fixed
+  part, so this is weight for whatever carries the head, not dynamics.
+
+**Converged (h_fine 0.60 / 0.45 mm, bolted base, 4.9 g holder):**
+
+| | R04 | **R05** |
+|---|---|---|
+| guide stiffness per axis | 0.0602 N/µm | 0.0451 N/µm |
+| stroke, worst-case / nominal | 109.8 / 118.2 µm | 114.3 / 123.0 µm |
+| YZ coupling (cross / Y-Z difference) | 0.19 % | 0.03 % / 0.11 % |
+| tip off-axis over full stroke | | ≤ 0.09 µm |
+| leaf von Mises at full stroke | 157 MPa | 131 / 137 MPa |
+| gravity sag, loaded platform | | 0.69 µm, pitch 2.5 µrad |
+| first modes, loaded, sprung | 575 Z / 580 Y / 661 X | **559 Z / 569 Y / 630 X**, 1330 pitch |
+| first modes, bare plate (no holder), 0.60 mm | 652 Y/Z, 836 X, 1554 yaw | 639 Y / 640 Z, 803 X, 1502 yaw |
+| mass (body + leaves + bars) | 98.5 g | 90.5 g |
+
+The guide stiffness fell by a quarter and the modes by less than 3 %: the R1.0
+ledge relief (the ledge runs 1 mm past the bar so the tab end never rides the
+cutter radius) leaves 1 mm of the shim unsupported between bar edge and ledge
+end at each root, so the effective free length grew from 8.5 to about 9.4 mm.
+Stroke and stress gained from it; the loaded modes are set by the actuator
+springs and the carried mass, which did not change. If the extra 5 µm of
+travel is not wanted, `r_root` back to 0.5 with a Ø1 finishing cutter
+restores R04's numbers; leave it - 123 µm nominal against a 100 µm requirement
+is the margin the shim tolerance (±0.005 on 0.20 → ±7.5 % stiffness) eats.
+
+Package: `variants/r05/manufacturing/` (STEP per part, `part_*.png` sheets,
+`README.md` with the tool-access table and assembly sequence, `BONDING.md`);
+FE record in `variants/r05/*.json` and `renders/`.
+
 ### Against the stacked P0 head
 
 | | stacked P0 (`../`) | parallel R01 (this) |
@@ -399,6 +462,25 @@ $py = "C:\Users\<user>\pythonEnvs\pic-env\Scripts\python.exe"
 & $py -B solve_static.py --variant r03; & $py -B solve_modal.py --variant r03 --loaded
 & $py -B drawing.py --variant r03                # renders/drawing_r02.png, the shop sheet
 ```
+
+### Running the chain on the compute host
+
+The same chain runs on the group's Linux box (`ssh compute`: mlcuda2, 4 × Xeon
+8280, 112 cores, 3 TB), with the three solves side by side instead of one after
+another. `remote/remote.ps1` drives it from this checkout:
+
+```powershell
+.\remote\remote.ps1 setup          # once: micromamba env under ~/mostafa on the host (~10 min)
+.\remote\remote.ps1 up             # sync this folder (zip; no meshes, no work/ logs)
+.\remote\remote.ps1 run r05        # model.py, then static + loaded modal + bare modal in parallel, then figures + sheet
+.\remote\remote.ps1 status r05     # tail the logs
+.\remote\remote.ps1 fetch r05      # *.json, renders/, STEP/ and logs back into variants/r05/
+```
+
+The host is shared, so everything stays under `~/mostafa` and each solve is
+capped at 32 MKL threads (`-Threads`). `remote/run_chain.sh` is the host-side
+script; `remote/remote_env.sh` builds the environment (CadQuery from
+conda-forge, gmsh and scikit-fem from pip so their OCCT builds do not clash).
 
 `model.py` prints, for every build, the number of leaves, the closed contours a
 wire would have to thread and the total profile length - the design rule of

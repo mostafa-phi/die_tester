@@ -104,8 +104,15 @@ topology but makes the leaves 0.20 mm 17-7PH shims clamped on a CNC 6061 body:
 candidate for manufacture. The assembly review of 2026-09-08 found the
 first build's coupler tabs crossing in the platform corner and 10 of 16
 clamp screws without a straight driver path; R04 now has platform arms and
-bonded tabs where screws cannot reach. Open risks: clamp/bond hysteresis and
-leaf parallelism, both bench items; the APA120S STEP is still an envelope.
+bonded tabs where screws cannot reach. A machining review the same day asked
+for per-part drawings, drill/tap access proven hole by hole, CNC internal
+radii, a documented clamp-or-bond choice and a fixture that sets leaf
+alignment: **R05** (`variants/r05`) closes them - every tab bonded (no taps
+inside voids), R1.0 internal corners, per-part STEP + sheets, a bonding jig,
+and three lightening windows in the frame's solid quadrant (90.5 g). Its
+numbers are in `parallel_yz/README.md` (R05); it is the release candidate.
+Open risks: bond hysteresis and leaf parallelism, both bench items; the
+APA120S STEP is still an envelope.
 The R01 sections below remain the record of the APA60S baseline.
 
 Sections 3 and 4 below are written for the stack; for the parallel plate the

@@ -73,7 +73,7 @@ def main() -> int:
     variant = rep["variant"]
     shim = rep.get("shim", {}).get("enabled", False)
     millable = shim or (p["t"] >= 0.8 and p["b"] / p["t"] <= 10.5)
-    process = ("CNC body + clamped shim leaves" if shim
+    process = (("CNC body + bonded shim leaves" if p.get("bond_all") else "CNC body + clamped shim leaves") if shim
                else "CNC-millable profile (or wire EDM)" if millable else "wire-EDM profile")
     ax.set_title(f"Parallel YZ flexure plate {variant} - {process}, viewed along the optical axis (+X toward viewer)\n"
                  f"{rep['actuator']['name']} in the +Y and +Z legs; scale from axes; DXF is the cut file",
@@ -115,9 +115,14 @@ def main() -> int:
     callout(ax, (0, 1.5), (R + 18, -42),
             f"dia {p['fiber_hole']:.0f} thru, {r['fiber_chamfer']:.1f} x 45 deg both faces\n"
             f"2 x M2 tapped {r['holder_tap_depth']:.0f} deep at Y +/-{r['holder_tap_y']:.1f} (front face)")
-    if r["windows"]:
+    if r["windows"] and p["windows"]:
         w0, w1 = r["window"]
         callout(ax, (w0, w1), (R + 18, -54), f"4 corner windows {w1 - w0:.0f} sq")
+    elif r["windows"]:
+        w = r["windows"][0]
+        callout(ax, (sum(w["y"]) / 2, sum(w["z"]) / 2), (R + 18, -54),
+                f"{len(r['windows'])} lightening windows, walls {p.get('lightening_wall', 0):.2f}\n"
+                f"(frame is the fixed part: weight only)")
     if r["wire_ties"]:
         wy, wz = r["wire_ties"][0]
         callout(ax, (wy, wz), (R + 18, 44), f"{len(r['wire_ties'])} x dia {r['wire_tie']:.0f} wire-tie holes")
@@ -130,19 +135,38 @@ def main() -> int:
         sh = rep["shim"]
         lm = p["leaf_material"]
         n_leaf = rep["edm"]["leaves"]
+        bond_all = p.get("bond_all", False)
+        rr = p["r_root"]
+        leaf_line = (f"LEAVES: {n_leaf} x {lm['name']}, {sh['leaf_t']:.2f} +/-0.005 thick, {sh['leaf_depth']:.0f} x "
+                     f"{sh['free_length'] + 2 * sh['tab']:.1f} rectangles, ")
+        if bond_all:
+            clamp_notes = [
+                leaf_line + "no holes; shear/laser cut, deburr.",
+                f"  Free length {sh['free_length']:.1f} between bar edges. Working stress ~200 MPa, 500 MPa at the stop.",
+                f"BONDING: every tab EPOXY-BONDED (DP460 / EA 9460) on its ledge with a {sh['leaf_depth']:.0f} x "
+                f"{sh['tab']:.1f} x {sh['bar_t']:.1f} bar bonded on top;",
+                f"  no clamp screws, no taps in the body. Bar edges chamfered {p['bar_edge_r']:.1f}: the inner edge is the leaf root.",
+                "  Cured on the assembly jig (assembly_jig.step) which sets leaf alignment and free length; see BONDING.md.",
+                f"  Ledges/notches run {rr:.1f} past the tab (cutter radius relief); stop gaps {r['stop_gap']:.2f} +0.10/-0",
+                "  are assembled clearances between the separate pieces.",
+            ]
+        else:
+            clamp_notes = [
+                leaf_line + "2 x dia 2.4 holes per tab; shear/laser cut, deburr.",
+                f"  Free length {sh['free_length']:.1f} between clamp-bar edges. Working stress ~200 MPa, 500 MPa at the stop.",
+                f"CLAMPS: 16 bars {sh['leaf_depth']:.0f} x {sh['tab']:.1f} x {sh['bar_t']:.1f} (body material). "
+                f"{len(sh['screws'])} x M2 x 6 into taps in the body",
+                f"  (side-drilled along Y or Z) on the {len(sh['screws']) // 2} bars a driver can reach "
+                f"({sum(1 for b_ in sh['bars'] if b_['access'] == 'angled')} of them ball-end only);",
+                f"  the {sum(1 for b_ in sh['bars'] if b_['access'] == 'bond')} inner guide bars have no screw path: those tabs are EPOXY-BONDED (DP460 / EA 9460,",
+                f"  jig-cured), bar as cure fixture. Bar inner edge R0.3 defines the root. Torque 0.3 N.m + thread-locker.",
+                f"  Stop gaps {r['stop_gap']:.2f} +0.10/-0 are profile features of the body.",
+            ]
         process_notes = [
             f"BODY: CNC mill the profile from the DXF (mm, 1:1) in {rep['material']['name']}; it is 4 pieces",
-            f"  (frame, 2 stages, platform) joined only by the leaves. Ledges/notches flat 0.01, no burrs.",
-            f"LEAVES: {n_leaf} x {lm['name']}, {sh['leaf_t']:.2f} +/-0.005 thick, {sh['leaf_depth']:.0f} x "
-            f"{sh['free_length'] + 2 * sh['tab']:.1f} rectangles, 2 x dia 2.4 holes per tab; shear/laser cut, deburr.",
-            f"  Free length {sh['free_length']:.1f} between clamp-bar edges. Working stress ~200 MPa, 500 MPa at the stop.",
-            f"CLAMPS: 16 bars {sh['leaf_depth']:.0f} x {sh['tab']:.1f} x {sh['bar_t']:.1f} (body material). "
-            f"{len(sh['screws'])} x M2 x 6 into taps in the body",
-            f"  (side-drilled along Y or Z) on the {len(sh['screws']) // 2} bars a driver can reach "
-            f"({sum(1 for b_ in sh['bars'] if b_['access'] == 'angled')} of them ball-end only);",
-            f"  the {sum(1 for b_ in sh['bars'] if b_['access'] == 'bond')} inner guide bars have no screw path: those tabs are EPOXY-BONDED (DP460 / EA 9460,",
-            f"  jig-cured), bar as cure fixture. Bar inner edge R0.3 defines the root. Torque 0.3 N.m + thread-locker.",
-            f"  Stop gaps {r['stop_gap']:.2f} +0.10/-0 are profile features of the body.",
+            f"  (frame, 2 stages, platform) joined only by the leaves; internal corners R{rr:.1f} (dia {2 * rr:.0f} cutter).",
+            "  Machine each piece as its own part (recommended): every hole is then on an external face. Ledges flat 0.01.",
+            *clamp_notes,
         ]
     elif millable:
         process_notes = [

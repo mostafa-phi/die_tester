@@ -79,6 +79,14 @@ VARIANTS = {
                 wall=6.5, wall_free=8.0, bolt_inset=5.5, base_margin=1.0,
                 wire_tie_pos=(46.0, 21.0),
                 body_material=dict(name="6061-T6", E_MPa=68900.0, nu=0.33, rho_kg_m3=2700.0)),
+    # R05 (2026-09-08 machining review): R04 detailed for CNC + bonded assembly.
+    # R1.0 internal radii (dia 2 cutter, 4:1 in 8 mm), 1.0 mm stop posts, no
+    # clamp screws/taps (bonded tabs), ledge reliefs, per-part exports and jig.
+    "r05": dict(actuator="APA120S", shim=True, t=0.20, L=8.5, b=8.0, s_g=6.0, s_c=7.5, r02=True,
+                legs=("+Y", "+Z"), guide_sides="plus", windows=False,
+                wall=6.5, wall_free=8.0, bolt_inset=5.5, base_margin=1.0,
+                wire_tie_pos=(46.0, 21.0), r_root=1.0, bond_all=True, post_w=(1.0, 1.0), lightening=True,
+                body_material=dict(name="6061-T6", E_MPa=68900.0, nu=0.33, rho_kg_m3=2700.0)),
 }
 
 # R02 detailing, all in the frame of the +Y leg (rotated onto the others).
@@ -127,6 +135,16 @@ P = dict(
     bar_t=2.0,       # clamp bar thickness (2 x M2 per bar; its edge defines the root, R0.3)
     leaf_material=dict(name="17-7PH CH900 precision shim", E_MPa=204000.0, nu=0.30, rho_kg_m3=7800.0),
     body_material=None,   # None: the plate material below; R04 uses 6061-T6
+    # R05 machining pass: every tab epoxy-bonded (no clamp screws, no taps, plain
+    # shims), bars kept as bonded backup blocks with the root edge radiused;
+    # ledges run r_root past the tab so the tab end clears the cutter radius.
+    bond_all=False,
+    bar_edge_r=0.3,
+    post_w=None,     # stop post widths override (R02["post_w"] when None)
+    # Two-leg plates: lightening windows in the +Y+Z corner block and in the
+    # frame beside each pocket (the frame is fixed, so this is weight only).
+    lightening=False,
+    lightening_wall=1.75,
     apa_clear=1.5,   # pocket clearance beyond the shell, each side
     apa_fit=0.15,    # land-to-land gap = apa_len + apa_fit: the APA120S is 13 +/-0.1 (ICD), shim to fit
     pad=(2.5, 5.0),  # APA pad: 2.5 along the shell, 5.0 through the thickness (vendor STEP)
@@ -241,30 +259,35 @@ def leg_rects(p: dict, d: dict) -> dict:
             b_lo, b_hi = sorted((z_face + s * t, z_face + s * (t + bt)))
             bars += [(a - tab, a, b_lo, b_hi), (y0, y0 + tab, b_lo, b_hi)]
             roles += ["coupler_platform", "coupler_stage"]
-            # ledges: everything above (below) the shim face is removed over the tab
+            # ledges: everything above (below) the shim face is removed over the
+            # tab, plus r_root of relief so the tab end never rides the cutter radius
+            rr = p["r_root"]
             l_lo, l_hi = sorted((z_face, s * p["a_p"]))
-            notches.append((a - tab, a, l_lo, l_hi))
-            notches.append((y0, y0 + tab, z_face, h) if s > 0 else (y0, y0 + tab, -h, z_face))
+            notches.append((a - tab - rr, a, l_lo, l_hi))
+            notches.append((y0, y0 + tab + rr, z_face, h) if s > 0 else (y0, y0 + tab + rr, -h, z_face))
         # Guide shims stand at y_g (occupying [y_g, y_g + t]) from tab below the
         # stage top to tab into the frame; the inner one is clamped from the
         # inside (bar toward the platform), the outer one from the outside.
         y_g1, y_g2 = d["guide_y"]
         for y_g, side in ((y_g1, -1), (y_g2, +1)):
             leaves.append((y_g, y_g + t, h - tab, c0 + tab))
+            rr = p["r_root"]
             if side < 0:
                 bar_y = (y_g - bt, y_g)
                 notch_y = (y_g - bt, y_g + t)
-                # At the frame the inner notch runs back to the stage line, or
-                # the two legs' notches leave a 3.5 mm island in the corner.
-                frame_notch_y = (y0, y_g + t)
+                # At the frame the inner notch runs back to where the other
+                # leg's void ends (c0), or the two legs' notches leave an island
+                # in the corner (they did, twice).
+                frame_notch_y = (min(y0, c0), y_g + t)
             else:
                 bar_y = (y_g + t, y_g + t + bt)
                 notch_y = (y_g, y_g + t + bt)
                 frame_notch_y = notch_y
+            # Notches run r_root deeper than the tab (relief for the tab end).
             bars += [(bar_y[0], bar_y[1], h - tab, h), (bar_y[0], bar_y[1], c0, c0 + tab)]
+            notches += [(notch_y[0], notch_y[1], h - tab - rr, h), (frame_notch_y[0], frame_notch_y[1], c0, c0 + tab + rr)]
             which = "inner" if side < 0 else "outer"
             roles += [f"guide_{which}_stage", f"guide_{which}_frame"]
-            notches += [(notch_y[0], notch_y[1], h - tab, h), (frame_notch_y[0], frame_notch_y[1], c0, c0 + tab)]
     else:
         for z in (-p["s_c"], p["s_c"]):                          # coupler leaves, along Y
             leaves.append((p["a_p"], d["y_in0"], z - t2, z + t2))
@@ -337,8 +360,9 @@ def r02_stops(p: dict, d: dict) -> dict:
     # The tongue reaches 2 mm into the fork whatever the leaf length is.
     a = d.get("a_leg", p["a_p"])            # platform edge along the leg (arm end in shim mode)
     tongue = (a + r["post_len"] - 2.0, d["y_in0"] + 0.5, z0, z1)      # 0.5 into the stage
-    post_in = (a - 0.5, a + r["post_len"], z0 - g - r["post_w"][0], z0 - g)
-    post_out = (a - 0.5, a + r["post_len"], z1 + g, z1 + g + r["post_w"][1])
+    pw = p.get("post_w") or r["post_w"]
+    post_in = (a - 0.5, a + r["post_len"], z0 - g - pw[0], z0 - g)
+    post_out = (a - 0.5, a + r["post_len"], z1 + g, z1 + g + pw[1])
     assert post_out[3] < p["s_c"] - p["t"] / 2 - 0.3, "outer post too close to the coupler leaf"
     return dict(tongue=tongue, posts=[post_in, post_out])
 
@@ -382,6 +406,26 @@ def add_r02(plate: cq.Workplane, p: dict, d: dict) -> tuple[cq.Workplane, dict]:
             plate = plate.cut(_cyl_through(y, z, r["wire_tie"], -1.0, p["b"] + 1.0))
             added["wire_ties"].append([y, z])
 
+    # Two-leg plates: a window in the corner block and one in the frame beside
+    # each pocket, walls `lightening_wall` from every void, hole and bolt.
+    if p.get("lightening") and set(p["legs"]) == {"+Y", "+Z"}:
+        w = p["lightening_wall"]
+        bolt_edge = R - p["bolt_inset"] - p["bolt"] / 2 - w
+        lo = d["void_out"] + w
+        if bolt_edge - lo > 4.0:
+            box = (lo, bolt_edge, lo, bolt_edge)
+            plate = plate.cut(_box(box, -1.0, p["b"] + 1.0))
+            added["windows"].append({"y": [box[0], box[1]], "z": [box[2], box[3]]})
+        tie_y, tie_z = p.get("wire_tie_pos", r["wire_tie_pos"])
+        z_lo = tie_z + r["wire_tie"] / 2 + w                 # above the wire-tie hole
+        z_hi = d["void_out"] - w
+        y_hi = d["pocket1"] - w
+        if y_hi - lo > 4.0 and z_hi - z_lo > 4.0:
+            for leg in [leg for leg in DRIVEN if leg in p["legs"]]:
+                box = rect_rot(leg, lo, y_hi, z_lo, z_hi)
+                plate = plate.cut(_box(box, -1.0, p["b"] + 1.0))
+                added["windows"].append({"y": [box[0], box[1]], "z": [box[2], box[3]]})
+
     # Corner lightening windows (only where a four-leg plate has its corner blocks).
     w0, w1 = r["window"]
     if p["windows"]:
@@ -401,6 +445,31 @@ def add_r02(plate: cq.Workplane, p: dict, d: dict) -> tuple[cq.Workplane, dict]:
     c = p["fiber_hole"] / 2 + 0.3
     plate = plate.edges(cq.selectors.BoxSelector((-0.1, -c, -c), (p["b"] + 0.1, c, c))).chamfer(r["fiber_chamfer"])
     return plate, added
+
+
+def build_jig(p: dict, d: dict, per_leg: dict) -> cq.Workplane:
+    """Assembly jig: a plate with 3 mm pockets that locate the platform (with its
+    arms) and both input stages at nominal while the leaves are bonded, and
+    dowel holes on the frame's bolt pattern to locate the frame around them.
+    Pocket clearance 0.02 per side; the jig sits on the body's back face."""
+    r = R02
+    t = 8.0
+    y0, y1, z0, z1 = d["box"]
+    jig = cq.Workplane("XY").box(t, y1 - y0 + 10, z1 - z0 + 10, centered=False).translate((-t, y0 - 5, z0 - 5))
+    c = 0.02
+    depth = 3.0
+    pockets = [(-p["a_p"] - c, p["a_p"] + c, -p["a_p"] - c, p["a_p"] + c)]
+    for parts in per_leg.values():
+        pockets += [(a[0] - c, a[1] + c, a[2] - c, a[3] + c) for a in parts["arms"]]
+        s = parts["stage"]
+        pockets.append((s[0] - c, s[1] + c, s[2] - c, s[3] + c))
+    for rect in pockets:
+        jig = jig.cut(_box(rect, -depth, 1.0))
+    for y, z in bolt_points(p, d):
+        jig = jig.cut(_cyl_through(y, z, p["bolt"] - 0.5, -t - 1.0, 1.0))   # press-fit dowel seats
+    # A window under the fiber hole and the holder taps so nothing touches them.
+    jig = jig.cut(_cyl_through(0.0, 0.0, 8.0, -t - 1.0, 1.0))
+    return jig
 
 
 def build_base(p: dict, d: dict) -> cq.Workplane:
@@ -512,8 +581,15 @@ def build(p: dict) -> tuple[cq.Workplane, cq.Workplane, dict]:
             leaf_solids += [_box(r, 0.0, p["b"]) for r in per_leg[leg]["leaves"]]
             for r, role in zip(per_leg[leg]["bars"], per_leg[leg]["roles"]):
                 bar = _box(r, 0.0, p["b"])
-                if BAR_ACCESS[role] == "bond":
-                    bar_solids.append(bar)               # cure fixture only: no screws
+                # The bar's root edge (the X-parallel edge facing the free leaf)
+                # is radiused so the leaf bends off a radius, not a corner; the
+                # model chamfers all four long edges, which is what a shop does.
+                try:
+                    bar = bar.edges("|X").chamfer(p["bar_edge_r"])
+                except Exception:
+                    pass
+                if p["bond_all"] or BAR_ACCESS[role] == "bond":
+                    bar_solids.append(bar)               # bonded: no screws, no taps
                     continue
                 y0, y1, z0, z1 = r
                 along_z = (z1 - z0) <= (y1 - y0)          # thin in z: coupler bar, screws along Z
@@ -684,6 +760,9 @@ def main() -> int:
         if apa is not None:
             assembly = assembly.add(apa.val())
     cq.exporters.export(assembly, str(step_dir /"parallel_yz_r01_assembly.step"))
+    if P["shim"] and P["bond_all"]:
+        jig = build_jig(P, d, info["legs"])
+        cq.exporters.export(jig, str(step_dir / "assembly_jig.step"))
 
     leaf_boxes = []
     for leg, parts in info["legs"].items():
