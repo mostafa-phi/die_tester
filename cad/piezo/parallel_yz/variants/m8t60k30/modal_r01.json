@@ -1,0 +1,341 @@
+{
+  "variant": "m8t60k30",
+  "case": "bare plate, frame back face fixed, both APA60S as axial springs with half their mass on each pad",
+  "status": "not_converged",
+  "convergence_gate": "<5% drift in every sprung frequency between densities",
+  "excludes": [
+    "mount compliance",
+    "real holder",
+    "actuator off-axis stiffness and internal modes",
+    "prestress",
+    "wiring"
+  ],
+  "runs": [
+    {
+      "h_fine_mm": 0.7,
+      "h_coarse_mm": 3.5,
+      "near_mm": 0.25,
+      "far_mm": 2.5,
+      "loaded": false,
+      "leaf_boxes": 8,
+      "linear_tets": 90589,
+      "mesh_nodes": 26090,
+      "msh": "parallel_yz_r01_h0.70.msh",
+      "dofs": 492537,
+      "setup_seconds": 41.4,
+      "sprung": {
+        "frequencies_Hz": [
+          670.7,
+          756.6,
+          764.8,
+          1174.7,
+          2011.8,
+          5511.4,
+          5546.8,
+          5623.6,
+          7121.8,
+          7592.6
+        ],
+        "modes": [
+          {
+            "label": "X",
+            "platform_share": 0.719,
+            "t_normalised": [
+              -0.719,
+              -0.059,
+              -0.059
+            ],
+            "theta_x_lever_normalised": [
+              -0.0,
+              0.144,
+              -0.144
+            ]
+          },
+          {
+            "label": "Y",
+            "platform_share": 0.955,
+            "t_normalised": [
+              0.0,
+              0.955,
+              -0.917
+            ],
+            "theta_x_lever_normalised": [
+              0.026,
+              -0.001,
+              -0.001
+            ]
+          },
+          {
+            "label": "Z",
+            "platform_share": 0.971,
+            "t_normalised": [
+              -0.007,
+              0.932,
+              0.971
+            ],
+            "theta_x_lever_normalised": [
+              0.0,
+              0.002,
+              -0.002
+            ]
+          },
+          {
+            "label": "rot Y (pitch)",
+            "platform_share": 0.227,
+            "t_normalised": [
+              -0.0,
+              -0.092,
+              0.092
+            ],
+            "theta_x_lever_normalised": [
+              0.001,
+              -0.227,
+              -0.227
+            ]
+          },
+          {
+            "label": "X",
+            "platform_share": 0.446,
+            "t_normalised": [
+              0.446,
+              0.077,
+              0.079
+            ],
+            "theta_x_lever_normalised": [
+              -0.0,
+              -0.194,
+              0.19
+            ]
+          },
+          {
+            "label": "rot Y (pitch)",
+            "platform_share": 0.379,
+            "t_normalised": [
+              -0.076,
+              -0.125,
+              -0.151
+            ],
+            "theta_x_lever_normalised": [
+              0.004,
+              0.379,
+              -0.314
+            ]
+          },
+          {
+            "label": "rot Z (yaw)",
+            "platform_share": 0.383,
+            "t_normalised": [
+              0.008,
+              0.154,
+              -0.122
+            ],
+            "theta_x_lever_normalised": [
+              0.057,
+              0.302,
+              0.383
+            ]
+          },
+          {
+            "label": "rot X (roll)",
+            "platform_share": 0.216,
+            "t_normalised": [
+              -0.0,
+              -0.01,
+              0.009
+            ],
+            "theta_x_lever_normalised": [
+              0.216,
+              -0.039,
+              -0.042
+            ]
+          },
+          {
+            "label": "local (leaf/stage)",
+            "platform_share": 0.002,
+            "t_normalised": [
+              -0.0,
+              -0.001,
+              -0.001
+            ],
+            "theta_x_lever_normalised": [
+              -0.0,
+              0.002,
+              -0.002
+            ]
+          },
+          {
+            "label": "local (leaf/stage)",
+            "platform_share": 0.084,
+            "t_normalised": [
+              -0.0,
+              0.004,
+              -0.004
+            ],
+            "theta_x_lever_normalised": [
+              0.084,
+              -0.0,
+              -0.0
+            ]
+          }
+        ]
+      },
+      "springless": {
+        "frequencies_Hz": [
+          422.1,
+          437.1,
+          670.7,
+          1174.7,
+          2011.8,
+          5511.4,
+          5546.8,
+          5623.6,
+          7121.8,
+          7592.6
+        ],
+        "modes": [
+          {
+            "label": "Y",
+            "platform_share": 0.952,
+            "t_normalised": [
+              0.0,
+              -0.952,
+              0.936
+            ],
+            "theta_x_lever_normalised": [
+              -0.026,
+              0.001,
+              0.001
+            ]
+          },
+          {
+            "label": "Z",
+            "platform_share": 0.97,
+            "t_normalised": [
+              -0.004,
+              -0.952,
+              -0.97
+            ],
+            "theta_x_lever_normalised": [
+              -0.0,
+              0.001,
+              -0.001
+            ]
+          },
+          {
+            "label": "X",
+            "platform_share": 0.719,
+            "t_normalised": [
+              0.719,
+              0.057,
+              0.057
+            ],
+            "theta_x_lever_normalised": [
+              0.0,
+              -0.144,
+              0.144
+            ]
+          },
+          {
+            "label": "rot Y (pitch)",
+            "platform_share": 0.227,
+            "t_normalised": [
+              -0.0,
+              -0.092,
+              0.092
+            ],
+            "theta_x_lever_normalised": [
+              0.001,
+              -0.227,
+              -0.227
+            ]
+          },
+          {
+            "label": "X",
+            "platform_share": 0.446,
+            "t_normalised": [
+              -0.446,
+              -0.077,
+              -0.079
+            ],
+            "theta_x_lever_normalised": [
+              0.0,
+              0.194,
+              -0.19
+            ]
+          },
+          {
+            "label": "rot Y (pitch)",
+            "platform_share": 0.379,
+            "t_normalised": [
+              -0.076,
+              -0.125,
+              -0.151
+            ],
+            "theta_x_lever_normalised": [
+              0.004,
+              0.379,
+              -0.314
+            ]
+          },
+          {
+            "label": "rot Z (yaw)",
+            "platform_share": 0.383,
+            "t_normalised": [
+              -0.008,
+              -0.154,
+              0.122
+            ],
+            "theta_x_lever_normalised": [
+              -0.057,
+              -0.302,
+              -0.383
+            ]
+          },
+          {
+            "label": "rot X (roll)",
+            "platform_share": 0.216,
+            "t_normalised": [
+              -0.0,
+              -0.01,
+              0.009
+            ],
+            "theta_x_lever_normalised": [
+              0.216,
+              -0.039,
+              -0.042
+            ]
+          },
+          {
+            "label": "local (leaf/stage)",
+            "platform_share": 0.002,
+            "t_normalised": [
+              0.0,
+              0.001,
+              0.001
+            ],
+            "theta_x_lever_normalised": [
+              0.0,
+              -0.002,
+              0.002
+            ]
+          },
+          {
+            "label": "local (leaf/stage)",
+            "platform_share": 0.084,
+            "t_normalised": [
+              -0.0,
+              0.004,
+              -0.004
+            ],
+            "theta_x_lever_normalised": [
+              0.084,
+              -0.0,
+              -0.0
+            ]
+          }
+        ]
+      },
+      "solve_seconds": 26.8
+    }
+  ]
+}

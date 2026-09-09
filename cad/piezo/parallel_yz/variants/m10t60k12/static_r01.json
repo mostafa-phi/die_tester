@@ -1,0 +1,420 @@
+{
+  "concept": "parallel-kinematic YZ platform, 2 P-P legs, two APA120S grounded to the frame",
+  "variant": "m10t60k12",
+  "status": "converged",
+  "convergence_gate": "<5% change in pad-to-pad stiffness between densities (PLAN.md section 2)",
+  "excludes": [
+    "actuator off-axis stiffness",
+    "mount compliance below the frame's back face",
+    "fatigue",
+    "station integration",
+    "real holder geometry"
+  ],
+  "sign_convention": "a leg's actuator \"extends\" when its pads move apart, which pushes the\nplatform toward the opposite leg (-Y for the +Y leg, -Z for the +Z leg).\nDisplacements are reported along the leg axis, positive toward that motion.",
+  "runs": [
+    {
+      "h_fine_mm": 0.7,
+      "mesh": {
+        "h_fine_mm": 0.7,
+        "h_coarse_mm": 3.5,
+        "near_mm": 0.25,
+        "far_mm": 2.5,
+        "loaded": false,
+        "leaf_boxes": 8,
+        "linear_tets": 133495,
+        "mesh_nodes": 38010,
+        "msh": "parallel_yz_r01_h0.70.msh"
+      },
+      "dofs": 721554,
+      "mesh_seconds": 7.6,
+      "solve_seconds": 54.7,
+      "cases": {
+        "Y": {
+          "k_guide_N_per_um": 0.05755004224131003,
+          "per_N_pure": {
+            "pad_relative_um": -17.37618185937993,
+            "platform_along_axis_um": 17.3523826080575,
+            "platform_off_axis_um": [
+              -0.00915110981508275,
+              0.38134497491756675
+            ],
+            "tip_off_axis_um": [
+              -0.00915110981508275,
+              0.36926696389964103
+            ],
+            "theta_urad": [
+              -13.13604556166073,
+              0.4026003672641912,
+              0.16350129089776397
+            ],
+            "platform_over_pad": 0.9986303520810826
+          },
+          "per_N_as_built": {
+            "pad_relative_um": -2.5801574109048326,
+            "platform_along_axis_um": 2.5766361425663815,
+            "platform_off_axis_um": [
+              -0.0013820092931173336,
+              0.008894969087034658
+            ],
+            "tip_off_axis_um": [
+              -0.0013820092931173336,
+              0.007116029191461483
+            ],
+            "theta_urad": [
+              -1.916713394919028,
+              0.05929799651910587,
+              0.02321203920663018
+            ],
+            "platform_over_pad": 0.9986352505767405
+          },
+          "loaded_stroke": {
+            "nominal": {
+              "pad_um": 119.21041146792942,
+              "platform_um": 119.04713517594908
+            },
+            "minimum": {
+              "pad_um": 110.69538207736302,
+              "platform_um": 110.54376837766699
+            }
+          },
+          "at_nominal_stroke": {
+            "platform_off_axis_um": [
+              -0.06385234003908972,
+              0.4109701675749208
+            ],
+            "tip_off_axis_um": [
+              -0.06385234003908972,
+              0.328778625385633
+            ],
+            "theta_urad": [
+              -88.5570278429793,
+              2.7397180729762614,
+              1.0724551765344732
+            ],
+            "coupling_pct": [
+              0.05363618363828525,
+              0.34521634390236755
+            ],
+            "guide_force_N": 6.860564215583287,
+            "peak_von_mises_MPa": 28.037569461445383
+          },
+          "peak_von_mises_per_N_MPa": 4.086773125417298
+        },
+        "Z": {
+          "k_guide_N_per_um": 0.05755975061517137,
+          "per_N_pure": {
+            "pad_relative_um": -17.373251087999396,
+            "platform_along_axis_um": 17.34920297899165,
+            "platform_off_axis_um": [
+              -0.008221622891579891,
+              0.37295037449744695
+            ],
+            "tip_off_axis_um": [
+              -0.008221622891579891,
+              0.3612253294876448
+            ],
+            "theta_urad": [
+              12.578037434839265,
+              -0.18438186208358104,
+              -0.390834833660071
+            ],
+            "platform_over_pad": 0.9986157968427476
+          },
+          "per_N_as_built": {
+            "pad_relative_um": -2.5800927518806858,
+            "platform_along_axis_um": 2.576510897244861,
+            "platform_off_axis_um": [
+              -0.0012466696284832276,
+              0.007647173654169351
+            ],
+            "tip_off_axis_um": [
+              -0.0012466696284832276,
+              0.005918691797799122
+            ],
+            "theta_urad": [
+              1.8325548588389238,
+              -0.0262853574509686,
+              -0.057616061879007634
+            ],
+            "platform_over_pad": 0.9986117341583112
+          },
+          "loaded_stroke": {
+            "nominal": {
+              "pad_um": 119.20742524647362,
+              "platform_um": 119.04241795207952
+            },
+            "minimum": {
+              "pad_um": 110.69260915743978,
+              "platform_um": 110.53938809835954
+            }
+          },
+          "at_nominal_stroke": {
+            "platform_off_axis_um": [
+              -0.057599821184827746,
+              0.3533220229206911
+            ],
+            "tip_off_axis_um": [
+              -0.057599821184827746,
+              0.2734610528822414
+            ],
+            "theta_urad": [
+              84.66945032496984,
+              -1.2144611967463523,
+              -2.6620323346149912
+            ],
+            "coupling_pct": [
+              0.04838596373942483,
+              0.29680346636013455
+            ],
+            "guide_force_N": 6.861549668663705,
+            "peak_von_mises_MPa": 48.739314776764736
+          },
+          "peak_von_mises_per_N_MPa": 7.103251762404975
+        },
+        "other_pad_per_um_of_platform": {
+          "Y_drive_moves_Z_pad": 0.0032370907232405263,
+          "Z_drive_moves_Y_pad": 0.0032372480710713765
+        }
+      },
+      "mesh_loaded": {
+        "h_fine_mm": 0.7,
+        "h_coarse_mm": 3.5,
+        "near_mm": 0.25,
+        "far_mm": 2.5,
+        "loaded": true,
+        "leaf_boxes": 8,
+        "linear_tets": 147711,
+        "mesh_nodes": 41635,
+        "msh": "parallel_yz_r01_loaded_h0.70.msh"
+      },
+      "gravity_loaded": {
+        "dofs": 793695,
+        "total_weight_N": 1.9958313840968642,
+        "platform_t_um": [
+          -0.1069845889889359,
+          0.01567942956845755,
+          -0.7627506233521117
+        ],
+        "theta_urad": [
+          1.138032421399695,
+          3.0477156571788715,
+          -1.1933608505398272
+        ],
+        "tip_um": [
+          -0.1069845889889359,
+          -0.020121395947737264,
+          -0.8541820930674778
+        ],
+        "apa_axial_force_N": {
+          "Y": 0.001963346825194468,
+          "Z": -0.23401804827724793
+        },
+        "seconds": 48.8
+      }
+    },
+    {
+      "h_fine_mm": 0.55,
+      "mesh": {
+        "h_fine_mm": 0.55,
+        "h_coarse_mm": 2.75,
+        "near_mm": 0.25,
+        "far_mm": 2.5,
+        "loaded": false,
+        "leaf_boxes": 8,
+        "linear_tets": 193803,
+        "mesh_nodes": 54041,
+        "msh": "parallel_yz_r01_h0.55.msh"
+      },
+      "dofs": 1035018,
+      "mesh_seconds": 10.8,
+      "solve_seconds": 51.5,
+      "cases": {
+        "Y": {
+          "k_guide_N_per_um": 0.056519586780245545,
+          "per_N_pure": {
+            "pad_relative_um": -17.69298144178073,
+            "platform_along_axis_um": 17.669088160154153,
+            "platform_off_axis_um": [
+              -0.00874073351095619,
+              0.38581158958373774
+            ],
+            "tip_off_axis_um": [
+              -0.00874073351095619,
+              0.3742203344656344
+            ],
+            "theta_urad": [
+              -13.216191770242354,
+              0.38637517060344456,
+              0.16510767064152534
+            ],
+            "platform_over_pad": 0.9986495615956418
+          },
+          "per_N_as_built": {
+            "pad_relative_um": -2.587040176760147,
+            "platform_along_axis_um": 2.583558124045462,
+            "platform_off_axis_um": [
+              -0.0013012969049024368,
+              0.008782225491374659
+            ],
+            "tip_off_axis_um": [
+              -0.0013012969049024368,
+              0.007099990801029576
+            ],
+            "theta_urad": [
+              -1.899044297834532,
+              0.05607448967816942,
+              0.023138581377137406
+            ],
+            "platform_over_pad": 0.9986540399542438
+          },
+          "loaded_stroke": {
+            "nominal": {
+              "pad_um": 119.52822464923844,
+              "platform_um": 119.36680914426735
+            },
+            "minimum": {
+              "pad_um": 110.99049431714997,
+              "platform_um": 110.84060849110539
+            }
+          },
+          "at_nominal_stroke": {
+            "platform_off_axis_um": [
+              -0.06012315257854121,
+              0.4057606540120527
+            ],
+            "tip_off_axis_um": [
+              -0.06012315257854121,
+              0.3280372285743234
+            ],
+            "theta_urad": [
+              -87.74056838371907,
+              2.590780847924309,
+              1.06905999188012
+            ],
+            "coupling_pct": [
+              0.05036840057094603,
+              0.3399275367423521
+            ],
+            "guide_force_N": 6.755685865751317,
+            "peak_von_mises_MPa": 44.16671944555401
+          },
+          "peak_von_mises_per_N_MPa": 6.537710651920923,
+          "change_vs_coarser_k_pct": 1.79,
+          "change_vs_coarser_vM_pct": 59.97
+        },
+        "Z": {
+          "k_guide_N_per_um": 0.05656772259043078,
+          "per_N_pure": {
+            "pad_relative_um": -17.677925753531465,
+            "platform_along_axis_um": 17.653874028222567,
+            "platform_off_axis_um": [
+              -0.008421041875457783,
+              0.3773280796559404
+            ],
+            "tip_off_axis_um": [
+              -0.008421041875457783,
+              0.3660714712832934
+            ],
+            "theta_urad": [
+              12.661511695868525,
+              -0.16419514270688296,
+              -0.37522027908823324
+            ],
+            "platform_over_pad": 0.9986394486749051
+          },
+          "per_N_as_built": {
+            "pad_relative_um": -2.5867179074147084,
+            "platform_along_axis_um": 2.5831872206944175,
+            "platform_off_axis_um": [
+              -0.0012562919649511727,
+              0.007540346318787488
+            ],
+            "tip_off_axis_um": [
+              -0.0012562919649511727,
+              0.005905939431746149
+            ],
+            "theta_urad": [
+              1.8177567956910827,
+              -0.02299245137829362,
+              -0.05448022956804463
+            ],
+            "platform_over_pad": 0.9986350708323585
+          },
+          "loaded_stroke": {
+            "nominal": {
+              "pad_um": 119.51334087183731,
+              "platform_um": 119.35073683754761
+            },
+            "minimum": {
+              "pad_um": 110.97667366670606,
+              "platform_um": 110.8256842062942
+            }
+          },
+          "at_nominal_stroke": {
+            "platform_off_axis_um": [
+              -0.058044330081389144,
+              0.348385855251967
+            ],
+            "tip_off_axis_um": [
+              -0.058044330081389144,
+              0.2728715198224554
+            ],
+            "theta_urad": [
+              83.98563263984758,
+              -1.0623178961698094,
+              -2.517144514317056
+            ],
+            "coupling_pct": [
+              0.048633407400236896,
+              0.29190088346598725
+            ],
+            "guide_force_N": 6.760597512293686,
+            "peak_von_mises_MPa": 43.31387892102762
+          },
+          "peak_von_mises_per_N_MPa": 6.4068122443710465,
+          "change_vs_coarser_k_pct": 1.72,
+          "change_vs_coarser_vM_pct": 9.8
+        },
+        "other_pad_per_um_of_platform": {
+          "Y_drive_moves_Z_pad": 0.0031660544664717295,
+          "Z_drive_moves_Y_pad": 0.003166509056863951
+        }
+      },
+      "mesh_loaded": {
+        "h_fine_mm": 0.55,
+        "h_coarse_mm": 2.75,
+        "near_mm": 0.25,
+        "far_mm": 2.5,
+        "loaded": true,
+        "leaf_boxes": 8,
+        "linear_tets": 219246,
+        "mesh_nodes": 60224,
+        "msh": "parallel_yz_r01_loaded_h0.55.msh"
+      },
+      "gravity_loaded": {
+        "dofs": 1160637,
+        "total_weight_N": 1.9954180273170776,
+        "platform_t_um": [
+          -0.10883596862838318,
+          0.018051070512408795,
+          -0.7674877923868305
+        ],
+        "theta_urad": [
+          1.2012675187380535,
+          3.0802443149648506,
+          -1.1935234018547598
+        ],
+        "tip_um": [
+          -0.10883596862838318,
+          -0.017754631543234,
+          -0.859895121835776
+        ],
+        "apa_axial_force_N": {
+          "Y": 0.0020489962149326207,
+          "Z": -0.23464347508974281
+        },
+        "seconds": 69.8
+      }
+    }
+  ]
+}

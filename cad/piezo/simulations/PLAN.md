@@ -112,7 +112,13 @@ inside voids), R1.0 internal corners, per-part STEP + sheets, a bonding jig,
 and three lightening windows in the frame's solid quadrant (90.5 g). Its
 numbers are in `parallel_yz/README.md` (R05); it is the release candidate.
 Open risks: bond hysteresis and leaf parallelism, both bench items; the
-APA120S STEP is still an envelope.
+APA120S STEP is still an envelope. A 17-variant sweep on the compute host
+(2026-09-08, `parallel_yz/README.md` "Monolithic CNC sweep") answered whether
+one milled 7075 piece can replace the shim plate: same size, stroke and mass
+(m8t60k12: 87 mm, 111 µm, 13:1 walls, pin stops), but the first mode is the
+out-of-plane bounce at 375-431 Hz, set by the leaf wall aspect ratio, and
+coupling is 0.35 %; R05's 559 Hz / 0.11 % need the steel shims. Decision
+pending (user).
 The R01 sections below remain the record of the APA60S baseline.
 
 Sections 3 and 4 below are written for the stack; for the parallel plate the

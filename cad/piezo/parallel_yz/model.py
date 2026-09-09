@@ -89,6 +89,45 @@ VARIANTS = {
                 body_material=dict(name="6061-T6", E_MPa=68900.0, nu=0.33, rho_kg_m3=2700.0)),
 }
 
+
+def cnc_variant(b: float, t: float, k_leaf_N_per_mm: float, **overrides) -> dict:
+    """A monolithic two-leg plate (R03 topology) whose 7075 leaves are thin-wall
+    milled: depth b (the plate), thickness t, and the free length L that gives
+    each leaf the stiffness k = E b t^3 / L^3 asked for. k = 21 N/mm is what
+    R05's 0.20 mm steel shims have (0.045 N/um guide stiffness, 114 um stroke);
+    30 N/mm trades stroke for modes. Sweep of 2026-09-08 ("m" variants).
+    """
+    E = 71700.0                                   # 7075-T6, P["E_MPa"] (P is defined below)
+    L = round((E * b * t ** 3 / k_leaf_N_per_mm) ** (1.0 / 3.0), 1)
+    # pocket1 = a_p + L + w_in + apa_len + apa_fit + 2 pad_boss; the tie hole sits 6.5 inside it
+    v = dict(actuator="APA120S", t=t, L=L, b=b, w_in=16.0, s_g=7.0, s_c=8.0, r02=True,
+             legs=("+Y", "+Z"), guide_sides="plus", windows=False,
+             wall=6.5, wall_free=8.0, bolt_inset=5.5, base_margin=1.0,
+             wire_tie_pos=(L + 33.0, 24.0), r_root=1.0, post_w=(1.0, 1.0), lightening=True,
+             stop="pin")
+    v.update(overrides)
+    if "w_in" in overrides:                       # the tie hole follows the pocket
+        v["wire_tie_pos"] = (L + 33.0 + overrides["w_in"] - 16.0, 24.0)
+    return v
+
+
+# Monolithic CNC sweep: plate depth b, leaf thickness t (aspect b/t is the
+# machining risk: 10:1 routine, 12-16:1 with care, 20:1 not for a first article).
+# Second pass: the FE gave the k21 plates 0.11 N/um (milled roots and the
+# couplers' share are stiffer than the shim estimate), i.e. 98 um worst-case
+# stroke; k12 aims the same plates at ~0.06 N/um and >= 105 um.
+for _b, _t, _k in ((6, 0.5, 21), (6, 0.5, 30), (8, 0.5, 21), (8, 0.5, 30),
+                   (8, 0.6, 21), (8, 0.6, 30), (6, 0.6, 21), (8, 0.8, 21),
+                   (6, 0.5, 12), (8, 0.5, 12), (8, 0.6, 12), (10, 0.6, 12)):
+    VARIANTS[f"m{_b}t{int(_t * 100)}k{_k}"] = cnc_variant(_b, _t, _k)
+# ... and one with the guide pair spread 9 instead of 7 on a 20 mm stage: the
+# two-leg plate's in-plane roll and Y-Z coupling scale with the spread.
+VARIANTS["m8t50k12w"] = cnc_variant(8, 0.5, 12, w_in=20.0, s_g=9.0)
+# Third pass: the two k12 candidates with pocketed stages and platform (less
+# moving mass on the same leaves -> higher out-of-plane mode).
+VARIANTS["m8t50k12p"] = cnc_variant(8, 0.5, 12, pockets=True)
+VARIANTS["m8t60k12p"] = cnc_variant(8, 0.6, 12, pockets=True)
+
 # R02 detailing, all in the frame of the +Y leg (rotated onto the others).
 R02 = dict(
     screw_hole=2.2,          # M2 clearance, along the leg axis, through stage and frame wall
@@ -141,6 +180,17 @@ P = dict(
     bond_all=False,
     bar_edge_r=0.3,
     post_w=None,     # stop post widths override (R02["post_w"] when None)
+    # Hard-stop style: "fork" is the EDM tongue-and-fork with 0.30 mm slots (a
+    # wire pass); "pin" is the milled version - a 2.6 mm notch through the stage
+    # flank around a dia 2 dowel pressed into the frame from the outer edge.
+    stop="fork",
+    # Pockets in the moving parts (milled plates): the out-of-plane bounce is
+    # the first mode of a milled plate and it is moving mass on leaf stiffness,
+    # so the stages are pocketed from both faces (the M2 screw runs through the
+    # mid-thickness web) and the platform from the back, walls `pocket_wall`.
+    pockets=False,
+    pocket_wall=2.0,
+    pocket_web=3.2,      # stage web left around the pad screw / platform front plate
     # Two-leg plates: lightening windows in the +Y+Z corner block and in the
     # frame beside each pocket (the frame is fixed, so this is weight only).
     lightening=False,
@@ -347,6 +397,17 @@ def _cyl_along(leg: str, y_from: float, y_to: float, z: float, x: float, dia: fl
     return cq.Workplane("XY").add(solid)
 
 
+def _cyl_across(leg: str, y: float, z_from: float, z_to: float, x: float, dia: float) -> cq.Workplane:
+    """Cylinder across the +Y leg's axis (along its z) at station y (rotated onto `leg`)."""
+    za, zb = sorted((z_from, z_to))
+    p0 = rot(leg, y, za)
+    p1 = rot(leg, y, zb)
+    direction = cq.Vector(0, p1[0] - p0[0], p1[1] - p0[1])
+    solid = cq.Solid.makeCylinder(dia / 2, direction.Length, cq.Vector(x, p0[0], p0[1]),
+                                  direction.normalized())
+    return cq.Workplane("XY").add(solid)
+
+
 def _cyl_through(y: float, z: float, dia: float, x0: float, x1: float) -> cq.Workplane:
     return cq.Workplane("XY").add(cq.Solid.makeCylinder(dia / 2, x1 - x0, cq.Vector(x0, y, z),
                                                           cq.Vector(1, 0, 0)))
@@ -371,16 +432,60 @@ def add_r02(plate: cq.Workplane, p: dict, d: dict) -> tuple[cq.Workplane, dict]:
     """Manufacturing detail on top of the concept plate; returns the plate and what was added."""
     r = R02
     R = d["R"]
-    added = {"stops": [], "screw_holes": [], "wire_ties": [], "windows": [], "holder_taps": []}
+    added = {"stops": [], "screw_holes": [], "wire_ties": [], "windows": [], "holder_taps": [],
+             "pins": []}
+    pin_solids = []
 
-    # Hard stops on every leg (sharp boxes, unioned after the filleted profile:
-    # a 0.7 mm post cannot carry R0.5 fillets).
-    stops = r02_stops(p, d)
-    for leg in p["legs"]:
-        for rect in [stops["tongue"], *stops["posts"]]:
-            box = rect_rot(leg, *rect)
-            plate = plate.union(_box(box, 0.0, p["b"]))
+    if p.get("stop", "fork") == "fork":
+        # Hard stops on every leg (sharp boxes, unioned after the filleted profile:
+        # a 0.7 mm post cannot carry R0.5 fillets).
+        stops = r02_stops(p, d)
+        for leg in p["legs"]:
+            for rect in [stops["tongue"], *stops["posts"]]:
+                box = rect_rot(leg, *rect)
+                plate = plate.union(_box(box, 0.0, p["b"]))
+                added["stops"].append({"x": [0.0, p["b"]], "y": [box[0], box[1]], "z": [box[2], box[3]], "leg": leg})
+    else:
+        # Pin stop for milled plates (no 0.3 mm slot anywhere): a notch 2.6 wide
+        # through the flank of each driven stage that faces the plate's free
+        # wall, and a dia 2 dowel pressed into the frame from the outer edge
+        # (an external face, so it is a plain drilled hole) reaching into the
+        # notch. The stage moves only along its leg, so the notch walls stop it
+        # at +/-0.30 both ways; the platform is bounded through the couplers.
+        pin_d, gap, depth = 2.0, r["stop_gap"], 4.0
+        edge = d["box"][2]                        # the free wall's outer edge (same on -Y and -Z)
+        for leg in [leg for leg in DRIVEN if leg in p["legs"]]:
+            yc = (d["y_in0"] + d["y_in1"]) / 2
+            flank = -p["h_in"]                    # flank on the side without guide leaves
+            notch = (yc - pin_d / 2 - gap, yc + pin_d / 2 + gap, flank - 0.1, flank + depth)
+            box = rect_rot(leg, *notch)
+            plate = plate.cut(_box(box, -1.0, p["b"] + 1.0))
+            plate = plate.cut(_cyl_across(leg, yc, edge - 1.0, flank + depth, p["b"] / 2, pin_d))
+            pin_solids.append(_cyl_across(leg, yc, edge + 1.0, flank + depth - 0.5, p["b"] / 2, pin_d))
             added["stops"].append({"x": [0.0, p["b"]], "y": [box[0], box[1]], "z": [box[2], box[3]], "leg": leg})
+            added["pins"].append({"leg": leg, "dia": pin_d, "hole": "H7 press fit, drilled from the outer edge",
+                                  "length": round(flank + depth - 0.5 - (edge + 1.0), 1),
+                                  "travel_to_stop": gap})
+    added["_pin_solids"] = pin_solids
+
+    if p.get("pockets"):
+        w, web, b = p["pocket_wall"], p["pocket_web"], p["b"]
+        added["pockets"] = []
+        for leg in [leg for leg in DRIVEN if leg in p["legs"]]:
+            # Stage: both faces, keeping the web around the pad screw at mid-
+            # thickness, clear of the pin notch (flank + 4) and the leaf roots.
+            rect = (d["y_in0"] + w, d["y_in1"] - w, -p["h_in"] + 5.0, p["h_in"] - w)
+            box = rect_rot(leg, *rect)
+            depth = (b - web) / 2
+            for x0, x1 in ((-1.0, depth), (b - depth, b + 1.0)):
+                plate = plate.cut(_box(box, x0, x1))
+                added["pockets"].append({"x": [max(x0, 0.0), min(x1, b)], "y": [box[0], box[1]], "z": [box[2], box[3]], "part": f"stage {leg}"})
+        # Platform: from the back, leaving `web` of front plate for the fiber
+        # hole and the holder taps, and 3 mm of wall to the coupler roots.
+        a = p["a_p"] - 3.0
+        box = (-a, a, -a, a)
+        plate = plate.cut(_box(box, -1.0, b - web))
+        added["pockets"].append({"x": [0.0, b - web], "y": [box[0], box[1]], "z": [box[2], box[3]], "part": "platform"})
 
     # M2 screw access on the driven legs: through the input stage from the coupler
     # void (counterbore on the inner face) and through the frame wall from the
@@ -753,7 +858,8 @@ def main() -> int:
            "leaves": len(leaf_boxes := [None] * 0) or sum(len(v["leaves"]) for v in info["legs"].values())}
 
     assembly = cq.Workplane("XY").add(body_solids)
-    for s in info["leaf_solids"] + info["bar_solids"]:
+    pin_solids = info["r02"].pop("_pin_solids", []) if info.get("r02") else []
+    for s in info["leaf_solids"] + info["bar_solids"] + pin_solids:
         assembly = assembly.add(s.val())
     for leg in [leg for leg in DRIVEN if leg in P["legs"]]:
         apa = place_apa(P, d, leg)

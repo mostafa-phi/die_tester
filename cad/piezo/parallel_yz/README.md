@@ -420,6 +420,71 @@ Package: `variants/r05/manufacturing/` (STEP per part, `part_*.png` sheets,
 `README.md` with the tool-access table and assembly sequence, `BONDING.md`);
 FE record in `variants/r05/*.json` and `renders/`.
 
+### Monolithic CNC sweep (2026-09-08): can one milled piece match R05?
+
+With the chain at 2.5 minutes per variant on the compute host, the question
+"is there a monolithic, CNC-only plate with R05's size and performance" was
+answered by running it: R03's two-leg topology in 7075 with thin-wall milled
+leaves, every leaf sized for a target stiffness k = E b t³/L³ (`model.cnc_variant`;
+"m<b>t<100t>k<k>"), the 0.30 mm fork stops replaced by a **pin stop** (a
+Ø2 dowel pressed into the frame from the outer edge into a 2.6 mm notch
+through the stage flank, `stop="pin"`), R1.0 corners everywhere, and in the
+"p" variants pocketed stages (both faces, web around the pad screw) and
+platform (from the back). Seventeen chains, two densities each (0.70 / 0.55,
+all converged), loaded, on the bolted base:
+
+| variant | leaves (t x L) | plate (mm) | b/t | mass g | k N/um | stroke min/nom um | coupling % | vM MPa | first modes (Hz) |
+|---|---|---|---|---|---|---|---|---|---|
+| **r05** (shims) | shim 0.20 x 8.5 | 82 x 82 x 8 | - | 90 | 0.0451 | 114 / 123 | 0.11 | 138 | 559 Z, 569 Y, 630 X |
+| r03 | milled 1.00 x 29.0 | 99 x 99 x 8 | 8:1 | 135 | 0.0938 | 101 / 109 | 1.01 | 28 | 326 X, 606 Z, 620 Y |
+| m8t80k21 | milled 0.80 x 24.1 | 90 x 90 x 8 | 10:1 | 97 | 0.0928 | 101 / 109 | 0.85 | 33 | 368 X, 604 Y, 626 Z |
+| m6t60k21 | milled 0.60 x 16.4 | 82 x 82 x 6 | 10:1 | 66 | 0.1029 | 99 / 106 | 0.85 | 90 | 381 X, 659 Z, 711 Y |
+| m8t60k21 | milled 0.60 x 18.1 | 84 x 84 x 8 | 13:1 | 90 | 0.1017 | 99 / 107 | 0.74 | 70 | 457 X, 624 Y, 648 Z |
+| m8t50k21 | milled 0.50 x 15.1 | 81 x 81 x 8 | 16:1 | 87 | 0.1087 | 98 / 105 | 0.70 | 62 | 513 X, 634 Y, 662 Z |
+| m6t50k21 | milled 0.50 x 13.7 | 79 x 79 x 6 | 12:1 | 64 | 0.1104 | 97 / 105 | 0.83 | 66 | 426 X, 675 Z, 724 Y |
+| m8t60k30 | milled 0.60 x 16.0 | 82 x 82 x 8 | 13:1 | 88 | 0.1498 | 89 / 96 | 1.16 | 77 | 515 X, 657 Y, 690 Z |
+| m8t50k30 | milled 0.50 x 13.4 | 79 x 79 x 8 | 16:1 | 85 | 0.1594 | 87 / 94 | 1.10 | 118 | 568 X, 669 Z, 707 Z |
+| m6t50k30 | milled 0.50 x 12.1 | 78 x 78 x 6 | 12:1 | 63 | 0.1648 | 86 / 93 | 1.32 | 78 | 475 X, 717 Z, 774 Y |
+| m6t50k12 | milled 0.50 x 16.5 | 82 x 82 x 6 | 12:1 | 66 | 0.0608 | 110 / 118 | 0.40 | 66 | 356 X, 623 Z, 674 Y |
+| **m8t60k12** | milled 0.60 x 21.8 | 87 x 87 x 8 | 13:1 | 94 | 0.0567 | 111 / 119 | 0.37 | 55 | 375 X, 587 Y, 604 Z |
+| m8t60k12p | + pockets | 87 x 87 x 8 | 13:1 | 85 | 0.0566 | 111 / 119 | 0.41 | 35 | 382 X, 660 Z, 689 Y |
+| **m8t50k12** | milled 0.50 x 18.1 | 84 x 84 x 8 | 16:1 | 90 | 0.0609 | 110 / 118 | 0.35 | 42 | 431 X, 597 Y, 616 Z |
+| m8t50k12p | + pockets | 84 x 84 x 8 | 16:1 | 81 | 0.0608 | 110 / 118 | 0.39 | 40 | 440 X, 671 Z, 704 Y |
+| m8t50k12w | guides at ±9 | 88 x 88 x 8 | 16:1 | 100 | 0.0613 | 109 / 118 | 0.26 | 67 | 440 X, 578 Z, 596 Y |
+| m10t60k12 | milled 0.60 x 23.5 | 89 x 89 x 10 | 17:1 | 120 | 0.0565 | 111 / 119 | 0.34 | 44 | 424 X, 545 Y, 558 Z |
+
+What the sweep says:
+
+- **Size and stroke: yes.** A one-piece 7075 plate with 0.5-0.6 mm leaves
+  lands at 82-88 mm, R05's footprint, and the k12 sizing gives 110 µm
+  worst-case stroke with leaf stress under 70 MPa (7075 fatigue ~150 MPa).
+  The hand estimate `k = E b t³/L³` underpredicts a milled plate's guide
+  stiffness 2.4× (R1.0 roots, the couplers' share), hence the k21 → k12
+  re-sizing.
+- **The first mode is the out-of-plane bounce, and it is set by the wall
+  aspect ratio.** A milled leaf's out-of-plane to in-plane stiffness ratio is
+  (b/t)², so at a fixed in-plane stiffness the X mode goes as b/t: 12:1 →
+  356 Hz, 13:1 → 375, 16:1 → 431 (about 27 Hz per unit). A 0.20 mm shim is at
+  40:1, which is why R05's first mode is in-plane at 559 Hz. Depth alone does
+  not help (the 10 mm plate adds moving mass and loses the Y/Z modes); the
+  guide spread helps coupling only (0.35 → 0.26 %); pockets take 9 g off the
+  moving parts and lift the Y/Z modes 12 % but not X (+2 %: the pocketed
+  stage and platform bend out of plane as much as they lighten).
+- **Coupling 0.35-0.4 %** against R05's 0.11 %: the two-leg plate has no
+  passive leg to react the coupler moment and milled leaves are stiffer in
+  the wrong direction. Still 0.4 µm at full stroke, well inside what the
+  optical loop corrects.
+
+**Verdict.** A monolithic plate is a real option - no bonding, no jig, no
+second material, one CNC job plus two dowels - at R05's size, stroke and
+mass, with a first mode of **375 Hz (m8t60k12, 13:1 walls, the safe
+machining pick) or 431 Hz (m8t50k12, 16:1 walls, ask the shop first)** and
+0.35 % coupling. R05's 559 Hz and 0.11 % are what the steel shims buy, and no
+milled aluminium leaf reaches them at ≥100 µm of stroke. The choice is the
+user's: m8t60k12 if 375 Hz and 0.4 % are acceptable for the alignment loop,
+R05 otherwise. Record: `variants/m*/` (geometry and result JSON for all,
+STEP and renders for the two candidates), `sweep_report.py` prints the table.
+
 ### Against the stacked P0 head
 
 | | stacked P0 (`../`) | parallel R01 (this) |

@@ -3,3 +3,13 @@ __pycache__/
 # Unanchored so it catches every revision folder's scratch, e.g.
 # simulations/fem_r01/work/. An anchored "simulations/work/" would not.
 work/
+
+# Monolithic CNC sweep (2026-09-08): the record is geometry_report.json + the
+# result JSONs of every m* variant; STEP and renders are kept only for the two
+# candidates (regenerate any other with model.py --variant <name>).
+parallel_yz/variants/m*/STEP/
+parallel_yz/variants/m*/renders/
+!parallel_yz/variants/m8t60k12/STEP/
+!parallel_yz/variants/m8t60k12/renders/
+!parallel_yz/variants/m8t50k12/STEP/
+!parallel_yz/variants/m8t50k12/renders/
