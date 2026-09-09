@@ -15,6 +15,7 @@ Units: mm, N, MPa, tonne, s. Frequencies come out in Hz from (rad/s)^2.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -110,6 +111,66 @@ class Materials:
 def material_fields(mat: Materials, basis: Basis) -> dict:
     x = np.asarray(basis.global_coordinates().value)
     return {"lam": mat.lam(x), "mu": mat.mu(x), "rho": mat.rho(x)}
+
+
+# Assembly is the single-threaded part of every solve (numpy over all elements
+# at once, 900 basis pairs per vector-P2 tet). On Linux it is split over
+# element chunks in forked workers - each assembles its subset with
+# Basis(..., elements=chunk) into the global numbering and the pieces are
+# summed. PIEZO_ASSEMBLY_WORKERS overrides the count; Windows (no fork) stays
+# serial, so the laptop results are unchanged.
+def assembly_workers() -> int:
+    env = os.environ.get("PIEZO_ASSEMBLY_WORKERS")
+    if env:
+        return max(1, int(env))
+    if not hasattr(os, "fork"):
+        return 1
+    return max(1, min(32, (os.cpu_count() or 1) // 2))
+
+
+_ASM_STATE: dict = {}
+
+
+def _assemble_chunk(args):
+    """Worker: (chunk index, want mass) -> COO pieces of K (and M) for that chunk."""
+    i, with_mass = args
+    mesh, element, mat, chunks = (_ASM_STATE[k] for k in ("mesh", "element", "mat", "chunks"))
+    basis = Basis(mesh, element, elements=chunks[i])
+    f = material_fields(mat, basis)
+    K = stiffness_form.assemble(basis, lam=f["lam"], mu=f["mu"]).tocoo()
+    out = [(K.data, K.row, K.col)]
+    if with_mass:
+        M = mass_form.assemble(basis, rho=f["rho"]).tocoo()
+        out.append((M.data, M.row, M.col))
+    return out
+
+
+def _gravity_chunk(i):
+    mesh, element, mat, chunks = (_ASM_STATE[k] for k in ("mesh", "element", "mat", "chunks"))
+    basis = Basis(mesh, element, elements=chunks[i])
+    return gravity_form.assemble(basis, rho=material_fields(mat, basis)["rho"])
+
+
+def _parallel_assemble(mesh, element, mat, n_dofs: int, with_mass: bool, workers: int):
+    import multiprocessing as mp
+    chunks = np.array_split(np.arange(mesh.t.shape[1]), workers)
+    _ASM_STATE.update(mesh=mesh, element=element, mat=mat, chunks=chunks)
+    try:
+        with mp.get_context("fork").Pool(workers) as pool:
+            pieces = pool.map(_assemble_chunk, [(i, with_mass) for i in range(workers)])
+    finally:
+        _ASM_STATE.clear()
+
+    def combine(j):
+        data = np.concatenate([p[j][0] for p in pieces])
+        row = np.concatenate([p[j][1] for p in pieces])
+        col = np.concatenate([p[j][2] for p in pieces])
+        A = sp.coo_matrix((data, (row, col)), shape=(n_dofs, n_dofs)).tocsr()
+        A.sum_duplicates()
+        return A
+    K = combine(0)
+    M = combine(1) if with_mass else None
+    return K, M
 
 
 @BilinearForm
@@ -216,14 +277,29 @@ class Model:
         return self._fields
 
     def gravity(self) -> np.ndarray:
-        return gravity_form.assemble(self.basis, rho=self.fields()["rho"])
+        workers = assembly_workers()
+        if workers == 1:
+            return gravity_form.assemble(self.basis, rho=self.fields()["rho"])
+        import multiprocessing as mp
+        chunks = np.array_split(np.arange(self.mesh.t.shape[1]), workers)
+        _ASM_STATE.update(mesh=self.mesh, element=self.element, mat=self.mat, chunks=chunks)
+        try:
+            with mp.get_context("fork").Pool(workers) as pool:
+                parts = pool.map(_gravity_chunk, range(workers))
+        finally:
+            _ASM_STATE.clear()
+        return np.sum(parts, axis=0)
 
     def assemble(self, with_mass: bool) -> tuple[sp.csr_matrix, sp.csr_matrix | None]:
-        f = self.fields()
-        K = stiffness_form.assemble(self.basis, lam=f["lam"], mu=f["mu"]).tocsr()
+        workers = assembly_workers()
+        if workers > 1:
+            K, M = _parallel_assemble(self.mesh, self.element, self.mat, self.N, with_mass, workers)
+        else:
+            f = self.fields()
+            K = stiffness_form.assemble(self.basis, lam=f["lam"], mu=f["mu"]).tocsr()
+            M = mass_form.assemble(self.basis, rho=f["rho"]).tocsr() if with_mass else None
         if not with_mass:
             return K, None
-        M = mass_form.assemble(self.basis, rho=f["rho"]).tocsr()
         # Half the actuator mass on each of its pads.
         act = self.rep["actuator"]
         half_t = act["mass_g"] / 2 * 1e-6
@@ -262,7 +338,7 @@ class Model:
         return sol[:3], sol[3:]
 
 
-class Factorised:
+class PardisoFactorised:
     """PARDISO factorisation of a reduced matrix, applied to many right-hand sides."""
 
     def __init__(self, A: sp.csr_matrix):
@@ -274,16 +350,85 @@ class Factorised:
         self.solver.factorize(self.A)
 
     def solve(self, B: np.ndarray) -> np.ndarray:
+        # PARDISO takes all right-hand sides in one call (one forward/backward
+        # sweep per column, no Python loop).
+        B = np.ascontiguousarray(np.asarray(B, dtype=np.float64))
+        return self.solver.solve(self.A, B)
+
+
+class CudssFactorised:
+    """The same on an NVIDIA GPU through cuDSS (nvmath-python + CuPy).
+
+    Factorising a 740 k-dof plate takes the A100 about as long as 28 PARDISO
+    threads (8 s), but each triangular solve afterwards is ~100x faster, and the
+    shift-invert eigensolver does hundreds of them. Numbers agree with PARDISO
+    to the solver tolerance (bench_solver.py). Selected with PIEZO_SOLVER=gpu;
+    anything that fails here (no CUDA, no memory) falls back to PARDISO.
+    """
+
+    def __init__(self, A: sp.csr_matrix):
+        import cupy as cp
+        import cupyx.scipy.sparse as cps
+        from nvmath.sparse.advanced import DirectSolver, DirectSolverOptions
+        self.cp = cp
+        self.n = A.shape[0]
+        A = A.tocsr()
+        A.sort_indices()
+        options = DirectSolverOptions(multithreading_lib=_cudss_threading_lib())
+        # One persistent RHS buffer: the solver is bound to its shape and strides.
+        self.b_gpu = cp.zeros((self.n, 1), dtype=np.float64, order="F")
+        self.solver = DirectSolver(cps.csr_matrix(A.astype(np.float64)), self.b_gpu, options=options)
+        self.solver.plan()
+        self.solver.factorize()
+        cp.cuda.Device().synchronize()
+
+    def solve(self, B: np.ndarray) -> np.ndarray:
+        # The DirectSolver is bound to the RHS shape it was planned with (one
+        # column), so several columns go one at a time - a solve is ~15 ms.
+        cp = self.cp
         B = np.asarray(B, dtype=np.float64)
-        if B.ndim == 1:
-            return self.solver.solve(self.A, B)
-        return np.column_stack([self.solver.solve(self.A, B[:, j]) for j in range(B.shape[1])])
+        B2 = B.reshape(self.n, -1)
+        X = np.empty_like(B2)
+        for j in range(B2.shape[1]):
+            self.b_gpu[:, 0] = cp.asarray(B2[:, j])
+            self.solver.reset_operands(b=self.b_gpu)
+            X[:, j] = cp.asnumpy(self.solver.solve())[:, 0]
+        return X.reshape(B.shape)
+
+    def __del__(self):
+        try:
+            self.solver.free()
+        except Exception:
+            pass
+
+
+def _cudss_threading_lib() -> str | None:
+    """Path of cuDSS's OpenMP threading layer (speeds up the CPU-side planning), if present."""
+    import glob
+    import sys
+    hits = glob.glob(str(Path(sys.prefix) / "lib" / "python*" / "site-packages" / "nvidia" / "cu*" / "lib"
+                         / "libcudss_mtlayer_gomp.so*"))
+    return sorted(hits)[0] if hits else None
+
+
+def solver_backend() -> str:
+    return os.environ.get("PIEZO_SOLVER", "pardiso").lower()
+
+
+def Factorised(A: sp.csr_matrix):
+    """Factorise A with the backend PIEZO_SOLVER names (pardiso, the default, or gpu)."""
+    if solver_backend() == "gpu":
+        try:
+            return CudssFactorised(A)
+        except Exception as e:                       # no CUDA, no nvmath, out of GPU memory ...
+            print(f"  [gpu solver unavailable ({type(e).__name__}: {e}); using PARDISO]", flush=True)
+    return PardisoFactorised(A)
 
 
 class Sprung:
     """(A + U diag(k) U^T)^-1 via Woodbury on a factorised A."""
 
-    def __init__(self, base: Factorised, U: np.ndarray, k: np.ndarray):
+    def __init__(self, base, U: np.ndarray, k: np.ndarray):
         self.base, self.U = base, U
         self.AiU = base.solve(U)
         self.S = np.diag(1.0 / k) + U.T @ self.AiU

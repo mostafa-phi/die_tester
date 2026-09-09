@@ -100,23 +100,37 @@ def main() -> int:
     parser.add_argument("--sizes", type=float, nargs="+", default=list(DEFAULT_SIZES))
     parser.add_argument("--modes", type=int, default=DEFAULT_MODES)
     parser.add_argument("--loaded", action="store_true", help="fiber holder block on the platform")
+    parser.add_argument("--partial", type=Path, default=None,
+                        help="write the single-density run to this JSON instead of the result file "
+                             "(one process per density; combine with --merge)")
+    parser.add_argument("--merge", type=Path, nargs="+", default=None,
+                        help="partial run files (coarse to fine) to combine into the result file")
     F.add_variant_argument(parser)
     args = parser.parse_args()
     F.set_variant(args.variant)
     rep = F.report()
     results_path = F.ROOT / ("modal_loaded_r01.json" if args.loaded else "modal_r01.json")
 
-    runs = []
-    for h in args.sizes:
-        print(f"--- h_fine = {h:.2f} mm{' loaded' if args.loaded else ''}", flush=True)
-        run = modes_at(h, rep, args.modes, args.loaded)
-        runs.append(run)
-        print(f"  {run['dofs']:,} dofs  setup {run['setup_seconds']}s  solve {run['solve_seconds']}s")
-        for key in ("sprung", "springless"):
-            if key in run:
-                print(f"  {key}: " + ", ".join(
-                    f"{f:.0f} ({m['label']})" for f, m in zip(run[key]["frequencies_Hz"], run[key]["modes"])),
-                    flush=True)
+    if args.merge:
+        runs = [json.loads(p.read_text(encoding="utf-8")) for p in args.merge]
+        runs.sort(key=lambda r: -r["h_fine_mm"])
+    else:
+        runs = []
+        for h in args.sizes:
+            print(f"--- h_fine = {h:.2f} mm{' loaded' if args.loaded else ''}", flush=True)
+            run = modes_at(h, rep, args.modes, args.loaded)
+            runs.append(run)
+            print(f"  {run['dofs']:,} dofs  setup {run['setup_seconds']}s  solve {run['solve_seconds']}s")
+            for key in ("sprung", "springless"):
+                if key in run:
+                    print(f"  {key}: " + ", ".join(
+                        f"{f:.0f} ({m['label']})" for f, m in zip(run[key]["frequencies_Hz"], run[key]["modes"])),
+                        flush=True)
+    if args.partial:
+        args.partial.parent.mkdir(parents=True, exist_ok=True)
+        args.partial.write_text(json.dumps(runs[-1], indent=2) + "\n", encoding="utf-8")
+        print(f"wrote {args.partial}")
+        return 0
 
     if len(runs) > 1:
         a, b = runs[-2]["sprung"]["frequencies_Hz"], runs[-1]["sprung"]["frequencies_Hz"]

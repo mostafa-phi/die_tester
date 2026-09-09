@@ -391,7 +391,8 @@ defined. `variants/r05/` is R04 with those closed:
   and beside each pocket, 1.75 mm walls): 98.5 → 90.5 g. The frame is the fixed
   part, so this is weight for whatever carries the head, not dynamics.
 
-**Converged (h_fine 0.60 / 0.45 mm, bolted base, 4.9 g holder):**
+**Converged (h_fine 0.70 / 0.55 / 0.45 mm, bolted base, 4.9 g holder; run on
+the compute host, see "Running the chain on the compute host"):**
 
 | | R04 | **R05** |
 |---|---|---|
@@ -466,21 +467,58 @@ $py = "C:\Users\<user>\pythonEnvs\pic-env\Scripts\python.exe"
 ### Running the chain on the compute host
 
 The same chain runs on the group's Linux box (`ssh compute`: mlcuda2, 4 × Xeon
-8280, 112 cores, 3 TB), with the three solves side by side instead of one after
-another. `remote/remote.ps1` drives it from this checkout:
+8280 = 112 cores on 4 NUMA nodes, 3 TB, 2 × A100). `remote/remote.ps1` drives
+it from this checkout:
 
 ```powershell
 .\remote\remote.ps1 setup          # once: micromamba env under ~/mostafa on the host (~10 min)
-.\remote\remote.ps1 up             # sync this folder (zip; no meshes, no work/ logs)
-.\remote\remote.ps1 run r05        # model.py, then static + loaded modal + bare modal in parallel, then figures + sheet
+.\remote\remote.ps1 up             # sync sources, reports and STEP (zip; never the result files)
+.\remote\remote.ps1 run r05 -Sizes "0.70 0.55 0.45" [-Solver gpu|pardiso] [-Threads 28]
 .\remote\remote.ps1 status r05     # tail the logs
 .\remote\remote.ps1 fetch r05      # *.json, renders/, STEP/ and logs back into variants/r05/
 ```
 
-The host is shared, so everything stays under `~/mostafa` and each solve is
-capped at 32 MKL threads (`-Threads`). `remote/run_chain.sh` is the host-side
-script; `remote/remote_env.sh` builds the environment (CadQuery from
-conda-forge, gmsh and scikit-fem from pip so their OCCT builds do not clash).
+What makes it fast there (2026-09-08, all three measured on R05):
+
+| | laptop, sequential | host, sequential | host, parallel, PARDISO | host, parallel, cuDSS |
+|---|---|---|---|---|
+| loaded modal 0.45 mm (1.38 M dofs): setup / solve | 999 / 354 s | 999 / 354 s | 123 / 175 s | **117 / 27 s** |
+| statics 0.45 mm: solve | 494 s | 494 s | 98 s | **62 s** |
+| whole chain (statics + loaded modal at 0.70/0.55/0.45, bare modal, figures, sheet) | ~2.5 h for 2 densities | 20 min for 2 densities | 10 min | **6 min** |
+
+Every column gives the same numbers (559 / 569 / 630 Hz, 0.0451 N/µm,
+114.2 / 123.0 µm). The R05 result files in `variants/r05/` are the cuDSS run
+of 2026-09-08 18:04 (three densities); what is left of a fine job is gmsh
+(43 s, single-threaded) and the mesh-to-basis setup.
+
+- **One process per (case, density)** (`remote/run_chain.sh`): the statics, the
+  loaded modal and the bare modal at every density all start at once, each
+  pinned with `numactl` to one socket (28 MKL threads on 28 cores, memory on
+  that node). The solvers took `--partial` / `--merge` for this; the merged
+  result files are identical in form to a sequential run and the convergence
+  gate is applied at merge time. Wall time is the slowest single job.
+- **Chunked assembly** (`fe_common.assembly_workers`): scikit-fem assembly was
+  the single-threaded bulk of every solve (260 s of 300 at 0.60 mm). On Linux
+  the elements are split over forked workers (`Basis(elements=chunk)`) and the
+  pieces summed: 260 → 30 s, matrices identical to 2e-16. Windows has no fork
+  and stays serial, so laptop runs are unchanged.
+- **cuDSS on the A100** (`PIEZO_SOLVER=gpu`, `fe_common.CudssFactorised`,
+  through nvmath-python + CuPy): factorising 740 k dofs takes the GPU 8 s, the
+  same as 28 PARDISO threads, but each triangular solve afterwards takes
+  15 ms instead of ~2 s, and the shift-invert eigensolver does hundreds of
+  them. Results agree with PARDISO to 1e-10 (`remote/test_gpu_backend.py`);
+  anything that fails on the GPU (no CUDA, memory) falls back to PARDISO with
+  a printed note. Jobs alternate between the two GPUs.
+- Per core the host is no faster than the laptop; the whole gain is parallel
+  work and the GPU. With 3 TB a fourth density (0.35 mm, ~3 M dofs) is
+  affordable when a convergence question needs it.
+
+The host is shared: everything stays under `~/mostafa`, nothing is installed
+system-wide, and each job is capped at `-Threads` cores. `remote/remote_env.sh`
+builds the environment (CadQuery from conda-forge, gmsh and scikit-fem from pip
+so their OCCT builds do not clash, the CUDA stack from pip);
+`remote/bench_solver.py` is the timing benchmark, `remote/summary.py` prints a
+variant's results in one screen.
 
 `model.py` prints, for every build, the number of leaves, the closed contours a
 wire would have to thread and the total profile length - the design rule of

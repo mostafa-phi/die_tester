@@ -161,6 +161,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--sizes", type=float, nargs="+", default=list(DEFAULT_SIZES))
+    parser.add_argument("--partial", type=Path, default=None,
+                        help="write the single-density run to this JSON instead of the result file "
+                             "(one process per density; combine with --merge)")
+    parser.add_argument("--merge", type=Path, nargs="+", default=None,
+                        help="partial run files (coarse to fine) to combine into the result file")
     F.add_variant_argument(parser)
     args = parser.parse_args()
     F.set_variant(args.variant)
@@ -168,7 +173,10 @@ def main() -> int:
     rep = F.report()
 
     runs = []
-    for h in args.sizes:
+    if args.merge:
+        runs = [json.loads(p.read_text(encoding="utf-8")) for p in args.merge]
+        runs.sort(key=lambda r: -r["h_fine_mm"])
+    for h in ([] if args.merge else args.sizes):
         print(f"--- h_fine = {h:.2f} mm", flush=True)
         run = solve_density(h, rep)
         runs.append(run)
@@ -187,6 +195,11 @@ def main() -> int:
         print(f"  gravity (loaded): platform {g['platform_t_um'][2]:+.3f} um Z, "
               f"pitch {g['theta_urad'][1]:+.2f} urad, tip {g['tip_um'][2]:+.3f} um Z  "
               f"[{g['seconds']}s]", flush=True)
+    if args.partial:
+        args.partial.parent.mkdir(parents=True, exist_ok=True)
+        args.partial.write_text(json.dumps(runs[-1], indent=2) + "\n", encoding="utf-8")
+        print(f"wrote {args.partial}")
+        return 0
 
     for coarse, fine in zip(runs, runs[1:]):
         for leg in ("Y", "Z"):

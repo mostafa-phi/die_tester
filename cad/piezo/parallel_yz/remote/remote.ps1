@@ -4,7 +4,7 @@ Drive the FE chain on the Linux compute host ("ssh compute", mlcuda2:
 
     .\remote\remote.ps1 setup                 # once: micromamba env under ~/mostafa (10 min)
     .\remote\remote.ps1 up                    # sync this folder (sources, variants, no meshes)
-    .\remote\remote.ps1 run r05 [-Threads 32] # launch run_chain.sh in the background
+    .\remote\remote.ps1 run r05 [-Threads 28] [-Sizes "0.70 0.55 0.45"] [-Solver gpu|pardiso]
     .\remote\remote.ps1 status r05            # tail the chain log
     .\remote\remote.ps1 fetch r05             # pull *.json, renders/, STEP/ back into variants/r05
     .\remote\remote.ps1 ssh                   # interactive shell in the remote folder
@@ -17,7 +17,9 @@ param(
     [ValidateSet("setup", "up", "run", "status", "fetch", "ssh")]
     [string]$Action,
     [Parameter(Position = 1)] [string]$Variant = "",
-    [int]$Threads = 32,
+    [int]$Threads = 28,
+    [string]$Sizes = "0.70 0.55",
+    [ValidateSet("gpu", "pardiso")] [string]$Solver = "gpu",
     [string]$Host_ = "compute",
     [string]$Python = "C:\Users\$env:USERNAME\pythonEnvs\pic-env\Scripts\python.exe"
 )
@@ -43,11 +45,11 @@ switch ($Action) {
     }
     "run" {
         if (-not $Variant) { throw "run needs a variant name" }
-        Remote "cd $remoteDir && nohup bash remote/run_chain.sh $Variant $Threads > /dev/null 2>&1 < /dev/null & echo launched $Variant"
+        Remote "cd $remoteDir && PIEZO_SOLVER=$Solver nohup bash remote/run_chain.sh $Variant $Threads $Sizes > /dev/null 2>&1 < /dev/null & echo launched $Variant with solver $Solver"
     }
     "status" {
         if (-not $Variant) { throw "status needs a variant name" }
-        Remote "cd $remoteDir/variants/$Variant/work 2>/dev/null && cat chain.log && for f in static modal_loaded modal_bare; do echo --- `$f; grep -v 'parse tags' `$f.log 2>/dev/null | grep -v '^$' | tail -3; done; cat /proc/loadavg"
+        Remote "cd $remoteDir/variants/$Variant/work 2>/dev/null && cat chain.log && for f in static_h* modal_*; do echo --- `$f; grep -v 'parse tags' `$f 2>/dev/null | grep -v '^$' | tail -2; done; cat /proc/loadavg"
     }
     "fetch" {
         if (-not $Variant) { throw "fetch needs a variant name" }
