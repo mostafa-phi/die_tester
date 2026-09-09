@@ -117,8 +117,10 @@ APA120S STEP is still an envelope. A 17-variant sweep on the compute host
 one milled 7075 piece can replace the shim plate: same size, stroke and mass
 (m8t60k12: 87 mm, 111 µm, 13:1 walls, pin stops), but the first mode is the
 out-of-plane bounce at 375-431 Hz, set by the leaf wall aspect ratio, and
-coupling is 0.35 %; R05's 559 Hz / 0.11 % need the steel shims. Decision
-pending (user).
+coupling is 0.35 %; R05's 559 Hz / 0.11 % need the steel shims. The user
+chose the monolithic m8t50k12 (16:1 walls, 431 Hz); **R06** (2026-09-09) is
+that plate detailed for a one-piece CNC order (edge-drilled pad screws, pin
+stops, `variants/r06/manufacturing/` with the Xometry settings).
 The R01 sections below remain the record of the APA60S baseline.
 
 Sections 3 and 4 below are written for the stack; for the parallel plate the

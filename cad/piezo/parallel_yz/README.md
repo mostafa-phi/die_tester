@@ -485,6 +485,49 @@ user's: m8t60k12 if 375 Hz and 0.4 % are acceptable for the alignment loop,
 R05 otherwise. Record: `variants/m*/` (geometry and result JSON for all,
 STEP and renders for the two candidates), `sweep_report.py` prints the table.
 
+### R06: m8t50k12 detailed for a one-piece CNC order (2026-09-09)
+
+The user's pick from the sweep, m8t50k12, with the machining detail a shop
+needs. Geometry is m8t50k12 with one change: on a monolithic plate the
+stage's inner face is inside the coupler void, so the stage pad screw has
+**no counterbore**; its Ø2.2 hole is drilled from the plate's outer edge in
+one straight pass through the frame wall (counterbored there), across the
+13 mm pocket and into the stage, and the screw head bears on the stage's
+inner face, driven from the void with a ball-end key or fitted as a stud and
+nut. Everything else was already CNC-only: R1.0 internal corners, pin stops
+(Ø2 H7 reamed from the outer edge, Ø2 m6 × 12 dowels), pad lands milled from
+the through pocket, holder taps and fiber hole from the faces, wire ties and
+bolt holes through.
+
+| | R06 (= m8t50k12) | R05 |
+|---|---|---|
+| plate | 83.7 × 83.7 × 8, 7075-T6, one piece, 88 g | 82 × 82 × 8, four 6061 pieces + 8 steel shims + 16 bars, 90 g |
+| leaves | 8 milled, 0.50 × 18.1, 16:1 walls | 8 shims 0.20 × 8.5, bonded |
+| guide stiffness | 0.061 N/µm | 0.045 N/µm |
+| stroke, worst / nominal | 110 / 118 µm | 114 / 123 µm |
+| coupling | 0.35 % | 0.11 % |
+| leaf stress at stroke | 42 MPa | 138 MPa |
+| first modes, loaded | **431 X**, 597 Y, 616 Z | 559 Z, 569 Y, 630 X |
+| assembly | press 2 dowels, bolt 2 actuators | bond 8 leaves on a jig, cure, bolt 2 actuators |
+
+FE record: the converged m8t50k12 run (0.70 / 0.55 mm, host); the
+counterbore removal changes nothing at that precision. R06's own three-density
+run is queued for the host (unreachable at the time of writing).
+
+**Package** (`variants/r06/manufacturing/`): `plate.step` + `plate_profile.dxf`,
+`drawing_sheet.png` (one-piece CNC notes: thin-wall strategy, pin stops, the
+edge-drilled screw holes), `base_plate.step`, `assembly_reference.step`, and a
+`README.md` with the Xometry settings (CNC milling, 7075-T6, as machined,
+tightest tolerance class with 14 listed locations: eight leaf thicknesses,
+four pad lands, two pin holes), the bought parts and the assembly sequence.
+
+**What to expect from the shop.** The 0.50 mm walls at 16:1 are the one
+feature outside most DFM guides (0.8 mm minimum for metals is the usual
+line). The sheet tells the machinist how (rough leaving 0.3, finish the leaves
+last, alternating sides, hand deburr only); if the shop declines, m8t60k12
+(0.60 walls, 13:1, 375 Hz) is the same drawing set with the fallback numbers.
+Order a spare plate: thin walls are the one thing a shop can scrap.
+
 ### Against the stacked P0 head
 
 | | stacked P0 (`../`) | parallel R01 (this) |

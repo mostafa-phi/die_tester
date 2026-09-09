@@ -127,6 +127,11 @@ VARIANTS["m8t50k12w"] = cnc_variant(8, 0.5, 12, w_in=20.0, s_g=9.0)
 # moving mass on the same leaves -> higher out-of-plane mode).
 VARIANTS["m8t50k12p"] = cnc_variant(8, 0.5, 12, pockets=True)
 VARIANTS["m8t60k12p"] = cnc_variant(8, 0.6, 12, pockets=True)
+# R06 (2026-09-09): m8t50k12 detailed for a one-piece CNC order. The stage pad
+# screw hole is drilled from the plate's outer edge in line with the frame
+# hole (through the wall, across the pocket, into the stage), so the stage
+# gets no counterbore: on a monolithic plate its inner face is inside a void.
+VARIANTS["r06"] = cnc_variant(8, 0.5, 12, stage_cbore=False)
 
 # R02 detailing, all in the frame of the +Y leg (rotated onto the others).
 R02 = dict(
@@ -190,6 +195,7 @@ P = dict(
     # mid-thickness web) and the platform from the back, walls `pocket_wall`.
     pockets=False,
     pocket_wall=2.0,
+    stage_cbore=True,    # counterbore on the stage's inner face (False on a monolithic plate: unreachable)
     pocket_web=3.2,      # stage web left around the pad screw / platform front plate
     # Two-leg plates: lightening windows in the +Y+Z corner block and in the
     # frame beside each pocket (the frame is fixed, so this is weight only).
@@ -497,10 +503,14 @@ def add_r02(plate: cq.Workplane, p: dict, d: dict) -> tuple[cq.Workplane, dict]:
         stage_cb = _cyl_along(leg, d["y_in0"] - 1.0, d["y_in0"] + r["cbore_stage"], 0.0, xm, r["cbore"])
         frame_hole = _cyl_along(leg, d["pocket1"] - p["pad_boss"] - 0.1, R + 1.0, 0.0, xm, r["screw_hole"])
         frame_cb = _cyl_along(leg, R - r["cbore_frame"], R + 1.0, 0.0, xm, r["cbore"])
-        for cyl in (stage_hole, stage_cb, frame_hole, frame_cb):
+        cuts = [stage_hole, frame_hole, frame_cb] + ([stage_cb] if p.get("stage_cbore", True) else [])
+        for cyl in cuts:
             plate = plate.cut(cyl)
-        added["screw_holes"].append({"leg": leg, "stage": "M2 x 8 SHCS from the coupler void",
-                                     "frame": "M2 x 5 SHCS from the outer edge"})
+        added["screw_holes"].append({
+            "leg": leg, "frame": "M2 x 5 SHCS from the outer edge",
+            "stage": ("M2 x 8 SHCS from the coupler void" if p.get("stage_cbore", True) else
+                      "M2 x 8 SHCS from the coupler void, head on the inner face (no counterbore); "
+                      "hole drilled from the outer edge in line with the frame hole")})
         # Wire-tie holes beside the pocket, one each side of the actuator where
         # there is frame to drill (a two-leg plate has frame on one side only).
         tie = p.get("wire_tie_pos", r["wire_tie_pos"])

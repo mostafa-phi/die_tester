@@ -13,3 +13,4 @@ parallel_yz/variants/m*/renders/
 !parallel_yz/variants/m8t60k12/renders/
 !parallel_yz/variants/m8t50k12/STEP/
 !parallel_yz/variants/m8t50k12/renders/
+# (r06 = m8t50k12 detailed for order: fully tracked, it does not match m*)

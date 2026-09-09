@@ -72,8 +72,10 @@ def main() -> int:
     ax.set_ylabel("Z (mm)")
     variant = rep["variant"]
     shim = rep.get("shim", {}).get("enabled", False)
-    millable = shim or (p["t"] >= 0.8 and p["b"] / p["t"] <= 10.5)
+    monolithic = (not shim) and p.get("stop") == "pin"      # the m*/R06 one-piece CNC plates
+    millable = shim or monolithic or (p["t"] >= 0.8 and p["b"] / p["t"] <= 10.5)
     process = (("CNC body + bonded shim leaves" if p.get("bond_all") else "CNC body + clamped shim leaves") if shim
+               else f"one-piece CNC, {p['b'] / p['t']:.0f}:1 thin-wall leaves, pin stops" if monolithic
                else "CNC-millable profile (or wire EDM)" if millable else "wire-EDM profile")
     ax.set_title(f"Parallel YZ flexure plate {variant} - {process}, viewed along the optical axis (+X toward viewer)\n"
                  f"{rep['actuator']['name']} in the +Y and +Z legs; scale from axes; DXF is the cut file",
@@ -107,11 +109,22 @@ def main() -> int:
             f"pad lands 2.5 x 5 x 0.2 raised, MILLED,\ncoplanar +/-0.02 (2 per driven leg)")
     callout(ax, (R, 0), (R + 18, -6),
             f"M2 clearance dia {r['screw_hole']:.1f} thru wall,\nc'bore dia {r['cbore']:.1f} x {r['cbore_frame']:.1f} from edge")
-    callout(ax, (d["y_in0"], 0), (R + 18, -18),
-            f"M2 clearance dia {r['screw_hole']:.1f} thru stage,\nc'bore dia {r['cbore']:.1f} x {r['cbore_stage']:.1f} from inner face")
-    t0, t1 = r["tongue"]
-    callout(ax, (p["a_p"] + 2, t1 + r["stop_gap"] / 2), (R + 18, -30),
-            f"stops: tongue/fork, gap {r['stop_gap']:.2f} +0.10/-0\nx{len(p['legs'])} legs, profile feature")
+    if p.get("stage_cbore", True):
+        callout(ax, (d["y_in0"], 0), (R + 18, -18),
+                f"M2 clearance dia {r['screw_hole']:.1f} thru stage,\nc'bore dia {r['cbore']:.1f} x {r['cbore_stage']:.1f} from inner face")
+    else:
+        callout(ax, (d["y_in0"], 0), (R + 18, -18),
+                f"M2 clearance dia {r['screw_hole']:.1f} thru stage, NO c'bore:\ndrilled from the outer edge in line with the frame hole")
+    if p.get("stop") == "pin":
+        pin = r["pins"][0]
+        st = r["stops"][0]
+        callout(ax, ((st["y"][0] + st["y"][1]) / 2, st["z"][1]), (R + 18, -30),
+                f"pin stops: dia {pin['dia']:.0f} dowel x {pin['length']:.0f} pressed from the outer edge (H7),\n"
+                f"2.6 notch thru the stage flank; +/-{pin['travel_to_stop']:.2f} travel, x2 legs")
+    else:
+        t0, t1 = r["tongue"]
+        callout(ax, (p["a_p"] + 2, t1 + r["stop_gap"] / 2), (R + 18, -30),
+                f"stops: tongue/fork, gap {r['stop_gap']:.2f} +0.10/-0\nx{len(p['legs'])} legs, profile feature")
     callout(ax, (0, 1.5), (R + 18, -42),
             f"dia {p['fiber_hole']:.0f} thru, {r['fiber_chamfer']:.1f} x 45 deg both faces\n"
             f"2 x M2 tapped {r['holder_tap_depth']:.0f} deep at Y +/-{r['holder_tap_y']:.1f} (front face)")
@@ -168,6 +181,21 @@ def main() -> int:
             "  Machine each piece as its own part (recommended): every hole is then on an external face. Ledges flat 0.01.",
             *clamp_notes,
         ]
+    elif monolithic:
+        pin = r["pins"][0]
+        process_notes = [
+            f"PROCESS: ONE PIECE, CNC milled from the DXF (mm, 1:1) in {rep['material']['name']}; no EDM, no assembly",
+            f"  of body parts. Internal corners R{p['r_root']:.1f} (dia {2 * p['r_root']:.0f} cutter, {b / (2 * p['r_root']):.0f}:1 reach).",
+            f"LEAVES (8 thin walls, the only critical feature): {t:.2f} +/-0.02 thick x {b:.0f} deep ({b / t:.0f}:1),",
+            f"  {p['L']:.1f} free length; faces flat and parallel 0.01 over {b:.0f}, perpendicular to the plate faces 0.01.",
+            "  Rough the profile leaving 0.3 on the leaves, finish the leaves LAST, both sides alternately in",
+            "  light passes (<= 0.1 radial), sharp cutter, no vibratory deburr - hand deburr only. Tell us if",
+            "  your DFM flags the walls: the fallback is 0.60 walls (variant m8t60k12), same drawing.",
+            f"PIN STOPS: 2 x dia {pin['dia']:.0f} H7 reamed from the outer edge (through the wall into the 2.6 notch),",
+            f"  dowel dia {pin['dia']:.0f} m6 x {pin['length']:.0f} pressed at assembly; +/-{pin['travel_to_stop']:.2f} of travel per leg.",
+            "PAD SCREWS: each leg's M2 clearance hole is one straight drill from the outer edge: through the",
+            "  frame wall (c'bore there), across the pocket, into the stage. No counterbore on the stage.",
+        ]
     elif millable:
         process_notes = [
             f"PROCESS: CNC mill the through profile from the DXF (mm, 1:1) or wire EDM it, shop's choice.",
@@ -190,11 +218,14 @@ def main() -> int:
         f"  (4 places); 2 x M2 taps on the front face; 4 x dia {p['bolt']:.1f}; {n_ties} x dia {r['wire_tie']:.0f}.",
         "FINISH: bare, deburr, ultrasonic clean; no anodising on the leaves.",
         "ASSEMBLY: APA pads bolt to the lands with M2 SHCS (frame: from the edge; stage: from the coupler void,",
-        "  ball-end key at <= 25 deg or stud + nut from the front). Torque per CEDRAT.",
+        "  ball-end key at <= 25 deg or stud + nut from the front). Torque per CEDRAT." + (
+            " Press the 2 stop dowels first." if p.get("stop") == "pin" else ""),
         "  Fiber enters from the back through the base opening; APA wires exit the pocket at the back face.",
         f"MASS: plate {rep['plate_mass_g']:.0f} g; base {rep['base']['mass_g']:.0f} g.",
-        f"CUTS: {rep['edm']['leaves']} leaves, {rep['edm']['closed_contours_to_thread']} closed contours, "
-        f"{rep['edm']['cut_length_mm'] / 1000:.2f} m of profile.",
+        (f"CUTS: {rep['edm']['leaves']} leaves, {rep['edm']['closed_contours_to_thread']} closed pockets/windows, "
+         f"{rep['edm']['cut_length_mm'] / 1000:.2f} m of profile." if monolithic else
+         f"CUTS: {rep['edm']['leaves']} leaves, {rep['edm']['closed_contours_to_thread']} closed contours, "
+         f"{rep['edm']['cut_length_mm'] / 1000:.2f} m of profile."),
         f"SOURCE: cad/piezo/parallel_yz/model.py, variant {variant}; analysis in the README.",
     ]
     fig.text(0.715, 0.90, "NOTES", fontsize=10, weight="bold", va="top")

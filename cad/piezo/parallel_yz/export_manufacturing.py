@@ -30,7 +30,9 @@ def main() -> int:
     root = HERE / "variants" / args.variant
     rep = json.loads((root / "geometry_report.json").read_text(encoding="utf-8"))
     if not rep.get("shim", {}).get("enabled"):
-        raise SystemExit("export_manufacturing.py is for shim-mode variants (R04)")
+        if rep["parameters"].get("stop") == "pin":
+            return export_monolithic(args.variant, root, rep)
+        raise SystemExit("export_manufacturing.py is for shim-mode (R04/R05) or monolithic pin-stop (R06) variants")
     p, sh, d, r = rep["parameters"], rep["shim"], rep["derived"], rep["r02"]
     out = root / "manufacturing"
     out.mkdir(exist_ok=True)
@@ -169,6 +171,122 @@ Bolt pattern for the base (Y, Z): {', '.join(f'({y:.1f}, {z:.1f})' for y, z in b
     (out / "README.md").write_text(readme, encoding="utf-8")
     counts = {k: len(v) for k, v in parts.items()}
     print(f"wrote {out} ({counts})")
+    return 0
+
+
+def export_monolithic(variant: str, root: Path, rep: dict) -> int:
+    """One-piece CNC plate (R06): the plate STEP, its profile DXF, the base
+    plate, the assembly reference, the sheet, and a README with the order
+    settings. Pins and screws are bought."""
+    p, d, r = rep["parameters"], rep["derived"], rep["r02"]
+    out = root / "manufacturing"
+    out.mkdir(exist_ok=True)
+    assembly = cq.importers.importStep(str(root / "STEP" / "parallel_yz_r01_assembly.step")).solids().vals()
+    loaded = cq.importers.importStep(str(root / "STEP" / "parallel_yz_r01_loaded.step")).solids().vals()
+
+    def kind(s):
+        bb = s.BoundingBox()
+        v = s.Volume()
+        if bb.xmin < -0.5:
+            return "base"
+        if v < 60:
+            return "pin"
+        if (bb.xmax - bb.xmin) > p["b"] + 0.5:
+            return "apa"
+        if bb.xmin > p["b"] - 0.5:
+            return "holder"
+        return "plate"
+
+    parts = {}
+    for s in assembly:
+        parts.setdefault(kind(s), []).append(s)
+    for s in loaded:
+        if kind(s) == "base":
+            parts["base"] = [s]
+    assert len(parts.get("plate", [])) == 1, f"expected one plate solid, got {len(parts.get('plate', []))}"
+
+    def export(name, solids):
+        cq.exporters.export(cq.Workplane("XY").add(solids), str(out / f"{name}.step"))
+
+    export("plate", parts["plate"])
+    export("base_plate", parts["base"])
+    export("assembly_reference", assembly)
+    shutil.copy(root / "STEP" / "parallel_yz_r02_profile.dxf", out / "plate_profile.dxf")
+    sheet = root / "renders" / "drawing_r02.png"
+    if sheet.exists():
+        shutil.copy(sheet, out / "drawing_sheet.png")
+
+    gap = d["pocket1"] - d["y_in1"] - 2 * p["pad_boss"]
+    pin = r["pins"][0]
+    box = d["box"]
+    bolts = rep["fixture_mounted"]["points"]
+    n_leaf = rep["edm"]["leaves"]
+    readme = f"""# {variant.upper()} manufacturing package - one-piece CNC plate
+
+Parallel-kinematic YZ fiber-alignment flexure, two {rep['actuator']['name']} actuators, monolithic
+{rep['material']['name']} plate {box[1] - box[0]:.1f} x {box[3] - box[2]:.1f} x {p['b']:.0f} mm with eight thin-wall milled leaves
+({p['t']:.2f} x {p['L']:.1f} mm, {p['b'] / p['t']:.0f}:1) and pin hard stops. Frame: X optical (plate thickness),
+Y lateral, Z up; all files mm. Analysis: ../../README.md (sections "Monolithic CNC sweep" and {variant.upper()}).
+
+| file | part | qty | material | process | what matters |
+|---|---|---|---|---|---|
+| `plate.step` (+ `plate_profile.dxf`, the through profile 1:1) | the flexure | 1 | {rep['material']['name']}, {p['b']:.0f} mm | CNC milling, one setup per face plus the edge drills; internal corners R{p['r_root']:.1f} (dia {2 * p['r_root']:.0f} cutter) | the {n_leaf} leaves: {p['t']:.2f} +/-0.02 thick, faces flat/parallel 0.01 over {p['b']:.0f}, perpendicular 0.01; finished last, light passes, hand deburr only. Pad lands coplanar +/-0.02 per leg, land gap {gap:.2f} +0.05/-0. Profile +/-0.05 elsewhere; faces ground flat 0.02 |
+| `drawing_sheet.png` | shop sheet | - | - | - | every note above, dimensioned; send with the STEP |
+| `base_plate.step` | mount | 1 | any aluminium | CNC, {rep['base']['t']:.0f} mm plate, opening {rep['base']['opening_mm'][0]:.0f} x {rep['base']['opening_mm'][1]:.0f}, 4 x dia {p['bolt']} | flat 0.02 where the flexure sits; a stiffness model - the station's real mount replaces it |
+| `assembly_reference.step` | everything placed | - | - | reference: plate, 2 stop pins, actuator envelopes | the actuators are datasheet envelopes; CEDRAT's STEP replaces them |
+
+## Bought parts
+
+| part | qty | notes |
+|---|---|---|
+| APA120S amplified piezo actuator | 2 | CEDRAT; 13 +/-0.1 pad-to-pad, M2 pads; shim 0.05-0.15 to the {gap:.2f} land gap |
+| dowel pin dia {pin['dia']:.0f} m6 x {pin['length']:.0f} (ISO 8734 / DIN 6325) | 2 | pressed into the dia {pin['dia']:.0f} H7 holes from the outer edge; +/-{pin['travel_to_stop']:.2f} of travel per leg |
+| M2 x 5 SHCS (frame pad), M2 x 8 SHCS (stage pad) | 2 + 2 | torque per CEDRAT; the stage screw's head bears on the stage's inner face (no counterbore), driven from the coupler void with a ball-end key or fitted as stud + nut |
+| M4 x 20 SHCS + washers | 4 | base |
+| 2-channel piezo amplifier (CEDRAT LA75 range or equivalent) | 1 | 1.1 uF per channel, >= 0.18 A peak for full stroke at 150 Hz |
+
+## Ordering on Xometry (or any CNC shop)
+
+- Process: CNC machining (milling). Material: {rep['material']['name']}. Finish: as machined, no anodising
+  (a coating on the leaves changes their stiffness and hides burrs). Quantity: 1 (+1 spare recommended: the
+  0.5 mm walls are the one feature a shop can scrap).
+- Tolerance: choose the tightest general class offered (+/-.001" / 0.025 mm) and list the critical locations
+  as the eight leaf thicknesses ({p['t']:.2f} +/-0.02), the four pad lands (coplanar +/-0.02, gap {gap:.2f} +0.05/-0)
+  and the two dia {pin['dia']:.0f} H7 pin holes: 14 locations. Everything else is +/-0.05 per the sheet.
+- Threads: 2 x M2 x {r['holder_tap_depth']:.0f} deep (front face). Upload `plate.step` and `drawing_sheet.png`; the DXF is
+  a convenience for the profile only.
+- Expect a DFM note on the {p['t']:.2f} mm walls ({p['b'] / p['t']:.0f}:1; most guides list 0.8 mm minimum for metals). Answer
+  it with the sheet's leaf note (rough leaving 0.3, finish last both sides, no tumbling). If the shop declines,
+  order variant m8t60k12 (0.60 walls, 13:1) from the same drawing set: 375 Hz instead of 431 Hz first mode.
+- Wire EDM is an acceptable alternative for the leaves only (through-profile), if the shop prefers it.
+
+## Tool access, feature by feature (one piece, no internal-face drilling)
+
+| feature | axis | reached from |
+|---|---|---|
+| profile: leaves, voids, pockets, windows, notches, stop notches | X | both faces (through) |
+| 4 x dia {p['bolt']:.1f} bolt holes, {len(r['wire_ties'])} x dia {r['wire_tie']:.0f} wire ties, fiber hole dia {p['fiber_hole']:.0f} + chamfers | X | the faces |
+| 2 x M2 holder taps | X | front face |
+| 4 pad lands (raised {p['pad_boss']:.1f}) | - | milled from the pocket, which is through |
+| pad screw hole per leg: dia {r['screw_hole']:.1f} through wall, pocket and stage; c'bore dia {r['cbore']:.1f} x {r['cbore_frame']:.1f} | leg axis | the outer edge, one straight drill ({p['wall']:.0f} wall + {gap:.1f} pocket + {d['w_in']:.0f} stage) |
+| 2 x dia {pin['dia']:.0f} H7 pin holes | across the leg | the outer edge, through the free wall into the notch |
+
+## Assembly sequence
+
+1. Deburr by hand, ultrasonic clean; check every leaf with a micrometer ({p['t']:.2f} +/-0.02) and sight the faces.
+2. Press the two stop dowels from the outer edges until flush 1 mm below the edge; check +/-{pin['travel_to_stop']:.2f} free travel
+   of each stage by hand (it must move freely and stop crisply both ways).
+3. Fit the actuators: drop each APA into its pocket with shims to a light preload, screw the frame pad from
+   the edge (M2 x 5), then the stage pad from the coupler void (M2 x 8, ball-end key, or stud + nut).
+4. Route the leads out at the back face; tie at the dia {r['wire_tie']:.0f} holes; drive each axis to +/-50 um and confirm
+   no stop contact and no rub.
+5. Fit the holder (2 x M2 on the platform front face); the fiber comes in from the back through the base
+   opening and the platform hole.
+
+Bolt pattern for the base (Y, Z): {', '.join(f'({y:.1f}, {z:.1f})' for y, z in bolts)}.
+"""
+    (out / "README.md").write_text(readme, encoding="utf-8")
+    print(f"wrote {out} ({ {k: len(v) for k, v in parts.items()} })")
     return 0
 
 
