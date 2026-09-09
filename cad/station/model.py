@@ -528,7 +528,97 @@ SN = dict(
     drop_t=3.0,                    # drop bracket: 3 mm leg on the -X side of the sensor (the sensor's M3 screws go along X into it)
     drop_tab=(-74.0, -60.0),       # its top tab X extent under the end plate (2 x M3 up into the plate); clear of the camera body
     heads_x=3.0,                   # M3 screw heads proud of the sensor's +X face (kept 5 mm from the open near root plate at X -43)
+    # ---- live-view camera (rev. 2.15): a second dart on a boom off the arm end plate's -Y edge, looking at the jaws from -Y
+    # and above, so every pick and set-down is watched from the side, at the tray and at the nest (the microscope sees the nest
+    # only from above; the tray camera looks 76 mm behind the jaws). Monitoring and fault diagnosis, not metrology.
+    # Why -Y: from -X / +X the arms and tip blocks hide the end faces, from above the height is invisible; -Y is the arm's own
+    # side, so the boom is short, and at the nest the sight line passes over the input fiber chuck (numbers in the checks).
+    live=True,
+    live_elev=35.0,                # optical-axis elevation above the horizontal (deg); the axis lies in the die's X = 5 plane and is
+    live_dist=63.0,                # aimed at the die centre (5, 3, 0.5), live_dist from the camera's housing front face
+    live_f=8.0, live_lens_out=11.0, live_spacer=1.5,   # 8 mm M12 lens focused at ~46 mm (1.5 mm extension); its length beyond the
+                                   # ring front (11) is an ENVELOPE until the lens is chosen. 8 mm rather than 12/16: depth of field
+                                   # (~6 mm at f/5.6 with a 3-pixel blur) has to cover the tilted die and the jaws' 2 mm of approach
+    live_pad=(36.0, -17.0, 35.0, 4.0),   # camera pad: width (X), extent below / above the axis along the pad, thickness; the pad's
+                                   # upper end runs into the shelf, the dart's front face is bolted to its back with 4 x M2
+    live_leg=(-28.0, -12.0),       # leg X extent on the end plate's -Y edge: 3 mm clear of the arm bar (X -31), 6 mm of the dia-40 tube
+    live_foot_up=2.5,              # foot bottom above the end plate's bottom face, so the foot stays 2.5 above the gripper bracket's
+                                   # top plate (Z 64..70) that ends 1 mm inside the plate edge; the 2 x M3 sit 2.75 below the plate top
+    live_shelf=(-52.0, -24.0, 63.0, 67.0),   # shelf Y extent and Z (bottom, top) the camera hangs under; +Y edge 7 mm from the tube
 )
+
+
+def live_camera(z_plate, with_aids=False):
+    """Live-view camera in the gripper frame at the nest (die origin at 0; the caller translates): Basler dart on a tilted pad
+    hanging from a boom (foot + leg on the end plate's -Y edge, shelf, pad) at -Y of the jaws, optical axis in the die's X = 5
+    plane at live_elev above the horizontal, aimed at the die centre from live_dist. Returns name -> solid; the boom is the
+    custom part, live_cam_fov (with_aids) the render aid."""
+    d = C.SENSORS["dart"]
+    e = math.radians(SN["live_elev"])
+    u = (0.0, math.cos(e), -math.sin(e))                                       # viewing direction (toward the die)
+    tx, ty, tz = C.DIE_LEN / 2, C.DIE_WID / 2, C.DIE_THK                        # aim point: die centre, top surface
+    P0 = (tx - SN["live_dist"] * u[0], ty - SN["live_dist"] * u[1], tz - SN["live_dist"] * u[2])   # housing front face centre
+    pw, v0, v1, pt = SN["live_pad"]
+    theta = 90.0 - SN["live_elev"]        # rotation about X taking the camera frame (+z behind the camera, +y up the pad) to (-u, v)
+
+    def place(shape):
+        return shape.rotate((0, 0, 0), (1, 0, 0), theta).translate(P0)
+
+    # camera frame: origin at the housing front face on the axis, -z toward the die, +y up the pad, x = station X
+    pad = box(-pw / 2, pw / 2, v0, v1, -pt, 0.0)                               # pad in front of the housing, ring through it
+    pad = pad.cut(C.cyl_z(0, 0, -pt - 1.0, 1.0, 8.5))                          # dia 17 for the lens ring
+    hd_, hp_ = d["holes"]
+    for dx in (-hp_ / 2, hp_ / 2):                                             # 4 x M2 tap-drill (screws from the camera's back)
+        for dy in (-hp_ / 2, hp_ / 2):
+            pad = pad.cut(C.cyl_z(dx, dy, -pt - 1.0, 1.0, M["tap_m2"] / 2))
+    P = {}
+    v = dart_vendor()
+    sx, sy, sh, ox, oy = d["stub"]
+    if v is not None:                                                          # USB side (+x file) toward +X, away from the gripper
+        P["live_cam_dart"] = place(cq.Workplane().add(v.translate((0, 0, -d["file_front_z"]))))
+    else:
+        body = box(-d["w"] / 2, d["w"] / 2, -d["l"] / 2, d["l"] / 2, 0.0, d["body_h"])
+        ring = C.cyl_z(0, 0, -d["ring_len"], 0.01, d["ring_d"] / 2)
+        stub = box(ox - sx / 2, ox + sx / 2, oy - sy / 2, oy + sy / 2, d["body_h"], d["body_h"] + sh)
+        P["live_cam_dart"] = place(body.union(ring).union(stub))
+    ring_front = -d["ring_len"]; lens_front = ring_front - SN["live_lens_out"]
+    P["live_cam_lens"] = place(C.cyl_z(0, 0, lens_front, ring_front + 0.01, d["lens_d"] / 2))
+    P["live_cam_usb_plug"] = place(box(d["w"] / 2 - 0.01, d["w"] / 2 + 10.0, oy - 4.0, oy + 4.0, d["body_h"], d["body_h"] + sh))
+    SN["live_wd"] = SN["live_dist"] + lens_front                               # lens front -> die centre along the axis
+    SN["live_lens_front"] = tuple(P0[i] - lens_front * u[i] for i in range(3))
+    if with_aids:
+        fw, fh, _ = C.sensor_fov(SN["live_wd"], f=SN["live_f"])
+        P["live_cam_fov"] = place(cq.Workplane("XY").workplane(offset=-SN["live_dist"]).rect(fw, fh)
+                                  .workplane(offset=SN["live_dist"] + lens_front).circle(3.0).loft())
+    # boom (one part): foot bolted to the end plate's -Y edge (2 x M3 along Y), leg down to the shelf, shelf, tilted pad
+    lx0, lx1 = SN["live_leg"]; sy0, sy1, sz0, sz1 = SN["live_shelf"]
+    iy0 = G.IFACE[2]                                                           # end plate -Y edge (Y -15)
+    zp1 = z_plate + S["arm_plate_t"]
+    zf0 = z_plate + SN["live_foot_up"]                                         # foot bottom: 2.5 above the bracket top plate (Z 70)
+    foot = box(lx0, lx1, iy0 - 6.0, iy0, zf0, zp1)                             # 6 thick against the plate edge, Z 72.5..78
+    leg = box(lx0, lx1, iy0 - 6.0, iy0 - 2.0, sz0, zf0)                        # 4 thick, 3 mm clear of the bracket top plate (Y -14)
+    link = box(lx0, lx1, sy1, iy0 - 2.0, sz0, sz1)
+    shelf = box(lx0, tx + pw / 2, sy0, sy1, sz0, sz1)
+    pad_w = place(pad)
+    boom = foot.union(leg).union(link).union(shelf).union(pad_w)
+    zh = (zf0 + zp1) / 2                                                       # M3 axis: 2.75 below the plate top
+    for x in (lx0 + 4.0, lx1 - 4.0):                                           # M3 clearance through the foot (tap-drill in arm())
+        boom = boom.cut(C.cyl_y(x, zh, iy0 - 6.5, iy0 + 0.5, 1.7))
+    P["live_cam_boom_6061"] = boom
+    # the boom's members for the per-member checks (its union box would span the empty corner next to the objective)
+    SN["_live_boom_members"] = [("foot", foot), ("leg", leg), ("link", link), ("shelf", shelf), ("pad", pad_w)]
+    return P
+
+
+def sens_members(sens, gx, gz):
+    """(name, solid) list of a sensor cluster for the checks: the live-camera boom expanded into its members."""
+    out = []
+    for n, s in sens.items():
+        if n == "live_cam_boom_6061":
+            out += [(f"live_cam_boom {mn}", m.translate((gx, 0, gz))) for mn, m in SN["_live_boom_members"]]
+        else:
+            out.append((n, s))
+    return out
 
 
 def dart_vendor():
@@ -569,6 +659,8 @@ def sensor_cluster(gx, gz, z_plate, with_aids=False):
         fw, fh, _ = C.sensor_fov(SN["cam_lens_z"] - C.DIE_THK)
         P["camera_fov"] = (cq.Workplane("XY").workplane(offset=C.DIE_THK).center(cx, cyc).rect(fw, fh)
                            .workplane(offset=SN["cam_lens_z"] - C.DIE_THK).circle(3.0).loft())
+    if SN["live"]:
+        P.update(live_camera(z_plate, with_aids))
     if not SN["laser"]:
         return {k: v.translate((gx, 0, gz)) for k, v in P.items()}
     # laser: 20 (X) x 44 (Y) x 25 (Z) body, emitting face down at laser_z0, beam beam_from_end from the -Y end, M3 heads on +X
@@ -617,6 +709,9 @@ def arm(xf, zc, z_iface_top, gx):
         ly0_ = SN["laser_c"][1] - h["beam_from_end"]; ly1_ = ly0_ + h["l"]
         for y in ((ly0_ + 6.0, ly1_ - 6.0) if SN["laser"] else ()):         # drop bracket: 2 x M3 tap-drill (laser option only)
             ep = ep.cut(C.cyl_z(gx + (SN["drop_tab"][0] + SN["drop_tab"][1]) / 2, y, z_iface_top - 0.5, z_iface_top + 6.0, M["tap_m3"] / 2))
+        lx0_, lx1_ = SN["live_leg"]
+        for x in ((lx0_ + 4.0, lx1_ - 4.0) if SN["live"] else ()):          # live-view camera boom: 2 x M3 tap-drill into the -Y edge
+            ep = ep.cut(C.cyl_y(gx + x, (z_iface_top + SN["live_foot_up"] + z_iface_top + 8.0) / 2, iy0 - 0.5, iy0 + 8.0, M["tap_m3"] / 2))
     al, ac = LX["table_holes"]
     for dz in (-al / 2, al / 2):
         for dy in (-ac / 2, ac / 2):
@@ -758,8 +853,10 @@ def main():
     tower2_parts = list(tower2.values())
     grip_stick = gripper_at(far_col_x, gz2, open_mm=1.5)
     sens_nest = sensor_cluster(0.0, 0.0, z_iface_top) if G.LAYOUT == "vertical" else {}
-    sens_far = sensor_cluster(far_col_x, gz2, z_iface_top + gz2) if G.LAYOUT == "vertical" else {}
-    sens_nest_parts, sens_far_parts = list(sens_nest.values()), list(sens_far.values())
+    sens_far = sensor_cluster(far_col_x, gz2, z_iface_top) if G.LAYOUT == "vertical" else {}   # gripper-frame plate height; the
+    # cluster is translated by (gx, 0, gz) inside (an earlier version passed z_iface_top + gz2 and so sat 12 mm low at the far column)
+    sens_nest_parts = [s for _, s in sens_members(sens_nest, 0.0, 0.0)]                 # per member (the boom expanded)
+    sens_far_parts = [s for _, s in sens_members(sens_far, far_col_x, gz2)]
 
     # ---- custom mounting parts: STEP + STL per part (the print list is docs/print_list.md) ----
     sfx = G.SFX
@@ -773,15 +870,21 @@ def main():
         C.export_part(static["nest_base_plate_6061"], DIRS, "nest_base_plate_6061")
         if SN["laser"]:
             C.export_part(sens_nest["laser_drop_bracket_6061"], DIRS, "laser_drop_bracket_6061")
+        if SN["live"]:
+            C.export_part(sens_nest["live_cam_boom_6061"], DIRS, "live_cam_boom_6061")
         # gripper + arm end + tray sensors close-up (render): jaws holding a die, beam and field of view shown
         gs = cq.Assembly(name="gripper_with_sensors")
         gs.add(arm_parts[2], name="arm_end_plate", color=cq.Color(0.18, 0.31, 0.44, 1.0))
         for n, s in grip_nest.items(): gs.add(s, name=f"gripper_{n}", color=cq.Color(0.25, 0.25, 0.27, 1.0))
         gs.add(static["die_at_nest"], name="die", color=cq.Color(0.81, 0.89, 0.97, 1.0))
+        for n, s in (("fiber_chuck_in", static["fiber_chuck_in"]), ("fiber_rotator_in", static["fiber_rotator_in"])):   # what the
+            gs.add(s, name=n, color=cq.Color(0.72, 0.72, 0.74, 1.0))                                                # live view looks over
         scol = {"camera_dart": (0.20, 0.22, 0.25), "camera_lens": (0.10, 0.10, 0.12), "camera_usb_plug": (0.35, 0.35, 0.38),
+                "live_cam_dart": (0.20, 0.22, 0.25), "live_cam_lens": (0.10, 0.10, 0.12), "live_cam_usb_plug": (0.35, 0.35, 0.38),
+                "live_cam_boom_6061": (0.18, 0.31, 0.44),
                 "laser_hgc1030": (0.55, 0.58, 0.62), "laser_screws": (0.45, 0.48, 0.52), "laser_drop_bracket_6061": (0.60, 0.63, 0.68)}
         for n, s in sensor_cluster(0.0, 0.0, z_iface_top, with_aids=True).items():
-            a_ = 0.35 if n in ("laser_beam", "camera_fov") else 1.0
+            a_ = 0.35 if n in ("laser_beam", "camera_fov", "live_cam_fov") else 1.0
             gs.add(s, name=n, color=cq.Color(*scol.get(n, (0.85, 0.64, 0.25)), a_))
         gs.save(os.path.join(DIRS["STEP"], "gripper_with_sensors.step"))
 
@@ -1010,7 +1113,7 @@ def main():
                      ("far_tip @nest", grip_nest["far_tip"]),
                      ("bracket @nest", grip_nest["bracket"]), ("mhz2_body @nest", grip_nest["mhz2_body"]), ("arm bar @nest", arm_parts[1]),
                      ("arm end plate @nest", arm_parts[2]), ("z_axis_motor @nest", tower["z_axis_motor"])] + \
-                    [(f"{n} @nest", s) for n, s in sens_nest.items()]:
+                    [(f"{n} @nest", s) for n, s in sens_members(sens_nest, 0.0, 0.0)]:
         for cn, (axy, r, z0, z1) in cyls.items():
             gp = gap_cyl(bb(part), axy, r, z0, z1)
             flag = "  OK " if gp > 2 else ("  TIGHT" if gp > 0 else "  ** OVERLAP **")
@@ -1042,6 +1145,23 @@ def main():
                    f"at the +8 traverse height: field {fw:.1f} x {fh:.1f} mm, {upx:.0f} um/px; column 0 imaged with the jaws at die X "
                    f"{S['tray_col0_x'] - SN['cam_c'][0]:.0f} (inside the exchange envelope), far column at {far_col_x - SN['cam_c'][0]:.0f}"
                    f"{'; housing from the vendor STEP' if dd['file'] in VENDOR_PLACED else '; housing envelope (vendor STEP missing)'}")
+        if SN["live"]:
+            lw_, lh_, lpx_ = C.sensor_fov(SN["live_wd"], f=SN["live_f"])
+            lf_ = SN["live_lens_front"]
+            e_ = math.radians(SN["live_elev"])
+            # sight line from the lens front to the die's -Y bottom edge (Y 0, Z 0) where it passes the input chuck tip (Y -5)
+            ct_y = -C.FIBER["protrusion"]; ct_top = C.DIE_THK + C.FIBER["chuck_d"] / 2      # fiber axis at the die top
+            z_at_tip = lf_[2] * (1.0 - (ct_y - lf_[1]) / (0.0 - lf_[1]))
+            rep.append(f"live-view camera on a boom off the end plate's -Y edge: second dart, optical axis in the die's X = 5 plane at "
+                       f"{SN['live_elev']:.0f} deg elevation aimed at the die centre, housing front {SN['live_dist']:.0f} from it, {SN['live_f']:.0f} mm "
+                       f"M12 lens on a {SN['live_spacer']:.1f} mm spacer, lens front at (X {lf_[0]:.0f}, Y {lf_[1]:.1f}, Z {lf_[2]:.1f}) -> "
+                       f"{SN['live_wd']:.1f} to the die centre: field {lw_:.1f} x {lh_:.1f} mm ({lw_ / math.sin(e_):.0f} mm of the die plane "
+                       f"along Y), {lpx_:.0f} um/px; the sight line to the die's -Y bottom edge passes {z_at_tip - ct_top:.1f} mm above the "
+                       f"input chuck tip at the nest (the chuck's middle X {C.DIE_LEN / 2 - C.FIBER['chuck_d'] / 2:.1f}..{C.DIE_LEN / 2 + C.FIBER['chuck_d'] / 2:.1f} "
+                       f"hides only what is below that); boom (foot on the plate edge, 2 x M3; leg X {SN['live_leg'][0]:.0f}..{SN['live_leg'][1]:.0f}; "
+                       f"shelf Y {SN['live_shelf'][0]:.0f}..{SN['live_shelf'][1]:.0f} at Z {SN['live_shelf'][2]:.0f}..{SN['live_shelf'][3]:.0f}; "
+                       f"pad {SN['live_pad'][0]:.0f} wide x {SN['live_pad'][3]:.0f}) is live_cam_boom_6061; the camera and boom move with the "
+                       f"gripper and are in every 'tray sensors' line above; lens length is an envelope until the lens is chosen")
         if SN["laser"]: rep.append(f"  HG-C1030 beam at die X {SN['laser_c'][0]:.0f} / Y {SN['laser_c'][1]:.0f}, emitting face {SN['laser_z0']:.0f} above the die-bottom plane -> "
                    f"{SN['laser_z0'] + 8 + S['tray_drop']:.0f} mm to the ledge plane at the traverse height (reference {C.SENSORS['hgc1030']['ref']:.0f} +/- "
                    f"{C.SENSORS['hgc1030']['span']:.0f}); +X rim (X {tray_ext[1]:.0f}) scanned with the jaws at die X {tray_ext[1] - SN['laser_c'][0]:.0f}, "
@@ -1083,7 +1203,9 @@ def main():
     for n, s in static.items(): assy.add(s, name=n, color=cq.Color(*col.get(n, al), 1.0))
     for n, s in moving_nest.items(): assy.add(s, name=n, color=cq.Color(*col.get(n, moving), 1.0))
     for n, s in grip_nest.items(): assy.add(s, name=f"gripper_{n}", color=cq.Color(0.25, 0.25, 0.27, 1.0))
-    for n, s in sens_nest.items(): assy.add(s, name=n, color=cq.Color(0.20, 0.22, 0.25, 1.0) if "camera" in n else cq.Color(0.55, 0.58, 0.62, 1.0))
+    for n, s in sens_nest.items():
+        sc = (0.20, 0.22, 0.25) if any(k in n for k in ("dart", "lens", "usb")) else (moving if "6061" in n else (0.55, 0.58, 0.62))
+        assy.add(s, name=n, color=cq.Color(*sc, 1.0))
     assy.add(keepout(), name="objective_keepout", color=cq.Color(0.85, 0.64, 0.25, 0.25))
     assy.save(os.path.join(DIRS["STEP"], f"station_assembly{suffix}.step"))
     # the second configuration (carriage, tower, arm, gripper and camera at the farthest tray column, jaws open in the pocket):

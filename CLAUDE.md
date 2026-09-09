@@ -148,5 +148,5 @@ HFR001 (41.9 mm overhang to the facet in the model), TEC part number and
 heat load, die backside finish, the LX20 envelope against its STEP (and the stepper length), the KB1X1 platform bolt pattern for
 the adapter plate under the X stage, RMPG40W-N resolution and repeatability, and the tray camera's lens (the 16 mm M12
 lens and its spacer are an envelope in `common.SENSORS` until the lens is chosen and its STEP placed; the dart housing
-is the vendor STEP). Until measured they stay as the
+is the vendor STEP), likewise the live-view camera's 8 mm lens (`SN["live_lens_out"]` in `cad/station`). Until measured they stay as the
 named parameters above with their assumed values stated in the component READMEs.

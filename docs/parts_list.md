@@ -22,7 +22,8 @@ the hand-cycling and sequence trials.
 | | micro-TEC 15 × 15 × 2.5 (Laird OptoTEC OT08 class or TE Technology TE-63-1.0-1.3) | 1 (+1) | |
 | | 10 kΩ glass-bead thermistor | 2 | |
 | Gripper and pneumatics | SMC MHZ2-6D-M9N with 2 × D-M9N switches | 2 | one spare |
-| Tray camera | Basler dart daA1440-220um S-mount (USB3, global shutter) + 12 mm M12 lens (Edmund μ-Video 12 mm, Commonlands CIL120 class or Basler S-mount 12 mm) + 3 mm M12 spacer ring + USB3 micro-B cable 3 m | 1 | pypylon; ≈ $300 + $80. A laser displacement sensor (Panasonic HG-C1030) was modelled and rejected for size, `cad/station/README.md` |
+| Tray camera | Basler dart daA1440-220um S-mount (USB3, global shutter) + 16 mm M12 lens (Edmund μ-Video 16 mm, Commonlands CIL160 class or Basler S-mount 16 mm) + 4 mm M12 spacer ring + USB3 micro-B cable 3 m | 1 | pypylon; ≈ $300 + $80. A laser displacement sensor (Panasonic HG-C1030) was modelled and rejected for size, `cad/station/README.md` |
+| Live-view camera | second Basler dart daA1440-220um S-mount + 8 mm M12 lens (Edmund μ-Video 8 mm, Commonlands CIL080 class or Basler S-mount 8 mm) + 1.5 mm M12 spacer ring + USB3 micro-B cable 3 m + two 3 mm white LEDs | 1 | side view of the jaws from −Y at 35°, on the boom `live_cam_boom_6061`; optional, monitoring only, §3.7 of the pick-and-place note |
 | | SMC SY3120-5LZ-M5 (gripper valve) | 2 | one spare |
 | | SMC VQ110-5L-M5 (chuck vacuum, blow-off) | 2 | |
 | | SMC AS1201F-M3-04 class meter-out speed controllers | 2 | ≤ 10 mm/s finger speed |
@@ -64,6 +65,7 @@ the hand-cycling and sequence trials.
 | Gripper bracket, far arm, near arm | `cad/gripper/STEP/bracket_6061.step`, `far_arm_6061.step`, `near_arm_6061.step` | 6061-T6, arms hard anodised | CNC | final, after the rig trials |
 | Tower bracket | `cad/station/STEP/tower_bracket_6061.step` | 6061 | mill from a 60 × 60 × 110 block | final |
 | Arm | `cad/station/STEP/arm_6061.step` | 6061 (stock 25 sq bar + machined block acceptable) | mill | final |
+| Live-view camera boom | `cad/station/STEP/live_cam_boom_6061.step` | 6061 (or the print, it carries 35 g) | mill, or print | after the camera trial |
 | X and Y riser bars | `cad/station/STEP/x_axis_riser_6061.step`, `y_axis_riser_6061.step` | 6061 bar (or 80/20 40 × 120 profile with a tapped top plate) | saw, face, drill, tap | final |
 | Tray deck | `cad/station/STEP/tray_deck_6061.step` | 6061 plate, 2 × Ø3 m6 × 10 dowel pins pressed in | mill, ream | final, or keep the print if the top measures flat |
 
@@ -76,6 +78,7 @@ the hand-cycling and sequence trials.
 | Tower bracket | `cad/station/STL/tower_bracket_6061.stl` | prototype | |
 | Arm | `cad/station/STL/arm_6061.stl` | prototype | one piece, no supports on its side |
 | Tray deck | `cad/station/STL/tray_deck_6061.stl` | prototype, possibly final | |
+| Live-view camera boom | `cad/station/STL/live_cam_boom_6061.stl` | prototype, possibly final | 35 g camera; print the pad face up |
 | X riser bar | `cad/station/STL/x_axis_riser_6061.stl` | prototype | 300 mm, on its side, ~0.7 kg |
 | Y riser bar | `cad/station/STL/y_axis_riser_6061.stl` | prototype | |
 | Nest T-riser, KB adapter, spacer | `cad/nest/STL/nest_riser_6061.stl`, `nest_adapter_kb_kxc.stl`, `nest_spacer_kxc_rot.stl` | fit check and cold trials only | metrology loop: aluminium for anything measured |
