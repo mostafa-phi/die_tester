@@ -467,8 +467,9 @@ $py = "C:\Users\<user>\pythonEnvs\pic-env\Scripts\python.exe"
 ### Running the chain on the compute host
 
 The same chain runs on the group's Linux box (`ssh compute`: mlcuda2, 4 × Xeon
-8280 = 112 cores on 4 NUMA nodes, 3 TB, 2 × A100). `remote/remote.ps1` drives
-it from this checkout:
+8280 = 112 cores on 4 NUMA nodes, 3 TB, 2 × A100). **The how-to, setup and
+pitfalls are in [`remote/cuda-remote-host.md`](remote/cuda-remote-host.md)**;
+`remote/remote.ps1` drives it from this checkout:
 
 ```powershell
 .\remote\remote.ps1 setup          # once: micromamba env under ~/mostafa on the host (~10 min)
