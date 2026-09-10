@@ -125,9 +125,9 @@ does the rest. How the map is obtained, in order of preference:
    "closed empty" as the noses ride up), or simply until the picked die's height at the nest microscope stops changing.
    Five points, once per tray type (not per tray), fitted to a plane and stored. Because the jaws measure their own
    height, the rail-pitch error between a sensor position and the jaws does not enter.
-4. **Check every die with the camera.** The dart on the arm (§3.6) sees each die's apparent length: at 55.5 mm and
-   12.5 µm per pixel a 10.000 mm die spans 800 px and a 0.1 mm height change scales it by 1.4 px, so with sub-pixel edge
-   fitting and a one-time lens calibration each die's height is known to about ±0.02 mm before the pick, and a die
+4. **Check every die with the camera.** The dart on the arm (§3.6) sees each die's apparent length: at 75.6 mm and
+   13 µm per pixel a 10.000 mm die spans 770 px and a 0.1 mm height change scales it by 1.0 px, so with sub-pixel edge
+   fitting and a one-time lens calibration each die's height is known to about ±0.03 mm before the pick, and a die
    sitting on a wall (0.8 mm proud, tilted 4.6°) is unmistakable.
 
 **Why not a laser displacement sensor.** A Panasonic HG-C1030 (30 ± 5 mm, 10 µm) on the arm was modelled
@@ -143,16 +143,34 @@ X, Y and yaw of the tray come from the two deck pins (`cad/tray/README.md`), so 
 The gripper itself is blind; the pocket play is removed mechanically (X and yaw by the closing noses, X and yaw again by
 the push-to-stop at the nest) except for **Y**, which the jaws do not define, and the discrete errors of hand loading
 (die rotated 180°, upside down, missing, doubled, chipped). The **Basler dart daA1440-220um** camera on the arm end
-plate looks down 76 mm behind the jaws (X −76, Y 3 in the gripper frame): at the traverse height a tray die is 55.5 mm
-from the lens, field 18 × 14 mm at 12.5 µm per pixel, so one pocket fills the frame. The lens is a 12 mm M12 board
-lens on a 3 mm spacer ring: board lenses are sold focused near infinity with a 100–200 mm minimum object distance, and
-the extension that focuses one at distance d is f²/(d − f), 3.3 mm here (depth of field about 1 mm at f/4). Before
+plate looks down 76 mm behind the jaws (X −76, Y 3 in the gripper frame): at the traverse height a tray die is 75.6 mm
+from the lens, field 18.5 × 13.9 mm at 13 µm per pixel, so one pocket fills the frame. The lens is a 16 mm M12 board
+lens on a 4 mm spacer ring: board lenses are sold focused near infinity with a 100–200 mm minimum object distance, and
+the extension that focuses one at distance d is f²/(d − f), 4.3 mm here (depth of field about 1.5 mm at f/4). The camera
+stands on top of the end plate with its lens ring down through the plate, so nothing hangs below it. Before
 each pick the software checks occupancy, reads the orientation fiducial (ask the layout for an asymmetric mark in the
 metal layer), flags chipped corners, and measures the die's Y offset in the pocket to ±0.05 mm; the pick then lands the
 die centred in the nest cage instead of up to 0.4 mm off. A 180° die is either mapped mirrored or skipped and logged; an
 upside-down or missing die is skipped. The nest microscope re-checks every die after the place (fiducials, seat against
 the pads). Lighting: a small white LED ring around the lens (to be added to the bracket) or the bench light; the die's
 metal fiducials read well in dark field.
+
+### 3.7 Watching the pick and the place: the live-view camera
+
+The tray camera looks 76 mm behind the jaws and the nest microscope looks straight down, so neither shows the moment
+that matters when something goes wrong: the noses entering the slots, the die lifting off the ledges or settling on
+the pads, the release. A second **dart daA1440** on a boom off the arm end plate's −Y edge (`cad/station`,
+`live_cam_boom_6061`) rides with the gripper and looks at the jaws from the side: optical axis in the die's X = 5
+plane, 35° above the horizontal, aimed at the die centre from 63 mm; an 8 mm M12 lens on a 1.5 mm spacer gives
+24 × 18 mm at 16 µm per pixel with about 6 mm of depth of field at f/5.6, enough for the tilted die and the jaws'
+approach. Because the camera moves with the gripper the picture is the same at every pocket and at the nest, so one
+set of image regions (nose gap, die outline, ledge line) serves the whole run, and a frame per step can be logged
+with the pick record. Why the −Y side and not −X or above: from ±X the arms and tip blocks hide the end faces, from
+above the height is invisible, and −Y is the arm's own side, so the boom stays short and inside the exchange
+envelope's Y band; at the nest the sight line to the die's near bottom edge clears the input fiber chuck's tip by
+0.2 mm (the chuck hides only what lies below the die in the middle of the frame, and the fibers are retracted 1 mm
+during the exchange anyway). It is a monitoring camera: the metrology stays with the microscope (nest) and the tray
+camera (pocket). Lighting: two 3 mm white LEDs on the pad, or the microscope ring light at the nest.
 
 ## 4. Sensing the die in the jaws
 

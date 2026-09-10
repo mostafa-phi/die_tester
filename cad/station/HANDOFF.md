@@ -40,3 +40,19 @@ drop your local `nest_kxc04015_unnamed` rename after the next zip.
 folded to LF, and `.gitattributes` marks `*.step -text` and `*.stl`, `*.zip`, `*.png` binary so the large files are
 never converted. Pull, then `python cad/build.py --check` should pass on your checkout; if it does not, say which
 files still differ.
+
+---
+
+## 2026-09-09 — ANNOUNCEMENT: live-view camera members (designer agent)
+
+New members in `station_assembly.step.zip` and `station_far_column.step` (suffix `_at_far_col` there), all moving
+with the gripper, all with the prefix `live_cam_`: `live_cam_dart` (a second Basler dart, vendor STEP), `live_cam_lens`,
+`live_cam_usb_plug`, `live_cam_boom_6061` (the custom boom: foot on the end plate's −Y edge, leg, shelf, tilted pad;
+one solid). `gripper_with_sensors.step` additionally carries `live_cam_fov` (translucent field-of-view aid) and, for
+the view, `fiber_chuck_in` / `fiber_rotator_in`. Nothing was renamed; `arm_6061` gained two M3 tap-drill holes in its
+end plate's −Y edge. The tray coupon (`cad/tray`) does not appear in the station. Material hint: the boom is a 6061 /
+printed bracket like `arm_6061`; the dart, lens and plug as `camera_*`.
+
+Also in `station_far_column.step`: the tray camera members (`camera_*_at_far_col`) moved **up 12 mm**; the earlier
+file placed them a tray drop too low (double offset in the model), so they sat inside the arm end plate there. The
+main assembly (at the nest) is unaffected.

@@ -134,31 +134,31 @@ clearances vs boxes (AABB separation, mm; negative = overlap):
   gripper mhz2_body @far col       vs x_axis_rail_lx20          :   143.0  OK 
   gripper mhz2_body @far col       vs y_axis_motor              :   164.0  OK 
   gripper bracket @far col         vs y_axis_motor              :   152.0  OK 
-  tray sensors @nest (per member)  vs gripper near_arm @nest    :    35.1  OK 
-  tray sensors @nest (per member)  vs gripper mhz2_fing_near @nest:    30.5  OK 
-  tray sensors @nest (per member)  vs gripper mhz2_body @nest   :    21.4  OK 
-  tray sensors @nest (per member)  vs gripper bracket top plate @nest:     7.5  OK 
-  tray sensors @nest (per member)  vs gripper bracket vert. plate @nest:    17.5  OK 
-  tray sensors @nest (per member)  vs nanomax300_in             :    67.6  OK 
+  tray sensors @nest (per member)  vs gripper near_arm @nest    :    23.5  OK 
+  tray sensors @nest (per member)  vs gripper mhz2_fing_near @nest:    26.3  OK 
+  tray sensors @nest (per member)  vs gripper mhz2_body @nest   :    13.0  OK 
+  tray sensors @nest (per member)  vs gripper bracket top plate @nest:     2.5  OK 
+  tray sensors @nest (per member)  vs gripper bracket vert. plate @nest:    10.0  OK 
+  tray sensors @nest (per member)  vs nanomax300_in             :    31.9  OK 
   tray sensors @nest (per member)  vs nanomax300_out            :    67.6  OK 
-  tray sensors @nest (per member)  vs fiber holder_in (per member):    59.1  OK 
-  tray sensors @nest (per member)  vs fiber holder_out (per member):    59.1  OK 
-  tray sensors @nest (per member)  vs fiber_in                  :    71.5  OK 
-  tray sensors @nest (per member)  vs fiber_out                 :    71.5  OK 
-  tray sensors @nest (per member)  vs die stage stack (per member):   117.4  OK 
-  tray sensors @nest (per member)  vs microscope_arm            :    66.5  OK 
-  tray sensors @nest (per member)  vs arm bar @nest             :     5.5  OK 
+  tray sensors @nest (per member)  vs fiber holder_in (per member):     7.4  OK 
+  tray sensors @nest (per member)  vs fiber holder_out (per member):    36.3  OK 
+  tray sensors @nest (per member)  vs fiber_in                  :    20.3  OK 
+  tray sensors @nest (per member)  vs fiber_out                 :    31.3  OK 
+  tray sensors @nest (per member)  vs die stage stack (per member):    81.7  OK 
+  tray sensors @nest (per member)  vs microscope_arm            :    42.5  OK 
+  tray sensors @nest (per member)  vs arm bar @nest             :     3.0  OK 
   tray sensors @nest (per member)  vs z_axis_motor @nest        :   132.5  OK 
-  tray sensors @far col (per member) vs wafer_tray                :    58.0  OK 
-  tray sensors @far col (per member) vs tray_deck                 :    50.0  OK 
-  tray sensors @far col (per member) vs tray pins (per member)    :    60.0  OK 
-  tray sensors @far col (per member) vs tower @far column (per member):   123.5  OK 
-  tray sensors @far col (per member) vs x_axis_block @far column  :   127.5  OK 
-  tray sensors @far col (per member) vs y_axis_rail_lx20          :   102.5  OK 
-  tray sensors @far col (per member) vs y_axis_block              :    96.5  OK 
+  tray sensors @far col (per member) vs wafer_tray                :    19.6  OK 
+  tray sensors @far col (per member) vs tray_deck                 :    23.4  OK 
+  tray sensors @far col (per member) vs tray pins (per member)    :    26.8  OK 
+  tray sensors @far col (per member) vs tower @far column (per member):    74.8  OK 
+  tray sensors @far col (per member) vs x_axis_block @far column  :    80.6  OK 
+  tray sensors @far col (per member) vs y_axis_rail_lx20          :    29.9  OK 
+  tray sensors @far col (per member) vs y_axis_block              :    29.4  OK 
   tray sensors @far col (per member) vs y_axis_motor              :   154.5  OK 
-  tray sensors @far col (per member) vs y_stage_riser             :    90.0  OK 
-  tray sensors @far col (per member) vs x_axis_rail_lx20          :   133.5  OK 
+  tray sensors @far col (per member) vs y_stage_riser             :    56.4  OK 
+  tray sensors @far col (per member) vs x_axis_rail_lx20          :    80.8  OK 
   tray sensors @far col (per member) vs x_axis_motor              :   146.4  OK 
   arm end plate @far col           vs tower @far column (per member):   120.0  OK 
   arm end plate @nest              vs nanomax300_in             :    81.5  OK 
@@ -210,11 +210,35 @@ clearances vs microscope cylinders (radial or vertical, mm):
   camera_usb_plug @nest    vs objective (dia 34)        :    78.8  OK 
   camera_usb_plug @nest    vs microscope_tube (dia 40)  :    75.8  OK 
   camera_usb_plug @nest    vs microscope_column (dia 40):   150.7  OK 
+  live_cam_dart @nest      vs objective (dia 34)        :    25.2  OK 
+  live_cam_dart @nest      vs microscope_tube (dia 40)  :    22.2  OK 
+  live_cam_dart @nest      vs microscope_column (dia 40):    53.5  OK 
+  live_cam_lens @nest      vs objective (dia 34)        :    16.7  OK 
+  live_cam_lens @nest      vs microscope_tube (dia 40)  :    21.5  OK 
+  live_cam_lens @nest      vs microscope_column (dia 40):    55.9  OK 
+  live_cam_usb_plug @nest  vs objective (dia 34)        :    36.3  OK 
+  live_cam_usb_plug @nest  vs microscope_tube (dia 40)  :    33.3  OK 
+  live_cam_usb_plug @nest  vs microscope_column (dia 40):    51.9  OK 
+  live_cam_boom foot @nest vs objective (dia 34)        :    12.0  OK 
+  live_cam_boom foot @nest vs microscope_tube (dia 40)  :     4.8  OK 
+  live_cam_boom foot @nest vs microscope_column (dia 40):    73.7  OK 
+  live_cam_boom leg @nest  vs objective (dia 34)        :     9.2  OK 
+  live_cam_boom leg @nest  vs microscope_tube (dia 40)  :     6.2  OK 
+  live_cam_boom leg @nest  vs microscope_column (dia 40):    74.1  OK 
+  live_cam_boom link @nest vs objective (dia 34)        :     9.2  OK 
+  live_cam_boom link @nest vs microscope_tube (dia 40)  :     6.2  OK 
+  live_cam_boom link @nest vs microscope_column (dia 40):    74.1  OK 
+  live_cam_boom shelf @nest vs objective (dia 34)        :    10.0  OK 
+  live_cam_boom shelf @nest vs microscope_tube (dia 40)  :     7.0  OK 
+  live_cam_boom shelf @nest vs microscope_column (dia 40):    43.1  OK 
+  live_cam_boom pad @nest  vs objective (dia 34)        :    11.3  OK 
+  live_cam_boom pad @nest  vs microscope_tube (dia 40)  :     8.3  OK 
+  live_cam_boom pad @nest  vs microscope_column (dia 40):    43.6  OK 
 
 swept volumes nest <-> tray (after the 8 mm lift; per member) vs static objects:
-  gripper band vs nanomax300_in         :    42.7  OK     arm band:    81.5  OK 
-  gripper band vs fiber_mount_in        :    57.0  OK     arm band:    56.9  OK 
-  gripper band vs fiber_rotator_in      :    32.9  OK     arm band:    57.0  OK 
+  gripper band vs nanomax300_in         :    39.9  OK     arm band:    81.5  OK 
+  gripper band vs fiber_mount_in        :    15.3  OK     arm band:    56.9  OK 
+  gripper band vs fiber_rotator_in      :    15.4  OK     arm band:    57.0  OK 
   gripper band vs fiber_chuck_in        :     6.5  OK     arm band:    66.3  OK 
   gripper band vs fiber_in              :     7.5  OK     arm band:    77.4  OK 
   gripper band vs nanomax300_out        :    43.2  OK     arm band:    89.5  OK 
@@ -224,18 +248,19 @@ swept volumes nest <-> tray (after the 8 mm lift; per member) vs static objects:
   gripper band vs nest_riser_6061       :    12.5  OK     arm band:    82.5  OK 
   gripper band vs nest_kxc04015_motor   :    69.4  OK     arm band:   131.3  OK 
   gripper band vs nest_rmpg40w_motor    :    35.0  OK     arm band:   104.9  OK 
-  gripper band vs x_axis_rail_lx20      :   131.0  OK     arm band:    36.2  OK 
-  gripper band vs x_axis_riser          :   116.0  OK     arm band:    62.7  OK 
+  gripper band vs x_axis_rail_lx20      :    80.8  OK     arm band:    36.2  OK 
+  gripper band vs x_axis_riser          :    65.8  OK     arm band:    62.7  OK 
   gripper band vs x_axis_motor          :   146.4  OK     arm band:   153.0  OK 
   gripper band vs y_axis_motor          :   152.0  OK     arm band:   147.0  OK 
   gripper band vs y_axis_plate          :   133.8  OK     arm band:   128.8  OK 
-  gripper band vs microscope_arm        :    42.5  OK     arm band:    34.5  OK 
+  gripper band vs microscope_arm        :    34.5  OK     arm band:    34.5  OK 
   gripper band vs objective (dia 34)    :    -8.5  ** CHECK **    arm band:    17.5  OK 
-  gripper band vs microscope_tube (dia 40):     4.9  OK     arm band:     7.0  OK 
-  gripper band vs microscope_column (dia 40):    44.1  OK     arm band:    82.0  OK 
+  gripper band vs microscope_tube (dia 40):     4.8  OK     arm band:     7.0  OK 
+  gripper band vs microscope_column (dia 40):    43.1  OK     arm band:    82.0  OK 
 
 
 tray camera on the arm end plate (vertical layout): Basler dart daA1440 S-mount standing on the plate top, ring through a dia 17 hole, axis at die X -76 / Y 3, 16 mm M12 lens on a 4 mm spacer, lens front 56.1 above the jaws' die-bottom plane -> 75.6 to a tray die top at the +8 traverse height: field 18.5 x 13.9 mm, 13 um/px; column 0 imaged with the jaws at die X -19 (inside the exchange envelope), far column at -131; housing from the vendor STEP
+live-view camera on a boom off the end plate's -Y edge: second dart, optical axis in the die's X = 5 plane at 35 deg elevation aimed at the die centre, housing front 63 from it, 8 mm M12 lens on a 1.5 mm spacer, lens front at (X 5, Y -34.8, Z 26.9) -> 46.1 to the die centre: field 23.7 x 17.8 mm (41 mm of the die plane along Y), 16 um/px; the sight line to the die's -Y bottom edge passes 0.2 mm above the input chuck tip at the nest (the chuck's middle X 1.8..8.2 hides only what is below that); boom (foot on the plate edge, 2 x M3; leg X -28..-12; shelf Y -52..-24 at Z 63..67; pad 36 wide x 4) is live_cam_boom_6061; the camera and boom move with the gripper and are in every 'tray sensors' line above; lens length is an envelope until the lens is chosen
   laser displacement sensor: not fitted (rejected for size, SN['laser']); Z across the tray by touch-off per tray type, the camera's size-based height check and the +/-0.15 pick window (docs/pick_and_place_design.md 3.5)
 the gripper band sweep necessarily passes under the objective (that is the exchange); its clearance there is the
 bar height check in cad/gripper/checks.txt (tallest part 9.0 mm above die top vs WD).
