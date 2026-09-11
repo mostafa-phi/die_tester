@@ -172,7 +172,9 @@ LX20 = dict(
     plate_t=13.0, plate_sq=40.0,                     # motor adapter plate (A2040 as uploaded; T2042 for a 42 sq stepper has the same outline)
     motor_sq=42.0, motor_len=90.0,                   # motor envelope on the plate: 40 sq servo or 42 sq brake stepper, length assumed
     stroke={100: 36.5, 150: 86.5, 200: 136.5, 250: 186.5, 300: 236.5},   # effective stroke per base length L
-    v_max=690.0, repeat=0.005, m_a=27.0, m_c=93.0,   # mm/s (screw-rated), mm, N.m, N.m
+    v_max=690.0, repeat=0.005,                       # mm/s (screw-rated), mm
+    m_a=27.0, m_b=27.0, m_c=93.0,                    # allowable static moments, N.m: pitch (about the width axis),
+                                                     # yaw (about the table normal), roll (about the rail axis)
     # bolt patterns measured in the vendor STEP files (file frame, see above):
     mount_pitch=60.0, mount_hole=3.4, mount_row=9.0, # base: N x dia 3.4 through / dia 6.5 counterbore from inside the rail channel,
                                                      # two rows at z = +/-9, pitch 60 along the rail; the mounting surface gets M3
@@ -258,6 +260,12 @@ def gap_cyl(a, axis_xy, r, z0, z1):
 
 def flag(g, need=2.0, tight=0.0):
     return "  OK " if g > need else ("  TIGHT" if g > tight else "  ** OVERLAP **")
+
+
+def n_solids(shape):
+    """Number of separate solids in a Workplane / Shape. A machined or printed part must be exactly one."""
+    s = shape.val() if hasattr(shape, "val") else shape
+    return len(s.Solids())
 
 
 # ----------------------------------------------------------------------------

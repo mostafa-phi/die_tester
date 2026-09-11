@@ -71,7 +71,14 @@ S = dict(
     tower_w=60.0, tower_t=10.0,    # 6061 angle bracket on the X block: 60 x 60 x 10 base plate (block's 4 x M4), 10 mm vertical leg
     arm_sec=25.0,                  # square arm bar (6061) from the adapter plate on the Z block to the gripper interface
     arm_plate_t=8.0,               # adapter plate on the Z block face (block's 4 x M4)
-    tower_mass=1.8,                # kg: Z actuator 0.45 + brake motor 0.6 + bracket 0.3 + arm 0.25 + gripper 0.1 + tray sensors 0.1 (moment check)
+    # moment check on the X and Z table plates (carriage_moments): the 6061 parts are weighed from their CAD volume at
+    # al_density; the bought parts below have no CAD mass and keep their catalog / estimated masses
+    al_density=2.70e-6,            # kg/mm^3, 6061-T6
+    bought_mass=dict(z_actuator=0.45,   # LX2005CG L 100: rail, table and adapter plate (common.LX20 "mass_per_100")
+                     z_motor=0.6,       # 42 sq brake stepper (estimate)
+                     gripper=0.1,       # gripper module: MHZ2-6D, bracket, arms, tip blocks (estimate)
+                     cameras=0.1),      # two Basler darts (15 g each) with their M12 lenses and spacers (estimate)
+    x_speed=200.0, x_ramp=25.0,    # X exchange move: speed (mm/s) and ramp length (mm) -> acceleration v^2 / (2 ramp)
     # wafer tray: geometry and column positions live in cad/tray (TM.TR)
     tray_cols=TM.TR["cols"], tray_rows=TM.TR["rows"], tray_col_pitch=TM.TR["col_pitch"], tray_row_pitch=TM.TR["row_pitch"],
     tray_col0_x=TM.TR["col0_x"],   # die X of the first (nearest) column; last column at -95 - 7*16 = -207
@@ -804,6 +811,41 @@ def gripper_at(gx, gz, open_mm=0.0):
 # ----------------------------------------------------------------------------
 # Clearance checks (axis-aligned bounding boxes)
 # ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# Static moments on the LX20 table plates (checks)
+# ----------------------------------------------------------------------------
+def weighed(name, shape):
+    """(name, kg, centre of mass) of a 6061 part from its CAD volume."""
+    s = shape.val() if hasattr(shape, "val") else shape
+    c = s.Center()
+    return name, s.Volume() * S["al_density"], (c.x, c.y, c.z)
+
+
+def lumped(name, kg, shapes):
+    """(name, kg, centre) of a bought part or group: its catalog / estimated mass at the centre of the members' joint box."""
+    boxes = [C.bb(s) for s in shapes]
+    lo = [min(b[2 * i] for b in boxes) for i in range(3)]
+    hi = [max(b[2 * i + 1] for b in boxes) for i in range(3)]
+    return name, kg, tuple((lo[i] + hi[i]) / 2 for i in range(3))
+
+
+def carriage_moments(items, ref, axes, accel):
+    """Static moments (N.m) on a table plate from the masses it carries, about the point `ref` (mm).
+    items: (name, kg, centre of mass in mm). Each mass contributes r x F: its weight (0, 0, -m g), and the d'Alembert force
+    (-m a, 0, 0) of the X move, which accelerates both ways, so the two are added in magnitude (worst sign).
+    axes maps "pitch" / "yaw" / "roll" to the station axis (0 = X, 1 = Y, 2 = Z) that moment turns about."""
+    g = 9.81
+    gravity = [0.0, 0.0, 0.0]
+    inertia = [0.0, 0.0, 0.0]
+    for _, m, c in items:
+        rx, ry, rz = ((c[i] - ref[i]) / 1000.0 for i in range(3))
+        gravity[0] += -ry * m * g            # r x (0, 0, -m g) = (-ry m g, rx m g, 0)
+        gravity[1] += rx * m * g
+        inertia[1] += rz * m * accel         # r x (m a, 0, 0) = (0, rz m a, -ry m a)
+        inertia[2] += -ry * m * accel
+    return {name: abs(gravity[i]) + abs(inertia[i]) for name, i in axes.items()}
+
+
 def main():
     # ---- derived transport numbers (all from the gripper interface, the tray drop and the actuator geometry) ----
     lo_c, _ = lx_limits(0)                                             # 31.75: block centre to rail end at the limit
@@ -928,12 +970,30 @@ def main():
     rep.append(f"  Z: L {Lz} (stroke {LX['stroke'][Lz]}), rail Z {S['z_rail_z0']:.1f}..{S['z_rail_z0'] + Lz:.1f}, motor up to Z {S['_z_top']:.0f}; "
                f"block centre nest {zc_nest:.1f}, +8 lift, tray {zc_nest + gz2:.1f}: used {z_used:.1f}; limits {zlo:.1f}..{zhi:.1f} -> margins {zc_nest + gz2 - zlo:.1f} / {zhi - zc_nest - 8:.1f}"
                f"{'  OK ' if zc_nest + gz2 >= zlo and zc_nest + 8 <= zhi else '  ** OUT OF TRAVEL **'}")
-    lever = (zc_nest - (S["x_rail_z"] + LX["block_top"])) / 1000.0
-    ma = S["tower_mass"] * 9.81 * lever
-    mc = 0.45 * 9.81 * (cy - S["x_axis_cy"]) / 1000.0
-    rep.append(f"  X block moment: tower {S['tower_mass']} kg at {lever * 1000:.0f} mm above the block -> Ma {ma:.2f} N.m of {LX['m_a']:.0f} allowable; "
-               f"arm + gripper 0.45 kg at {cy - S['x_axis_cy']:.0f} mm -> Mc {mc:.2f} N.m of {LX['m_c']:.0f}{'  OK ' if ma < LX['m_a'] / 5 and mc < LX['m_c'] / 5 else '  ** CHECK **'}")
-    rep.append(f"  exchange time: X {abs(far_col_x):.0f} mm at 200 mm/s with 25 mm ramps ~{abs(far_col_x) / 200 + 0.3:.1f} s each way; Z moves 8 / 20 mm at 50 mm/s")
+    # static moments on the X and Z table plates at the nest: 6061 parts weighed from CAD, bought parts at their catalog mass;
+    # about the centre of each table plate's face (confirm against the catalog's moment reference); OK below 1/5 of allowable
+    accel = S["x_speed"] ** 2 / (2 * S["x_ramp"]) / 1000.0                                  # m/s^2
+    bm = S["bought_mass"]
+    on_z = [weighed("arm", arm_u), lumped("gripper", bm["gripper"], list(grip_nest.values()))]
+    cams = [sens_nest[n] for n in ("camera_dart", "camera_lens", "live_cam_dart", "live_cam_lens") if n in sens_nest]
+    if cams:
+        on_z.append(lumped("cameras", bm["cameras"], cams))
+    if "live_cam_boom_6061" in sens_nest:
+        on_z.append(weighed("live_cam_boom", sens_nest["live_cam_boom_6061"]))
+    on_x = on_z + [weighed("tower_bracket", tower["tower_bracket_6061"]),
+                   lumped("z_actuator", bm["z_actuator"], [tower["z_axis_rail_lx20"], tower["z_axis_block"], tower["z_axis_plate"]]),
+                   lumped("z_motor", bm["z_motor"], [tower["z_axis_motor"]])]
+    tables = (("X table", on_x, (xc_nest, S["x_axis_cy"], S["x_rail_z"] + LX["block_top"]), dict(pitch=1, yaw=2, roll=0)),
+              ("Z table", on_z, (xf, S["x_axis_cy"], zc_nest), dict(pitch=1, yaw=0, roll=2)))
+    for label, items, ref, axes in tables:
+        mom = carriage_moments(items, ref, axes, accel)
+        ok = mom["pitch"] < LX["m_a"] / 5 and mom["yaw"] < LX["m_b"] / 5 and mom["roll"] < LX["m_c"] / 5
+        rep.append(f"  {label} moments (gravity + X ramp {accel:.1f} m/s^2): carries {sum(m for _, m, _ in items):.2f} kg "
+                   f"({', '.join(f'{n} {m:.2f}' for n, m, _ in items)}) -> pitch {mom['pitch']:.2f} / yaw {mom['yaw']:.2f} / "
+                   f"roll {mom['roll']:.2f} N.m of {LX['m_a']:.0f} / {LX['m_b']:.0f} / {LX['m_c']:.0f} allowable"
+                   f"{'  OK ' if ok else '  ** CHECK **'}")
+    rep.append(f"  exchange time: X {abs(far_col_x):.0f} mm at {S['x_speed']:.0f} mm/s with {S['x_ramp']:.0f} mm ramps "
+               f"~{abs(far_col_x) / S['x_speed'] + 0.3:.1f} s each way; Z moves 8 / 20 mm at 50 mm/s")
     pairs = [
         ("gripper far_arm @nest", grip_nest["far_arm"], "objective", static["objective"]),
         ("gripper near_arm @nest", grip_nest["near_arm"], "objective", static["objective"]),

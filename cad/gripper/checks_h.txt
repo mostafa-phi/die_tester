@@ -12,3 +12,9 @@ actuator body X extent     : -40.0 .. -20.0 (objective barrel -12..22, tube -15.
 bracket/interface X extent : -54.0 .. -22.0  (pattern centre X -38.0, Y 3.0)
 module height above die top: 25.5 mm (to interface plate top)  [layout: horizontal]
 body Y extent              : -44.5 .. -5.7 at Z 10..20  (input fiber holder below Z 4.5)
+one solid                  : far_arm_6061_h: 1  OK 
+one solid                  : near_arm_6061_h: 1  OK 
+one solid                  : far_tip_block_semitron: 1  OK 
+one solid                  : near_tip_block_semitron: 1  OK 
+one solid                  : flexure_blade_0p127_steel: 1  OK 
+one solid                  : bracket_6061_h: 1  OK 

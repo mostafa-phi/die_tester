@@ -213,8 +213,9 @@ def far_arm():
     head_x0 = far_face_x + 2.0                                        # tip block is 2.0 thick: 9.935..11.935
     head_x1 = head_x0 + P["head_x"]                                   # 11.935..15.935
     bar = box(root_x0, head_x1, far_bar_y0, far_bar_y1, bar_z0, bar_z1)
-    # head: full 3 mm wide block centred on the die middle, carries the tip block on its -X face
-    head = box(head_x0, head_x1, blk_y0, blk_y1, bar_z0, bar_z1)
+    # head: full 3 mm wide block centred on the die middle, carries the tip block on its -X face. It runs on across the
+    # 0.3 mm lane gap into the bar so the arm is one solid (beyond the die's +X end, where the near arm never reaches).
+    head = box(head_x0, head_x1, blk_y0, far_bar_y1, bar_z0, bar_z1)
     # M2 tapped hole along X for the tip block screw
     head = head.cut(cq.Workplane("YZ").center(die_cy, bar_z0 + 1.5).circle(0.8).extrude(P["head_x"] + 0.2).translate((head_x0 - 0.1, 0, 0)))
     return root.union(drop).union(bar).union(head)
@@ -249,16 +250,19 @@ def near_arm():
     blk_top = P["nose_h"] + 0.05 + (P["nose_h"] + 1.1)                # near block top (see near_tip_block): 0.05..1.5
     head_z0 = 1.5 + P["blade_free"]                                   # 6.5
     head_z1 = head_z0 + P["bar_h"]                                    # 9.5  (max height under objective)
-    head = box(head_x0, head_x1, blk_y0, blk_y1, head_z0, head_z1)
-    # blade slot (blade_t + 0.05) x (blade_w + 0.1) x blade_clamp deep, on the head's -X? no: blade hangs
-    # from the head bottom at X = -2 - 0.6 (behind the tip block face)
+    # the head runs on across the 0.3 mm lane gap into the riser, so the arm is one solid and the blade slot (open at +Y,
+    # top and bottom) is closed at its -Y end: the 1 mm wall on the slot's +X side stays attached to the arm
+    head = box(head_x0, head_x1, near_bar_y0, blk_y1, head_z0, head_z1)
+    # blade slot (blade_t + 0.05) x (blade_w + 0.1) x blade_clamp deep at the blade plane; the blade hangs from the head
+    # bottom 1.8 behind the nose face
     slot_x = blade_plane
     slot = box(slot_x - (P["blade_t"] + 0.05) / 2, slot_x + (P["blade_t"] + 0.05) / 2,
                die_cy - (P["blade_w"] + 0.1) / 2, die_cy + (P["blade_w"] + 0.1) / 2,
                head_z0 - 0.01, head_z0 + P["blade_clamp"])
     head = head.cut(slot)
-    # M2 clamp screw along X through the head into the slot (pinches the blade)
-    head = head.cut(cq.Workplane("YZ").center(die_cy, head_z0 + 1.5).circle(0.8).extrude(P["head_x"] + 0.2).translate((head_x0 - 0.1, 0, 0)))
+    # M2 clamp screw along X from the head's -X face into the slot: it presses the blade against the 1 mm wall
+    screw_len = slot_x - head_x0 + 0.1
+    head = head.cut(cq.Workplane("YZ").center(die_cy, head_z0 + 1.5).circle(0.8).extrude(screw_len).translate((head_x0 - 0.1, 0, 0)))
     # join bar to raised head with a riser
     riser = box(head_x0, head_x1, near_bar_y0, near_bar_y1, bar_z0, head_z1)
     return root.union(drop).union(bar).union(riser).union(head)
@@ -400,6 +404,10 @@ def main():
          if LAYOUT == "horizontal" else
          f"body Y extent              : {die_cy - P['act_body_y']/2:.1f} .. {die_cy + P['act_body_y']/2:.1f}  (fiber clamps at Y <= -12 and >= 18)"),
     ]
+    # each custom part must come out of the CAD as one solid (members that only nearly touch export as separate bodies)
+    for name, shape in parts.items():
+        n = C.n_solids(shape)
+        report.append(f"one solid                  : {name}: {n}{'  OK ' if n == 1 else '  ** CHECK ** separate solids in one part'}")
     print("\n".join(report))
     with open(os.path.join(DIRS["comp"], f"checks{SFX}.txt"), "w") as f:
         f.write("\n".join(report) + "\n")
